@@ -1,0 +1,66 @@
+name: Continuous Integration
+
+# Pipeline uruchomi się przy każdym pushu na main oraz przy każdym Pull Requeście do main
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  # ------------------------------------
+  # ZADANIE 1: Sprawdzenie Backendu (.NET)
+  # ------------------------------------
+  build-backend:
+    name: Build .NET Backend
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. Pobranie kodu z repozytorium
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # 2. Instalacja .NET 8 na maszynie wirtualnej
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    # 3. Pobranie paczek NuGet
+    - name: Restore dependencies
+      run: dotnet restore
+
+    # 4. Próba skompilowania kodu
+    - name: Build solution
+      run: dotnet build --no-restore --configuration Release
+
+  # ------------------------------------
+  # ZADANIE 2: Sprawdzenie Frontendu (Vite/React)
+  # ------------------------------------
+  build-frontend:
+    name: Build React Frontend
+    runs-on: ubuntu-latest
+    
+    # Mówimy GitHubowi, że te kroki mają dziać się w folderze 'frontend'
+    defaults:
+      run:
+        working-directory: ./frontend
+
+    steps:
+    # 1. Pobranie kodu
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # 2. Instalacja Node.js
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    # 3. Instalacja paczek NPM
+    - name: Install dependencies
+      run: npm install
+
+    # 4. Próba zbudowania frontendu (TypeScript i Vite)
+    - name: Build project
+      run: npm run build
