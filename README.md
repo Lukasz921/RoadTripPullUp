@@ -1,29 +1,33 @@
-### Runing
-to run
-first run your docker engine 
-then 
-docker compose up --build
+## Running the project
 
-your frontend is at 5173 port
-http://localhost:5173
+### Option 1: Full Docker setup
 
+1. Start Docker Desktop / Docker Engine.
+2. Run:
+   ```bash
+   docker compose up --build
+   ```
+3. Open the frontend:
+   - http://localhost:5173
 
+### Option 2: Local development 
 
+Run only the database in Docker, and run API + frontend locally.
 
-
-to run localy
-first run db container
-docker compose up -d db
-
-
-then run backend
-cd ./Api
-dotnet restore
-dotnet watch run
-
-
-and frontend
-cd ./frontend
-npm install
-npm run dev
-
+1. Start database:
+   ```bash
+   docker compose up -d db
+   ```
+2. Run backend:
+   ```bash
+   cd API
+   dotnet restore
+   dotnet watch run
+   ```
+3. Run frontend:
+   ```bash
+   cd frontend
+   npm install
+   npm run dev
+   ```
+   
