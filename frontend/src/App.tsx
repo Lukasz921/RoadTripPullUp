@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import TripForm from './pages/TripForm';
 
 function Home() {
   return (
@@ -9,6 +10,7 @@ function Home() {
       <nav style={{ display: 'flex', gap: '10px' }}>
         <Link to="/login">Zaloguj</Link>
         <Link to="/register">Zarejestruj</Link>
+        <Link to="/trip/create">Create Trip</Link>
       </nav>
     </div>
   );
@@ -21,6 +23,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/trip/create" element={<TripForm />} />
       </Routes>
     </BrowserRouter>
   );
