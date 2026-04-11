@@ -8,6 +8,7 @@ namespace API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+// property authorize dleguje najpierw do authorize zdefinowanego w program.cs 
 [Authorize]
 public class TripController : ControllerBase
 {
