@@ -2,6 +2,7 @@ using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Application.Interfaces;
+using Application.Interfaces.Trip;
 using Infrastructure.Authentication;
 using Infrastructure.Repositories;
 using Application.Services;

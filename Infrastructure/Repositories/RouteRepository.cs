@@ -1,4 +1,4 @@
-using Application.Interfaces;
+using Application.Interfaces.Trip;
 using Core.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -27,5 +27,11 @@ public class RouteRepository : IRouteRepository
         }
 
         await _context.SaveChangesAsync();
+    }
+
+    public async Task<Route> GetById(Guid id)
+    {
+        var route = await _context.Routes.AsNoTracking().FirstOrDefaultAsync(r => r.Id == id);
+        return route!;
     }
 }

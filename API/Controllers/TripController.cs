@@ -1,6 +1,6 @@
 using System.Security.Claims;
 using Application.DTOs;
-using Application.Interfaces;
+using Application.Interfaces.Trip;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -35,6 +35,21 @@ public class TripController : ControllerBase
 
             var createdTrip = await _tripService.CreateTrip(dto, driverId);
             return Created($"/api/trip/{createdTrip.TripId}", createdTrip);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpGet]
+    [AllowAnonymous]
+    public async Task<IActionResult> Search([FromQuery] SearchTripsCriteria criteria)
+    {
+        try
+        {
+            var results = await _tripService.SearchTrips(criteria);
+            return Ok(results);
         }
         catch (Exception ex)
         {

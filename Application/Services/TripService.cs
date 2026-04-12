@@ -1,5 +1,5 @@
 using Application.DTOs;
-using Application.Interfaces;
+using Application.Interfaces.Trip;
 using Core.Entities;
 
 namespace Application.Services;
@@ -53,6 +53,52 @@ public class TripService : ITripService
             Date = trip.Date,
             MaxPassengers = trip.MaxPassengers
         };
+    }
+
+    public async Task<List<TripSummaryDTO>> SearchTrips(SearchTripsCriteria criteria)
+    {
+        // lightweight normalization
+        if (criteria == null)
+        {
+            criteria = new SearchTripsCriteria();
+        }
+
+        if (!string.IsNullOrWhiteSpace(criteria.From))
+        {
+            criteria.From = criteria.From.Trim();
+        }
+
+        if (!string.IsNullOrWhiteSpace(criteria.To))
+        {
+            criteria.To = criteria.To.Trim();
+        }
+
+        var trips = await _tripRepository.Search(criteria);
+
+        var results = new List<TripSummaryDTO>();
+
+        foreach (var trip in trips)
+        {
+            // load route if necessary via route repository
+            var route = await _routeRepository.GetById(trip.RouteId);
+
+            results.Add(new TripSummaryDTO
+            {
+                TripId = trip.Id,
+                DriverId = trip.DriverId,
+                Price = (decimal)trip.Price,
+                Date = trip.Date,
+                MaxPassengers = trip.MaxPassengers,
+                Route = new RouteDTO
+                {
+                    RouteId = route.Id,
+                    From = route.From,
+                    To = route.To
+                }
+            });
+        }
+
+        return results;
     }
 
     private static void ValidateInput(CreateTripDTO dto, Guid driverId)
