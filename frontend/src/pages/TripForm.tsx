@@ -87,6 +87,12 @@ export default function TripForm() {
       >
         <input type="text" placeholder="Skąd" value={from} onChange={(e) => setFrom(e.target.value)} />
         <input type="text" placeholder="Dokąd" value={to} onChange={(e) => setTo(e.target.value)} />
+          <input
+              type="text"
+              placeholder="Punkty pośrednie (oddzielone przecinkami)}"
+              value={betweenPoints}
+              onChange={(e) => setBetweenPoints(e.target.value)}
+          />  
         <input type="number" step="0.01" placeholder="Cena" value={price} onChange={(e) => setPrice(e.target.value)} />
         <input type="datetime-local" value={date} onChange={(e) => setDate(e.target.value)} />
         <input
