@@ -101,6 +101,34 @@ public class TripService : ITripService
         return results;
     }
 
+    public async Task<TripDetailsDTO?> GetById(Guid id)
+    {
+        var trip = await _tripRepository.GetById(id);
+        if (trip == null)
+            return null;
+
+        var route = await _routeRepository.GetById(trip.RouteId);
+
+        var dto = new TripDetailsDTO
+        {
+            TripId = trip.Id,
+            DriverId = trip.DriverId,
+            Price = (decimal)trip.Price,
+            Date = trip.Date,
+            MaxPassengers = trip.MaxPassengers,
+            Status = Enum.Parse<TripStatusDTO>(trip.OfferStatus.ToString()),
+            Route = new RouteDTO
+            {
+                RouteId = route.Id,
+                From = route.From,
+                To = route.To
+            },
+            PassengerIds = trip.Passengers?.Select(p => p.Id).ToList() ?? new List<Guid>()
+        };
+
+        return dto;
+    }
+
     private static void ValidateInput(CreateTripDTO dto, Guid driverId)
     {
         if (driverId == Guid.Empty)

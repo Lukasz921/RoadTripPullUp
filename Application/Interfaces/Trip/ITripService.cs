@@ -7,4 +7,6 @@ public interface ITripService
     Task<CreateTripResponseDTO> CreateTrip(CreateTripDTO dto, Guid driverId);
 
     Task<List<TripSummaryDTO>> SearchTrips(SearchTripsCriteria criteria);
+
+    Task<TripDetailsDTO?> GetById(Guid id);
 }

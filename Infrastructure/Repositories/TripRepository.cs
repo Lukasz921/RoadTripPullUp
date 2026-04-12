@@ -5,6 +5,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories;
 
+using TripEntity = Core.Entities.Trip;
+
 public class TripRepository : ITripRepository
 {
     private readonly AppDbContext _context;
@@ -14,7 +16,7 @@ public class TripRepository : ITripRepository
         _context = context;
     }
 
-    public async Task Save(Trip trip)
+    public async Task Save(TripEntity trip)
     {
         var exists = await _context.Trips.AnyAsync(t => t.Id == trip.Id);
 
@@ -30,7 +32,7 @@ public class TripRepository : ITripRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task<List<Trip>> Search(SearchTripsCriteria criteria)
+    public async Task<List<TripEntity>> Search(SearchTripsCriteria criteria)
     {
         var query = _context.Trips.AsNoTracking().AsQueryable();
 
@@ -59,5 +61,15 @@ public class TripRepository : ITripRepository
         var results = await query.ToListAsync();
 
         return results;
+    }
+
+    public async Task<TripEntity?> GetById(Guid id)
+    {
+        var trip = await _context.Trips
+            .AsNoTracking()
+            .Include(t => t.Passengers)
+            .FirstOrDefaultAsync(t => t.Id == id);
+
+        return trip;
     }
 }
