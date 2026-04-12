@@ -11,8 +11,8 @@ function Home() {
       <nav style={{ display: 'flex', gap: '10px' }}>
         <Link to="/login">Zaloguj</Link>
         <Link to="/register">Zarejestruj</Link>
-        <Link to="/trip/create">Create Trip</Link>
-        <Link to="/trips">Search Trips</Link>
+        <Link to="/trip/create">Dodaj ofertę</Link>
+        <Link to="/trips">Szukaj ofert</Link>
       </nav>
     </div>
   );

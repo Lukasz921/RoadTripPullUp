@@ -72,7 +72,7 @@ public class TripController : ControllerBase
         return Ok(results);
     }
 
-    [HttpGet("{id}")]
+    [HttpGet("{id:guid}")]
     [AllowAnonymous]
     [ProducesResponseType(typeof(TripDetailsDTO), 200)]
     [ProducesResponseType(404)]

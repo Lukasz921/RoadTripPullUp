@@ -27,13 +27,13 @@ const TripsPage: React.FC = () => {
     <div>
       <h1>Wyszukaj przejazdy</h1>
       <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-        <input placeholder="From" value={from} onChange={(e) => setFrom(e.target.value)} />
-        <input placeholder="To" value={to} onChange={(e) => setTo(e.target.value)} />
+        <input placeholder="Skąd" value={from} onChange={(e) => setFrom(e.target.value)} />
+        <input placeholder="Dokąd" value={to} onChange={(e) => setTo(e.target.value)} />
         <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
         <button onClick={doSearch} disabled={loading}>Szukaj</button>
       </div>
 
-      {loading && <div>Loading...</div>}
+      {loading && <div>Ładowanie...</div>}
       {error && <div style={{ color: 'red' }}>{error}</div>}
 
       {!loading && !error && results.length === 0 && <div>Brak wyników</div>}
