@@ -60,11 +60,11 @@ export default function TripForm() {
 
     try {
       setIsSubmitting(true);
-      const response = await api.post('/trip', payload);
+      const response = await api.post('/trips', payload);
       setResponseText(JSON.stringify(response.data, null, 2));
       console.log('Trip created:', response.data);
     } catch (err: any) {
-      const message = err?.response?.data?.message || 'Failed to create trip.';
+      const message = err?.response?.data?.error || err?.response?.data?.message || 'Failed to create trip.';
       setError(message);
       console.error('Create trip error:', err?.response?.data || err);
     } finally {

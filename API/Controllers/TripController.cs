@@ -1,6 +1,8 @@
 using System.Security.Claims;
+using System.Globalization;
 using Application.DTOs;
 using Application.Interfaces.Trip;
+using Application.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -39,13 +41,31 @@ public class TripController : ControllerBase
     [AllowAnonymous]
     [ProducesResponseType(typeof(List<TripSummaryDTO>), 200)]
     [ProducesResponseType(400)]
-    public async Task<IActionResult> Search([FromQuery(Name = "from")] string? from, [FromQuery(Name = "to")] string? to, [FromQuery(Name = "date")] DateTime? date)
+    public async Task<IActionResult> Search([FromQuery(Name = "from")] string? from, [FromQuery(Name = "to")] string? to, [FromQuery(Name = "date")] string? date)
     {
+        DateTime? parsedDate = null;
+        if (!string.IsNullOrWhiteSpace(date))
+        {
+            // try yyyy-MM-dd first (date input)
+            if (DateTime.TryParseExact(date, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out var d))
+            {
+                parsedDate = DateTime.SpecifyKind(d.Date, DateTimeKind.Utc);
+            }
+            else if (DateTime.TryParse(date, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out d))
+            {
+                parsedDate = DateTime.SpecifyKind(d.Date, DateTimeKind.Utc);
+            }
+            else
+            {
+                throw new ValidationException("Invalid date format. Use YYYY-MM-DD or a valid date.");
+            }
+        }
+
         var criteria = new SearchTripsCriteria
         {
             From = string.IsNullOrWhiteSpace(from) ? null : from,
             To = string.IsNullOrWhiteSpace(to) ? null : to,
-            Date = date
+            Date = parsedDate
         };
 
         var results = await _tripService.SearchTrips(criteria);
@@ -60,9 +80,6 @@ public class TripController : ControllerBase
     public async Task<IActionResult> GetById([FromRoute] Guid id)
     {
         var dto = await _tripService.GetById(id);
-        if (dto == null)
-            return NotFound(new { message = "Trip not found." });
-
         return Ok(dto);
     }
 }

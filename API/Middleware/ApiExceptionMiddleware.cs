@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Microsoft.Extensions.Hosting;
 
 namespace API.Middleware;
 
@@ -6,11 +7,13 @@ public class ApiExceptionMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly ILogger<ApiExceptionMiddleware> _logger;
+    private readonly IWebHostEnvironment _env;
 
-    public ApiExceptionMiddleware(RequestDelegate next, ILogger<ApiExceptionMiddleware> logger)
+    public ApiExceptionMiddleware(RequestDelegate next, ILogger<ApiExceptionMiddleware> logger, IWebHostEnvironment env)
     {
         _next = next;
         _logger = logger;
+        _env = env;
     }
 
     public async Task Invoke(HttpContext context)
@@ -26,10 +29,11 @@ public class ApiExceptionMiddleware
         }
     }
 
-    private static Task HandleExceptionAsync(HttpContext context, Exception exception)
+    private Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
         var code = System.Net.HttpStatusCode.InternalServerError;
         string message = "An unexpected error occurred.";
+        string? details = null;
 
         if (exception is Application.Exceptions.ValidationException vex)
         {
@@ -41,10 +45,22 @@ public class ApiExceptionMiddleware
             code = System.Net.HttpStatusCode.NotFound;
             message = nf.Message;
         }
+        else
+        {
+            // other exceptions -> include details in Development
+            if (_env.IsDevelopment())
+            {
+                message = exception.Message;
+                details = exception.StackTrace;
+            }
+        }
 
-        var result = JsonSerializer.Serialize(new { error = message });
+        var payload = string.IsNullOrEmpty(details)
+            ? JsonSerializer.Serialize(new { error = message })
+            : JsonSerializer.Serialize(new { error = message, details });
+
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = (int)code;
-        return context.Response.WriteAsync(result);
+        return context.Response.WriteAsync(payload);
     }
 }

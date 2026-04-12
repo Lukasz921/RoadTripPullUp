@@ -33,13 +33,30 @@ public class TripService : ITripService
 
         await _routeRepository.Save(route);
 
+        // Normalize date to UTC to avoid writing Local DateTime to timestamptz
+        DateTime tripDateUtc;
+        switch (dto.Date.Kind)
+        {
+            case DateTimeKind.Utc:
+                tripDateUtc = dto.Date;
+                break;
+            case DateTimeKind.Local:
+                tripDateUtc = dto.Date.ToUniversalTime();
+                break;
+            default:
+                // Unspecified: assume input represents a UTC date/time (ISO with Z should be parsed as Utc by model binder),
+                // but to be safe, treat as UTC without conversion.
+                tripDateUtc = DateTime.SpecifyKind(dto.Date, DateTimeKind.Utc);
+                break;
+        }
+
         var trip = new Trip
         {
             Id = Guid.NewGuid(),
             DriverId = driverId,
             RouteId = route.Id,
             Price = dto.Price,
-            Date = dto.Date,
+            Date = tripDateUtc,
             MaxPassengers = dto.MaxPassengers,
             OfferStatus = TripStatus.Active
         };
@@ -162,7 +179,21 @@ public class TripService : ITripService
             throw new ValidationException("Max passengers must be greater than zero.");
         }
 
-        if (dto.Date <= DateTime.UtcNow)
+        // compare in UTC
+        DateTime tripDateUtcForValidation;
+        switch (dto.Date.Kind)
+        {
+            case DateTimeKind.Utc:
+                tripDateUtcForValidation = dto.Date;
+                break;
+            case DateTimeKind.Local:
+                tripDateUtcForValidation = dto.Date.ToUniversalTime();
+                break;
+            default:
+                tripDateUtcForValidation = DateTime.SpecifyKind(dto.Date, DateTimeKind.Utc);
+                break;
+        }
+        if (tripDateUtcForValidation <= DateTime.UtcNow)
         {
             throw new ValidationException("Trip date must be in the future.");
         }
