@@ -134,7 +134,7 @@ public class TripService : ITripService
             Price = (decimal)trip.Price,
             Date = trip.Date,
             MaxPassengers = trip.MaxPassengers,
-            Status = Enum.Parse<TripStatusDTO>(trip.OfferStatus.ToString()),
+            Status = Enum.Parse<TripStatus>(trip.OfferStatus.ToString()),
             Route = new RouteDTO
             {
                 RouteId = route.Id,
