@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace API.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/trips")]
 // property authorize dleguje najpierw do authorize zdefinowanego w program.cs 
 [Authorize]
 public class TripController : ControllerBase
@@ -34,7 +34,7 @@ public class TripController : ControllerBase
             }
 
             var createdTrip = await _tripService.CreateTrip(dto, driverId);
-            return Created($"/api/trip/{createdTrip.TripId}", createdTrip);
+            return Created($"/api/trips/{createdTrip.TripId}", createdTrip);
         }
         catch (Exception ex)
         {
@@ -44,10 +44,19 @@ public class TripController : ControllerBase
 
     [HttpGet]
     [AllowAnonymous]
-    public async Task<IActionResult> Search([FromQuery] SearchTripsCriteria criteria)
+    [ProducesResponseType(typeof(List<TripSummaryDTO>), 200)]
+    [ProducesResponseType(400)]
+    public async Task<IActionResult> Search([FromQuery(Name = "from")] string? from, [FromQuery(Name = "to")] string? to, [FromQuery(Name = "date")] DateTime? date)
     {
         try
         {
+            var criteria = new SearchTripsCriteria
+            {
+                From = string.IsNullOrWhiteSpace(from) ? null : from,
+                To = string.IsNullOrWhiteSpace(to) ? null : to,
+                Date = date
+            };
+
             var results = await _tripService.SearchTrips(criteria);
             return Ok(results);
         }
