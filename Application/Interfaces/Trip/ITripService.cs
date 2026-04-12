@@ -8,5 +8,5 @@ public interface ITripService
 
     Task<List<TripSummaryDTO>> SearchTrips(SearchTripsCriteria criteria);
 
-    Task<TripDetailsDTO?> GetById(Guid id);
+    Task<TripDetailsDTO> GetById(Guid id);
 }

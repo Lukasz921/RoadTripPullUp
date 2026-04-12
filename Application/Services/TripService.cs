@@ -1,6 +1,7 @@
 using Application.DTOs;
 using Application.Interfaces.Trip;
 using Core.Entities;
+using Application.Exceptions;
 
 namespace Application.Services;
 
@@ -101,11 +102,11 @@ public class TripService : ITripService
         return results;
     }
 
-    public async Task<TripDetailsDTO?> GetById(Guid id)
+    public async Task<TripDetailsDTO> GetById(Guid id)
     {
         var trip = await _tripRepository.GetById(id);
         if (trip == null)
-            return null;
+            throw new NotFoundException($"Trip with id {id} not found.");
 
         var route = await _routeRepository.GetById(trip.RouteId);
 
@@ -133,37 +134,37 @@ public class TripService : ITripService
     {
         if (driverId == Guid.Empty)
         {
-            throw new Exception("Invalid driver identifier.");
+            throw new ValidationException("Invalid driver identifier.");
         }
 
         if (dto.Route == null)
         {
-            throw new Exception("Route is required.");
+            throw new ValidationException("Route is required.");
         }
 
         if (string.IsNullOrWhiteSpace(dto.Route.From) || string.IsNullOrWhiteSpace(dto.Route.To))
         {
-            throw new Exception("Route origin and destination are required.");
+            throw new ValidationException("Route origin and destination are required.");
         }
 
         if (dto.Route.From.Trim().Equals(dto.Route.To.Trim(), StringComparison.OrdinalIgnoreCase))
         {
-            throw new Exception("Route origin and destination cannot be the same.");
+            throw new ValidationException("Route origin and destination cannot be the same.");
         }
 
         if (dto.Price <= 0)
         {
-            throw new Exception("Trip price must be greater than zero.");
+            throw new ValidationException("Trip price must be greater than zero.");
         }
 
         if (dto.MaxPassengers <= 0)
         {
-            throw new Exception("Max passengers must be greater than zero.");
+            throw new ValidationException("Max passengers must be greater than zero.");
         }
 
         if (dto.Date <= DateTime.UtcNow)
         {
-            throw new Exception("Trip date must be in the future.");
+            throw new ValidationException("Trip date must be in the future.");
         }
     }
 }
