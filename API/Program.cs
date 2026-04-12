@@ -2,12 +2,14 @@ using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Application.Interfaces;
+using Application.Interfaces.Trip;
 using Infrastructure.Authentication;
 using Infrastructure.Repositories;
 using Application.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using API.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -86,6 +88,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 var app = builder.Build();
+
+// use exception middleware early to catch exceptions from downstream
+app.UseMiddleware<ApiExceptionMiddleware>();
 
 app.UseSwagger();
 app.UseSwaggerUI();
