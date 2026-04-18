@@ -20,13 +20,13 @@ Run only the database in Docker, and run API + frontend locally.
    ```
 2. Run backend:
    ```bash
-   cd API
+   cd src/API
    dotnet restore
    dotnet watch run
    ```
 3. Run frontend:
    ```bash
-   cd frontend
+   cd src/frontend
    npm install
    npm run dev
    ```
