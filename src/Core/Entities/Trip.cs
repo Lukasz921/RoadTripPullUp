@@ -17,6 +17,8 @@ public class Trip
     
     public TripStatus OfferStatus {get; set; } = TripStatus.InActive;
 
+    public uint RowVersion { get; set; }
+
     public bool TryAddPassenger(User passenger)
     {
         if (passenger == null)

@@ -47,6 +47,8 @@ public class AppDbContext : DbContext
             entity.Property(t => t.MaxPassengers).IsRequired();
             entity.Property(t => t.OfferStatus).IsRequired();
 
+            entity.Property(t => t.RowVersion).IsRowVersion();
+
             // Trip -> Driver (wiele tripów może mieć jednego drivera)
             entity.HasOne<User>()
                 .WithMany()

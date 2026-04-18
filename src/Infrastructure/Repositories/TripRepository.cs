@@ -29,7 +29,14 @@ public class TripRepository : ITripRepository
             _context.Trips.Update(trip);
         }
 
-        await _context.SaveChangesAsync();
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            throw new InvalidOperationException("A concurrency conflict occurred. The trip data has been modified by another user.", ex);
+        }
     }
 
     public async Task<List<TripEntity>> Search(SearchTripsCriteria criteria)
