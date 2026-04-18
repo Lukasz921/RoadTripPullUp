@@ -44,7 +44,7 @@ jobs:
     # Mówimy GitHubowi, że te kroki mają dziać się w folderze 'frontend'
     defaults:
       run:
-        working-directory: ./frontend
+        working-directory: ./src/frontend
 
     steps:
     # 1. Pobranie kodu

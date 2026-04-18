@@ -19,7 +19,7 @@ services:
   api:
     build:
       context: .
-      dockerfile: API/Dockerfile
+      dockerfile: src/API/Dockerfile
     container_name: app_api
     ports:
       - "8080:8080"
@@ -29,13 +29,13 @@ services:
 
   frontend:
     build:
-      context: ./frontend
+      context: ./src/frontend
       dockerfile: Dockerfile
     container_name: app_frontend
     ports:
       - "5173:5173"
     volumes:
-      - ./frontend:/app
+      - ./src/frontend:/app
       - /app/node_modules
     depends_on:
       - api
