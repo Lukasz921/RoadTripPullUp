@@ -82,4 +82,36 @@ public class TripController : ControllerBase
         var dto = await _tripService.GetById(id);
         return Ok(dto);
     }
+
+    [HttpPost("{id:guid}/request")]
+    public async Task<IActionResult> RequestRide([FromRoute] Guid id)
+    {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? User.FindFirstValue(ClaimTypes.Name)
+            ?? User.FindFirstValue("sub");
+
+        if (!Guid.TryParse(userIdClaim, out var passengerId))
+        {
+            return Unauthorized(new { message = "Missing or invalid user identifier in token." });
+        }
+
+        await _tripService.RequestRide(id, passengerId);
+        return Ok(new { message = "Ride request submitted successfully." });
+    }
+
+    [HttpGet("{id:guid}/requests")]
+    public async Task<IActionResult> GetRequestsForTrip([FromRoute] Guid id)
+    {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? User.FindFirstValue(ClaimTypes.Name)
+            ?? User.FindFirstValue("sub");
+
+        if (!Guid.TryParse(userIdClaim, out var driverId))
+        {
+            return Unauthorized(new { message = "Missing or invalid user identifier in token." });
+        }
+
+        var requests = await _tripService.GetRequestsForTrip(id, driverId);
+        return Ok(requests);
+    }
 }

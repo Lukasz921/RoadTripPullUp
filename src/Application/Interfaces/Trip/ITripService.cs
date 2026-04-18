@@ -13,4 +13,6 @@ public interface ITripService
     Task RequestRide(Guid tripId, Guid passengerId);
 
     Task AcceptRequest(Guid requestId, Guid driverId);
+
+    Task<List<TripRequestDTO>> GetRequestsForTrip(Guid tripId, Guid driverId);
 }

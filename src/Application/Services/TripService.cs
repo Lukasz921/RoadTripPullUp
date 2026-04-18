@@ -267,4 +267,24 @@ public class TripService : ITripService
         await _tripRequestRepository.Save(request);
         await _tripRepository.Save(trip);
     }
+
+    public async Task<List<TripRequestDTO>> GetRequestsForTrip(Guid tripId, Guid driverId)
+    {
+        var trip = await _tripRepository.GetById(tripId);
+        if (trip == null)
+            throw new NotFoundException($"Trip with id {tripId} not found.");
+
+        if (trip.DriverId != driverId)
+            throw new ValidationException("Only the driver can view ride requests for this trip.");
+
+        var requests = await _tripRequestRepository.GetByTripId(tripId);
+
+        return requests.Select(r => new TripRequestDTO
+        {
+            Id = r.Id,
+            TripId = r.TripId,
+            PassengerId = r.PassengerId,
+            Status = r.TripRequestStatus.ToString()
+        }).ToList();
+    }
 }
