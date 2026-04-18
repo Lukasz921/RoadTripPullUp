@@ -5,6 +5,7 @@ namespace Core.Entities;
 public enum TripRequestStatus
 {
     Pending,
+    Accepted,
     Rejected,
     Cancelled,
 }

@@ -81,6 +81,7 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 // definicje dla controlerow
 builder.Services.AddScoped<ITripRepository, TripRepository>();
 builder.Services.AddScoped<IRouteRepository, RouteRepository>();
+builder.Services.AddScoped<ITripRequestRepository, TripRequestRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITripService, TripService>();
 

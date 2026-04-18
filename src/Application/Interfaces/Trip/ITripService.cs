@@ -9,4 +9,8 @@ public interface ITripService
     Task<List<TripSummaryDTO>> SearchTrips(SearchTripsCriteria criteria);
 
     Task<TripDetailsDTO> GetById(Guid id);
+
+    Task RequestRide(Guid tripId, Guid passengerId);
+
+    Task AcceptRequest(Guid requestId, Guid driverId);
 }

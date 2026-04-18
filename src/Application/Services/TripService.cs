@@ -2,6 +2,7 @@ using Application.DTOs;
 using Application.Interfaces.Trip;
 using Core.Entities;
 using Application.Exceptions;
+using Application.Interfaces;
 
 namespace Application.Services;
 
@@ -9,11 +10,19 @@ public class TripService : ITripService
 {
     private readonly ITripRepository _tripRepository;
     private readonly IRouteRepository _routeRepository;
+    private readonly ITripRequestRepository _tripRequestRepository;
+    private readonly IUserRepository _userRepository;
 
-    public TripService(ITripRepository tripRepository, IRouteRepository routeRepository)
+    public TripService(
+        ITripRepository tripRepository, 
+        IRouteRepository routeRepository,
+        ITripRequestRepository tripRequestRepository,
+        IUserRepository userRepository)
     {
         _tripRepository = tripRepository;
         _routeRepository = routeRepository;
+        _tripRequestRepository = tripRequestRepository;
+        _userRepository = userRepository;
     }
 
     public async Task<CreateTripResponseDTO> CreateTrip(CreateTripDTO dto, Guid driverId)
@@ -197,5 +206,65 @@ public class TripService : ITripService
         {
             throw new ValidationException("Trip date must be in the future.");
         }
+    }
+
+    public async Task RequestRide(Guid tripId, Guid passengerId)
+    {
+        var trip = await _tripRepository.GetById(tripId);
+        if (trip == null)
+            throw new NotFoundException($"Trip with id {tripId} not found.");
+
+        if (trip.OfferStatus != TripStatus.Active)
+            throw new ValidationException("Cannot request a ride for a non-active trip.");
+
+        if (trip.DriverId == passengerId)
+            throw new ValidationException("Driver cannot request their own trip.");
+
+        var request = new TripRequest
+        {
+            Id = Guid.NewGuid(),
+            TripId = tripId,
+            PassengerId = passengerId,
+            TripRequestStatus = TripRequestStatus.Pending
+        };
+
+        await _tripRequestRepository.Save(request);
+    }
+
+    public async Task AcceptRequest(Guid requestId, Guid driverId)
+    {
+        var request = await _tripRequestRepository.GetById(requestId);
+        if (request == null)
+            throw new NotFoundException($"Trip request with id {requestId} not found.");
+
+        if (request.TripRequestStatus != TripRequestStatus.Pending)
+            throw new ValidationException("Only pending requests can be accepted.");
+
+        var trip = await _tripRepository.GetById(request.TripId);
+        if (trip == null)
+            throw new NotFoundException($"Trip with id {request.TripId} not found.");
+
+        if (trip.DriverId != driverId)
+            throw new ValidationException("Only the driver can accept ride requests.");
+
+        var passenger = await _userRepository.FindById(request.PassengerId);
+        if (passenger == null)
+            throw new NotFoundException($"Passenger with id {request.PassengerId} not found.");
+
+        // Call domain logic
+        var success = trip.TryAddPassenger(passenger);
+        if (!success)
+        {
+            if (trip.OfferStatus == TripStatus.Full || trip.Passengers.Count >= trip.MaxPassengers)
+            {
+                throw new SeatUnavailableException();
+            }
+            throw new ValidationException("Could not add passenger to the trip.");
+        }
+
+        request.TripRequestStatus = TripRequestStatus.Accepted;
+
+        await _tripRequestRepository.Save(request);
+        await _tripRepository.Save(trip);
     }
 }

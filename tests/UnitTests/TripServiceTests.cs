@@ -2,6 +2,7 @@ using Application.DTOs;
 using Application.Exceptions;
 using Application.Interfaces.Trip;
 using Application.Services;
+using Application.Interfaces;
 using Core.Entities;
 using FluentAssertions;
 using Moq;
@@ -13,13 +14,21 @@ public class TripServiceTests
 {
     private readonly Mock<ITripRepository> _tripRepositoryMock;
     private readonly Mock<IRouteRepository> _routeRepositoryMock;
+    private readonly Mock<ITripRequestRepository> _tripRequestRepositoryMock;
+    private readonly Mock<IUserRepository> _userRepositoryMock;
     private readonly TripService _tripService;
 
     public TripServiceTests()
     {
         _tripRepositoryMock = new Mock<ITripRepository>();
         _routeRepositoryMock = new Mock<IRouteRepository>();
-        _tripService = new TripService(_tripRepositoryMock.Object, _routeRepositoryMock.Object);
+        _tripRequestRepositoryMock = new Mock<ITripRequestRepository>();
+        _userRepositoryMock = new Mock<IUserRepository>();
+        _tripService = new TripService(
+            _tripRepositoryMock.Object, 
+            _routeRepositoryMock.Object,
+            _tripRequestRepositoryMock.Object,
+            _userRepositoryMock.Object);
     }
 
     [Fact]
@@ -160,5 +169,74 @@ public class TripServiceTests
 
         // Assert
         await act.Should().ThrowAsync<NotFoundException>();
+    }
+
+    [Fact]
+    public async Task RequestRide_Valid_SavesRequest()
+    {
+        // Arrange
+        var tripId = Guid.NewGuid();
+        var passengerId = Guid.NewGuid();
+        var trip = new Trip { Id = tripId, DriverId = Guid.NewGuid(), RouteId = Guid.NewGuid(), OfferStatus = TripStatus.Active };
+
+        _tripRepositoryMock.Setup(t => t.GetById(tripId)).ReturnsAsync(trip);
+
+        // Act
+        await _tripService.RequestRide(tripId, passengerId);
+
+        // Assert
+        _tripRequestRepositoryMock.Verify(r => r.Save(It.Is<TripRequest>(tr => 
+            tr.TripId == tripId && tr.PassengerId == passengerId && tr.TripRequestStatus == TripRequestStatus.Pending)), Times.Once);
+    }
+
+    [Fact]
+    public async Task AcceptRequest_Valid_AddsPassengerAndUpdatesStatus()
+    {
+        // Arrange
+        var requestId = Guid.NewGuid();
+        var driverId = Guid.NewGuid();
+        var passengerId = Guid.NewGuid();
+        var tripId = Guid.NewGuid();
+        
+        var request = new TripRequest { Id = requestId, TripId = tripId, PassengerId = passengerId, TripRequestStatus = TripRequestStatus.Pending };
+        var trip = new Trip { Id = tripId, DriverId = driverId, RouteId = Guid.NewGuid(), MaxPassengers = 2, OfferStatus = TripStatus.Active };
+        var passenger = new User { Id = passengerId };
+
+        _tripRequestRepositoryMock.Setup(r => r.GetById(requestId)).ReturnsAsync(request);
+        _tripRepositoryMock.Setup(t => t.GetById(tripId)).ReturnsAsync(trip);
+        _userRepositoryMock.Setup(u => u.FindById(passengerId)).ReturnsAsync(passenger);
+
+        // Act
+        await _tripService.AcceptRequest(requestId, driverId);
+
+        // Assert
+        trip.Passengers.Should().Contain(passenger);
+        request.TripRequestStatus.Should().Be(TripRequestStatus.Accepted);
+        _tripRequestRepositoryMock.Verify(r => r.Save(request), Times.Once);
+        _tripRepositoryMock.Verify(t => t.Save(trip), Times.Once);
+    }
+
+    [Fact]
+    public async Task AcceptRequest_NoSeats_ThrowsSeatUnavailableException()
+    {
+        // Arrange
+        var requestId = Guid.NewGuid();
+        var driverId = Guid.NewGuid();
+        var passengerId = Guid.NewGuid();
+        var tripId = Guid.NewGuid();
+        
+        var request = new TripRequest { Id = requestId, TripId = tripId, PassengerId = passengerId, TripRequestStatus = TripRequestStatus.Pending };
+        var trip = new Trip { Id = tripId, DriverId = driverId, RouteId = Guid.NewGuid(), MaxPassengers = 0, OfferStatus = TripStatus.Active };
+        var passenger = new User { Id = passengerId };
+
+        _tripRequestRepositoryMock.Setup(r => r.GetById(requestId)).ReturnsAsync(request);
+        _tripRepositoryMock.Setup(t => t.GetById(tripId)).ReturnsAsync(trip);
+        _userRepositoryMock.Setup(u => u.FindById(passengerId)).ReturnsAsync(passenger);
+
+        // Act
+        Func<Task> act = () => _tripService.AcceptRequest(requestId, driverId);
+
+        // Assert
+        await act.Should().ThrowAsync<SeatUnavailableException>();
     }
 }
