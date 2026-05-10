@@ -39,3 +39,28 @@ export const acceptRequest = async (requestId: string) => {
   const response = await api.post(`/requests/${requestId}/accept`);
   return response.data;
 };
+
+export interface TripDetailsDTO {
+  tripId: string;
+  driverId: string;
+  price: number;
+  date: string;
+  maxPassengers: number;
+  status: string;
+  route: {
+    routeId: string;
+    from: string;
+    to: string;
+  };
+  passengerIds: string[];
+}
+
+export const getTripById = async (id: string) => {
+  const response = await api.get<TripDetailsDTO>(`/trips/${id}`);
+  return response.data;
+};
+
+export const getMyTrips = async () => {
+  const response = await api.get<TripSummaryDTO[]>('/trips/my');
+  return response.data;
+};

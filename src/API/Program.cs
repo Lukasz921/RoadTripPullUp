@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Application.Interfaces;
 using Application.Interfaces.Trip;
+using Application.Interfaces.Messaging;
 using Infrastructure.Authentication;
 using Infrastructure.Repositories;
 using Application.Services;
@@ -84,6 +85,8 @@ builder.Services.AddScoped<IRouteRepository, RouteRepository>();
 builder.Services.AddScoped<ITripRequestRepository, TripRequestRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITripService, TripService>();
+builder.Services.AddScoped<IMessageRepository, MessageRepository>();
+builder.Services.AddScoped<IMessagingService, MessagingService>();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));

@@ -79,4 +79,13 @@ public class TripRepository : ITripRepository
 
         return trip;
     }
+
+    public async Task<List<TripEntity>> GetByDriverIdAsync(Guid driverId)
+    {
+        return await _context.Trips
+            .AsNoTracking()
+            .Where(t => t.DriverId == driverId)
+            .OrderByDescending(t => t.Date)
+            .ToListAsync();
+    }
 }
