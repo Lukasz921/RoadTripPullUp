@@ -12,6 +12,7 @@ public class AppDbContext : DbContext
     public DbSet<Trip> Trips { get; set; }
     public DbSet<Route> Routes { get; set; }
     public DbSet<TripRequest> TripRequest { get; set; }
+    public DbSet<Message> Messages { get; set; }
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -98,7 +99,24 @@ public class AppDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(tr => tr.PassengerId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
 
+        modelBuilder.Entity<Message>(entity =>
+        {
+            entity.HasKey(m => m.Id);
+
+            entity.Property(m => m.Content).IsRequired().HasMaxLength(1000);
+            entity.Property(m => m.Timestamp).IsRequired();
+
+            entity.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(m => m.SenderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(m => m.ReceiverId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 

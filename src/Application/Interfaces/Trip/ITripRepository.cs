@@ -12,4 +12,6 @@ public interface ITripRepository
     Task<List<TripEntity>> Search(SearchTripsCriteria criteria);
 
     Task<TripEntity?> GetById(Guid id);
+
+    Task<List<TripEntity>> GetByDriverIdAsync(Guid driverId);
 }
