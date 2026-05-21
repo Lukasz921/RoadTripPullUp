@@ -1,4 +1,5 @@
-using Core.Entities;
+using Core.TripPlanner;
+using Core.Users;
 using FluentAssertions;
 using Xunit;
 

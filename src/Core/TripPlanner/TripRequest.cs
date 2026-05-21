@@ -1,0 +1,17 @@
+namespace Core.TripPlanner;
+
+public enum TripRequestStatus
+{
+    Pending,
+    Accepted,
+    Rejected,
+    Cancelled,
+}
+
+public class TripRequest
+{
+    public Guid Id { get; set; }
+    public Guid PassengerId { get; set; }
+    public Guid TripId { get; set; }
+    public TripRequestStatus TripRequestStatus { get; set; } = TripRequestStatus.Pending;
+}

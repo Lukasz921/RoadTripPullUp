@@ -2,7 +2,7 @@ using Application.Messages;
 using Core.Messages;
 using Microsoft.EntityFrameworkCore;
 
-namespace Infrastructure.Repositories;
+namespace Infrastructure.Messages;
 
 public class MessageRepository : IMessageRepository
 {
