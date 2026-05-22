@@ -2,8 +2,8 @@ import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import Hero from './main/sections/Hero';
 import Benefits from './main/sections/Benefits';
-import AddRoute from './main/sections/AddRoute';
-import FindRideCTA from './main/sections/FindRideCTA';
+import AddTrip from './main/sections/AddTrip';
+import JoinTripCTA from './main/sections/JoinTripCTA';
 
 export default function MainPage() {
   return (
@@ -11,8 +11,8 @@ export default function MainPage() {
       <Navbar />
       <Hero />
       <Benefits />
-      <AddRoute />
-      <FindRideCTA />
+      <AddTrip />
+      <JoinTripCTA />
       <Footer />
     </main>
   );

@@ -1,8 +1,18 @@
+export interface LatLng {
+  lat: number;
+  lng: number;
+}
+
 export interface Trip {
-  id: number;
-  from: string;
-  to: string;
-  date: string;
+  id: string;
+  driverId: string;
+  source: LatLng;
+  target: LatLng;
+  departureTime: string;
+  pricePerSeat: number;
+  availableSeats: number;
+  maxDetourMeters: number;
+  actualDetourMeters: number;
 }
 
 interface TripListProps {
@@ -11,6 +21,21 @@ interface TripListProps {
   actionLabel?: string;
   onAction?: () => void;
   actionVariant?: 'dark' | 'green';
+}
+
+function formatCoords(coords: LatLng) {
+  return `${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}`;
+}
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleString('en-GB', {
+    day: '2-digit', month: 'short', year: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+  });
+}
+
+function metersToKm(meters: number) {
+  return (meters / 1000).toFixed(1) + ' km';
 }
 
 export default function TripList({ title, trips, actionLabel, onAction, actionVariant = 'dark' }: TripListProps) {
@@ -35,17 +60,29 @@ export default function TripList({ title, trips, actionLabel, onAction, actionVa
 
       <div className="space-y-3">
         {trips.map((trip) => (
-          <div
-            key={trip.id}
-            className="flex items-center justify-between rounded-xl border border-[#d7e8c8] bg-white px-5 py-4"
-          >
-            <div>
-              <p className="font-semibold text-[#12351f]">{trip.from} → {trip.to}</p>
-              <p className="text-sm text-[#5d7056]">{trip.date}</p>
+          <div key={trip.id} className="rounded-xl border border-[#d7e8c8] bg-white px-5 py-4">
+            <div className="grid gap-x-6 gap-y-2 sm:grid-cols-2">
+              <Field label="From" value={formatCoords(trip.source)} />
+              <Field label="To" value={formatCoords(trip.target)} />
+              <Field label="Departure" value={formatDate(trip.departureTime)} />
+              <Field label="Price per seat" value={`${trip.pricePerSeat} PLN`} />
+              <Field label="Available seats" value={String(trip.availableSeats)} />
+              <Field label="Max detour" value={metersToKm(trip.maxDetourMeters)} />
+              <Field label="Actual detour" value={metersToKm(trip.actualDetourMeters)} />
+              <Field label="Trip ID" value={trip.id} mono />
             </div>
           </div>
         ))}
       </div>
     </section>
+  );
+}
+
+function Field({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
+  return (
+    <div>
+      <p className="text-xs text-[#5d7056]">{label}</p>
+      <p className={`text-sm font-semibold text-[#12351f] ${mono ? 'font-mono' : ''}`}>{value}</p>
+    </div>
   );
 }

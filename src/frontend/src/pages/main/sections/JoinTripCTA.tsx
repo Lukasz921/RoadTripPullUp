@@ -1,9 +1,9 @@
 import mapSrc from '../../../assets/map.png';
 import StreetButton from '../../../components/ui/StreetButton';
 
-export default function FindRideCTA() {
+export default function JoinTripCTA() {
   return (
-    <section id="find-ride" className="bg-[#12351f] px-6 py-28 text-white">
+    <section id="join-trip" className="bg-[#12351f] px-6 py-28 text-white">
       <div className="mx-auto grid max-w-7xl items-center gap-10 md:grid-cols-[1.1fr_0.9fr]">
         <div>
           <p className="text-sm font-black uppercase tracking-[0.25em] text-[#8cc63f]">Find your route</p>
@@ -12,7 +12,7 @@ export default function FindRideCTA() {
             Browse shared rides across the country and hit the road.
           </p>
           <div className="mt-8">
-            <StreetButton href="/search" className="border border-white/40">Search rides</StreetButton>
+            <StreetButton href="/search" className="border border-white/40">Join trips</StreetButton>
           </div>
         </div>
 

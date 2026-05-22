@@ -12,14 +12,53 @@ const user = {
 };
 
 const joinedTrips: Trip[] = [
-  { id: 1, from: 'Warsaw', to: 'Kraków', date: '2026-02-14' },
-  { id: 2, from: 'Warsaw', to: 'Gdańsk', date: '2026-02-22' },
-  { id: 3, from: 'Łódź', to: 'Warsaw', date: '2026-03-03' },
+  {
+    id: 'a1b2c3d4-0001',
+    driverId: 'drv-0001',
+    source: { lat: 52.2297, lng: 21.0122 },
+    target: { lat: 50.0647, lng: 19.9450 },
+    departureTime: '2026-02-14T08:30:00',
+    pricePerSeat: 45,
+    availableSeats: 2,
+    maxDetourMeters: 10000,
+    actualDetourMeters: 3200,
+  },
+  {
+    id: 'a1b2c3d4-0002',
+    driverId: 'drv-0002',
+    source: { lat: 52.2297, lng: 21.0122 },
+    target: { lat: 54.3520, lng: 18.6466 },
+    departureTime: '2026-02-22T06:00:00',
+    pricePerSeat: 80,
+    availableSeats: 1,
+    maxDetourMeters: 5000,
+    actualDetourMeters: 1500,
+  },
 ];
 
 const publishedTrips: Trip[] = [
-  { id: 1, from: 'Warsaw', to: 'Poznań', date: '2026-02-18' },
-  { id: 2, from: 'Warsaw', to: 'Wrocław', date: '2026-02-27' },
+  {
+    id: 'a1b2c3d4-0003',
+    driverId: 'drv-self',
+    source: { lat: 52.2297, lng: 21.0122 },
+    target: { lat: 52.4064, lng: 16.9252 },
+    departureTime: '2026-02-18T07:00:00',
+    pricePerSeat: 60,
+    availableSeats: 3,
+    maxDetourMeters: 8000,
+    actualDetourMeters: 0,
+  },
+  {
+    id: 'a1b2c3d4-0004',
+    driverId: 'drv-self',
+    source: { lat: 52.2297, lng: 21.0122 },
+    target: { lat: 51.1079, lng: 17.0385 },
+    departureTime: '2026-02-27T09:15:00',
+    pricePerSeat: 55,
+    availableSeats: 2,
+    maxDetourMeters: 12000,
+    actualDetourMeters: 0,
+  },
 ];
 
 export default function ProfilePage() {
@@ -42,15 +81,15 @@ export default function ProfilePage() {
         <TripList
           title="Trips joined"
           trips={joinedTrips}
-          actionLabel="Search trips"
-          onAction={() => goTo('find-ride')}
+          actionLabel="Join trip"
+          onAction={() => goTo('join-trip')}
         />
 
         <TripList
           title="Trips published"
           trips={publishedTrips}
-          actionLabel="Publish trip"
-          onAction={() => goTo('add-route')}
+          actionLabel="Add trip"
+          onAction={() => goTo('add-trip')}
           actionVariant="green"
         />
       </div>
