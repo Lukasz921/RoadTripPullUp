@@ -51,7 +51,7 @@ export default function LoginRegisterPage() {
           email: form.email,
           password: form.password,
         });
-        navigate('/home');
+        navigate('/');
       } catch (err: any) {
         console.error('Register error:', err);
         setError(err.response?.data?.detail ?? 'Registration failed. Please try again.');
@@ -65,7 +65,7 @@ export default function LoginRegisterPage() {
         password: form.password,
       });
       localStorage.setItem('token', response.data.token);
-      navigate('/home');
+      navigate('/');
     } catch (err: any) {
       console.error('Login error:', err);
       setError(err.response?.data?.detail ?? 'Login failed. Please try again.');
