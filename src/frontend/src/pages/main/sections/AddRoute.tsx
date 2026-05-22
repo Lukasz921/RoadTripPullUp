@@ -1,3 +1,5 @@
+import StreetButton from '../../../components/ui/StreetButton';
+
 const ROUTE_PREVIEW_FIELDS = [
   { label: 'From', value: 'Warsaw' },
   { label: 'To', value: 'Kraków' },
@@ -29,12 +31,9 @@ export default function AddRoute() {
             </div>
           </div>
 
-          <a
-            href="/add-route"
-            className="mt-5 block rounded-2xl bg-[#252a30] px-8 py-5 text-center text-lg font-black text-white hover:bg-[#334155]"
-          >
-            Add route
-          </a>
+          <div className="mt-5">
+            <StreetButton href="/add-route">Add route</StreetButton>
+          </div>
         </div>
       </div>
     </section>

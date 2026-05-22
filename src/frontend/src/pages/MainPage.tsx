@@ -3,7 +3,7 @@ import Footer from '../components/layout/Footer';
 import Hero from './main/sections/Hero';
 import Benefits from './main/sections/Benefits';
 import AddRoute from './main/sections/AddRoute';
-import LoginCTA from './main/sections/LoginCTA';
+import FindRideCTA from './main/sections/FindRideCTA';
 
 export default function MainPage() {
   return (
@@ -12,7 +12,7 @@ export default function MainPage() {
       <Hero />
       <Benefits />
       <AddRoute />
-      <LoginCTA />
+      <FindRideCTA />
       <Footer />
     </main>
   );
