@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { searchTrips, requestRide, getTripRequests, acceptRequest } from '../api/trips';
-import type { TripSummaryDTO, TripRequestDTO } from '../api/trips';
+import { searchTrips, requestRide, getTripRequests, acceptRequest } from '../../api/trips';
+import type { TripSummaryDTO, TripRequestDTO } from '../../api/trips';
 import { jwtDecode } from 'jwt-decode';
 
 interface DecodedToken {

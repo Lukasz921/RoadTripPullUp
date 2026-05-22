@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { getTripById, requestRide } from '../api/trips';
-import type { TripDetailsDTO } from '../api/trips';
+import { getTripById, requestRide } from '../../api/trips';
+import type { TripDetailsDTO } from '../../api/trips';
 import { jwtDecode } from 'jwt-decode';
 
 interface DecodedToken {

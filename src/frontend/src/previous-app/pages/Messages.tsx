@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { getConversations, getConversation, sendMessage } from '../api/messages';
-import type { ConversationSummaryDTO, MessageDTO } from '../api/messages';
+import { getConversations, getConversation, sendMessage } from '../../api/messages';
+import type { ConversationSummaryDTO, MessageDTO } from '../../api/messages';
 import { jwtDecode } from 'jwt-decode';
 
 interface DecodedToken {

@@ -1,10 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../api/axiosConfig';
+import api from '../../api/axiosConfig';
 
-export default function Register() {
-  const [name, setName] = useState('');
-  const [surname, setSurname] = useState('');
+export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -14,7 +12,7 @@ export default function Register() {
     e.preventDefault();
     setError('');
 
-    if (!name || !surname || !email || !password) {
+    if (!email || !password) {
       setError('Wypełnij wszystkie pola');
       return;
     }
@@ -26,23 +24,26 @@ export default function Register() {
     }
 
     try {
-      await api.post('/auth/register', { name, surname, email, password });
-      navigate('/login');
+      const response = await api.post('/auth/login', { email, password });
+      localStorage.setItem('token', response.data.token);
+      navigate('/');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Wystąpił błąd podczas rejestracji');
+      if (err.response?.status === 401) {
+        setError('Błędny email lub hasło');
+      } else {
+        setError('Wystąpił błąd podczas logowania');
+      }
     }
   };
 
   return (
     <div>
-      <h2>Rejestracja</h2>
+      <h2>Logowanie</h2>
       {error && <p style={{ color: 'red' }}>{error}</p>}
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', width: '300px', gap: '10px' }}>
-        <input type="text" placeholder="Imię" value={name} onChange={(e) => setName(e.target.value)} />
-        <input type="text" placeholder="Nazwisko" value={surname} onChange={(e) => setSurname(e.target.value)} />
         <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
         <input type="password" placeholder="Hasło" value={password} onChange={(e) => setPassword(e.target.value)} />
-        <button type="submit">Zarejestruj</button>
+        <button type="submit">Zaloguj</button>
       </form>
     </div>
   );
