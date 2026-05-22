@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getMyTrips } from '../api/trips';
-import type { TripSummaryDTO } from '../api/trips';
+import { getMyTrips } from '../../api/trips';
+import type { TripSummaryDTO } from '../../api/trips';
 
 const MyTrips: React.FC = () => {
   const [trips, setTrips] = useState<TripSummaryDTO[]>([]);

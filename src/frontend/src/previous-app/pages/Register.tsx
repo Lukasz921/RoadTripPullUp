@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../api/axiosConfig';
+import api from '../../api/axiosConfig';
 
-export default function Login() {
+export default function Register() {
+  const [name, setName] = useState('');
+  const [surname, setSurname] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -12,7 +14,7 @@ export default function Login() {
     e.preventDefault();
     setError('');
 
-    if (!email || !password) {
+    if (!name || !surname || !email || !password) {
       setError('Wypełnij wszystkie pola');
       return;
     }
@@ -24,26 +26,23 @@ export default function Login() {
     }
 
     try {
-      const response = await api.post('/auth/login', { email, password });
-      localStorage.setItem('token', response.data.token);
-      navigate('/');
+      await api.post('/auth/register', { name, surname, email, password });
+      navigate('/login');
     } catch (err: any) {
-      if (err.response?.status === 401) {
-        setError('Błędny email lub hasło');
-      } else {
-        setError('Wystąpił błąd podczas logowania');
-      }
+      setError(err.response?.data?.message || 'Wystąpił błąd podczas rejestracji');
     }
   };
 
   return (
     <div>
-      <h2>Logowanie</h2>
+      <h2>Rejestracja</h2>
       {error && <p style={{ color: 'red' }}>{error}</p>}
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', width: '300px', gap: '10px' }}>
+        <input type="text" placeholder="Imię" value={name} onChange={(e) => setName(e.target.value)} />
+        <input type="text" placeholder="Nazwisko" value={surname} onChange={(e) => setSurname(e.target.value)} />
         <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
         <input type="password" placeholder="Hasło" value={password} onChange={(e) => setPassword(e.target.value)} />
-        <button type="submit">Zaloguj</button>
+        <button type="submit">Zarejestruj</button>
       </form>
     </div>
   );
