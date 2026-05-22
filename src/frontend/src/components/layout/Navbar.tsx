@@ -18,7 +18,7 @@ export default function Navbar() {
           <button onClick={() => goTo('benefits')} className="px-4 py-2 text-white/70 hover:text-white">Benefits</button>
           <button onClick={() => goTo('add-route')} className="px-4 py-2 text-white/70 hover:text-white">Add route</button>
           {loggedIn ? (
-            <button className="px-4 py-2 text-white/70 hover:text-white">Profile</button>
+            <button onClick={() => navigate('/profile')} className="px-4 py-2 text-white/70 hover:text-white">Profile</button>
           ) : (
             <button onClick={() => navigate('/login')} className="px-4 py-2 text-white/70 hover:text-white">Login</button>
           )}
