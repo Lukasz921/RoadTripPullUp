@@ -1,3 +1,4 @@
+import mapSrc from '../../../assets/map.png';
 import StreetButton from '../../../components/ui/StreetButton';
 
 export default function LoginCTA() {
@@ -10,11 +11,13 @@ export default function LoginCTA() {
           <p className="mt-6 max-w-2xl text-lg leading-8 text-white/70">
             Log in to search rides, or create a new account to start finding shared routes.
           </p>
+          <div className="mt-8">
+            <StreetButton href="/search" className="border border-white/40">Search rides</StreetButton>
+          </div>
         </div>
 
-        <div className="grid gap-4">
-          <StreetButton href="/login">Log in</StreetButton>
-          <StreetButton href="/register">Register</StreetButton>
+        <div className="overflow-hidden rounded-2xl shadow-2xl">
+          <img src={mapSrc} alt="Route map" className="w-full object-cover" />
         </div>
       </div>
     </section>
