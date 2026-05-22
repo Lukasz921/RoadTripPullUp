@@ -1,12 +1,12 @@
 import { BrowserRouter, Routes, Route, Link, useNavigate } from 'react-router-dom';
-import Login from '../pages/Login';
-import Register from '../pages/Register';
-import TripForm from '../pages/TripForm';
-import Trips from '../pages/Trips';
-import TripDetails from '../pages/TripDetails';
-import Chat from '../pages/Chat';
-import Messages from '../pages/Messages';
-import MyTrips from '../pages/MyTrips';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import TripForm from './pages/TripForm';
+import Trips from './pages/Trips';
+import TripDetails from './pages/TripDetails';
+import Chat from './pages/Chat';
+import Messages from './pages/Messages';
+import MyTrips from './pages/MyTrips';
 
 function getCurrentUserEmail(): string | null {
   const token = localStorage.getItem('token');
