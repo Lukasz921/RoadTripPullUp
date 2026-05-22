@@ -1,13 +1,14 @@
 interface StreetButtonProps {
   href: string;
   children: React.ReactNode;
+  className?: string;
 }
 
-export default function StreetButton({ href, children }: StreetButtonProps) {
+export default function StreetButton({ href, children, className = '' }: StreetButtonProps) {
   return (
     <a
       href={href}
-      className="relative block overflow-hidden rounded-2xl bg-[#252a30] px-8 py-5 text-center text-lg font-black text-white shadow-xl shadow-black/20 transition hover:-translate-y-1 hover:bg-[#334155]"
+      className={`relative block overflow-hidden rounded-2xl bg-[#252a30] px-8 py-5 text-center text-lg font-black text-white shadow-xl shadow-black/20 transition hover:-translate-y-1 hover:bg-[#334155] ${className}`}
     >
       <span
         className="absolute left-6 right-6 top-1/2 flex -translate-y-1/2 justify-between opacity-35"
