@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../api/axiosConfig';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
@@ -22,7 +22,8 @@ const INITIAL_FORM: FormState = {
 };
 
 export default function LoginRegisterPage() {
-  const [mode, setMode] = useState<Mode>('login');
+  const { pathname } = useLocation();
+  const [mode, setMode] = useState<Mode>(pathname === '/register' ? 'register' : 'login');
   const [form, setForm] = useState<FormState>(INITIAL_FORM);
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -51,7 +52,7 @@ export default function LoginRegisterPage() {
           email: form.email,
           password: form.password,
         });
-        navigate('/home');
+        navigate('/');
       } catch (err: any) {
         console.error('Register error:', err);
         setError(err.response?.data?.detail ?? 'Registration failed. Please try again.');
@@ -65,7 +66,7 @@ export default function LoginRegisterPage() {
         password: form.password,
       });
       localStorage.setItem('token', response.data.token);
-      navigate('/home');
+      navigate('/');
     } catch (err: any) {
       console.error('Login error:', err);
       setError(err.response?.data?.detail ?? 'Login failed. Please try again.');

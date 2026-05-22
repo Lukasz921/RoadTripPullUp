@@ -1,7 +1,21 @@
+import Navbar from '../components/layout/Navbar';
+import Footer from '../components/layout/Footer';
+import Hero from './main/sections/Hero';
+import Benefits from './main/sections/Benefits';
+import AddRoute from './main/sections/AddRoute';
+import LoginCTA from './main/sections/LoginCTA';
+
 export default function MainPage() {
+  const loggedIn = !!localStorage.getItem('token');
+
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#f3faee] text-[#12351f]">
-      <h1 className="text-3xl font-bold">Welcome to PullUp</h1>
+    <main className="min-h-screen bg-[#eaf6df]">
+      <Navbar />
+      <Hero loggedIn={loggedIn} />
+      <Benefits />
+      <AddRoute />
+      <LoginCTA />
+      <Footer />
     </main>
   );
 }

@@ -68,6 +68,9 @@ node_modules/
 dist/
 dist-ssr/
 
+# Vite cache
+.vite/
+
 # Pliki środowiskowe (lokalne sekrety)
 .env.local
 .env.*.local
