@@ -94,13 +94,13 @@ export default function LoginRegisterPage() {
                   label="Name"
                   value={form.name}
                   onChange={(v) => updateField('name', v)}
-                  placeholder="Cezary"
+                  placeholder="Name"
                 />
                 <TextInput
                   label="Surname"
                   value={form.surname}
                   onChange={(v) => updateField('surname', v)}
-                  placeholder="Bolkowski"
+                  placeholder="Surname"
                 />
               </div>
             )}
