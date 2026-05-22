@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc *)",
+      "Bash(cd /mnt/c/Users/przem/Pulpit/sem6/io2/RoadTripPullUp && ls -la)"
+    ]
+  }
+}
