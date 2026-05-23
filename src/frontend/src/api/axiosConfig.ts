@@ -1,25 +1,31 @@
-import axios from 'axios';
+import axios, { type AxiosInstance } from 'axios';
 
-const api = axios.create({
-  baseURL: 'http://localhost:8080/api',
-});
+function createApiInstance(baseURL: string): AxiosInstance {
+  const instance = axios.create({ baseURL });
 
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token && config.headers) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response && error.response.status === 401) {
-      console.error('Błędny email lub hasło / Brak autoryzacji');
+  instance.interceptors.request.use((config) => {
+    const token = localStorage.getItem('token');
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
-    return Promise.reject(error);
-  }
-);
+    return config;
+  });
 
-export default api;
+  instance.interceptors.response.use(
+    (response) => response,
+    (error) => {
+      if (error.response?.status === 401) {
+        console.error('Unauthorized:', error.response.config.url);
+      }
+      return Promise.reject(error);
+    }
+  );
+
+  return instance;
+}
+
+export const authApi = createApiInstance(import.meta.env.VITE_AUTH_SERVICE_URL);
+export const tripApi = createApiInstance(import.meta.env.VITE_TRIP_SERVICE_URL);
+
+// default export kept for backwards compatibility
+export default authApi;
