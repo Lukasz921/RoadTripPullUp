@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import StreetButton from '../../../components/ui/StreetButton';
 
 const TRIP_PREVIEW_FIELDS = [
@@ -7,6 +8,13 @@ const TRIP_PREVIEW_FIELDS = [
 ];
 
 export default function AddTrip() {
+  const navigate = useNavigate();
+
+  function handleAddTrip() {
+    const loggedIn = !!localStorage.getItem('token');
+    navigate(loggedIn ? '/add-trip' : '/login');
+  }
+
   return (
     <section id="add-trip" className="bg-[#eaf6df] px-6 py-28 text-[#12351f]">
       <div className="mx-auto grid max-w-7xl items-center gap-10 md:grid-cols-[1fr_0.9fr]">
@@ -32,7 +40,7 @@ export default function AddTrip() {
           </div>
 
           <div className="mt-5">
-            <StreetButton href="/add-trip">Add trip</StreetButton>
+            <StreetButton onClick={handleAddTrip}>Add trip</StreetButton>
           </div>
         </div>
       </div>

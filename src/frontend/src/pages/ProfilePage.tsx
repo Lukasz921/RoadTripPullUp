@@ -1,8 +1,8 @@
+import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import ProfileRow from './profile/components/ProfileRow';
 import TripList from './profile/components/TripList';
-import { goTo } from '../utils/scroll';
 import { useMyTrips } from '../hooks/useMyTrips';
 
 const user = {
@@ -13,6 +13,7 @@ const user = {
 };
 
 export default function ProfilePage() {
+  const navigate = useNavigate();
   const { trips: publishedTrips, loading, error } = useMyTrips();
 
   return (
@@ -35,7 +36,7 @@ export default function ProfilePage() {
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-2xl font-bold text-[#12351f]">Trips published</h2>
             <button
-              onClick={() => goTo('add-trip')}
+              onClick={() => navigate('/add-trip')}
               className="rounded-xl bg-[#8cc63f] px-4 py-2 text-sm font-semibold text-[#12351f] hover:bg-[#a6dd55]"
             >
               Add trip
