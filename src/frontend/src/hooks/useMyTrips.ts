@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react';
 import { tripApi } from '../api/axiosConfig';
-import type { Trip } from '../pages/profile/components/TripList';
+import type { TripSummary } from '../types/trip';
 
 interface UseMyTripsResult {
-  trips: Trip[];
+  trips: TripSummary[];
   loading: boolean;
   error: string;
 }
 
 export function useMyTrips(): UseMyTripsResult {
-  const [trips, setTrips] = useState<Trip[]>([]);
+  const [trips, setTrips] = useState<TripSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
