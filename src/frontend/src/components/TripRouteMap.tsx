@@ -19,8 +19,9 @@ export default function TripRouteMap({ origin, destination }: TripRouteMapProps)
       if (cancelled || !containerRef.current) return;
 
       if (!mapRef.current) {
-        mapRef.current = L.map(containerRef.current).setView([52.0, 19.0], 6);
+        mapRef.current = L.map(containerRef.current, { zoomControl: false }).setView([52.0, 19.0], 6);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapRef.current);
+        L.control.zoom({ position: 'bottomright' }).addTo(mapRef.current);
       }
 
       layersRef.current.forEach((layer) => layer.remove());
