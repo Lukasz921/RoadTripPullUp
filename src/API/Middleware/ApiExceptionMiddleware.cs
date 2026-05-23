@@ -51,6 +51,13 @@ public class ApiExceptionMiddleware
             title = "Not Found";
             type = "https://tools.ietf.org/html/rfc7231#section-6.5.4";
         }
+        else if (exception is Application.Exceptions.ForbiddenException fex)
+        {
+            code = System.Net.HttpStatusCode.Forbidden;
+            message = fex.Message;
+            title = "Forbidden";
+            type = "https://tools.ietf.org/html/rfc7231#section-6.5.3";
+        }
         else if (exception is Application.Exceptions.SeatUnavailableException suex)
         {
             code = System.Net.HttpStatusCode.Conflict;
