@@ -1,14 +1,16 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import LocationAutocomplete from '../components/LocationAutocomplete';
 import MapPoint from '../components/ui/MapPoint';
 import TripRouteMap from '../components/TripRouteMap';
 import NumberInput from '../components/ui/NumberInput';
+import Spinner from '../components/ui/Spinner';
 import { tripApi } from '../api/axiosConfig';
 import type { Place } from '../utils/geoapify';
 
 const PAGE_SIZE = 10;
+const POLL_INTERVAL_MS = 1000;
 
 export default function SearchTripsPage() {
   // Route
@@ -24,12 +26,61 @@ export default function SearchTripsPage() {
   const [minSeats, setMinSeats] = useState('1');
   const [page, setPage] = useState(1);
 
-  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [polling, setPolling] = useState(false);
   const [error, setError] = useState('');
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  function stopPolling() {
+    if (pollRef.current !== null) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
+  }
+
+  function startPolling(statusUrl: string, estimatedDurationMs: number) {
+    setPolling(true);
+
+    // strip /api/v1 prefix since tripApi base already includes it
+    const path = statusUrl.replace('/api/v1', '');
+
+    const beginPolling = () => {
+      pollRef.current = setInterval(() => {
+        tripApi
+          .get(path)
+          .then((res) => {
+            const { status, trips } = res.data;
+
+            if (status === 'done') {
+              stopPolling();
+              setPolling(false);
+              console.log('Search results:', trips);
+              // TODO: setResults(trips ?? []);
+            }
+
+            if (status === 'failed') {
+              stopPolling();
+              setPolling(false);
+              setError('Search job failed. Please try again.');
+            }
+          })
+          .catch((err) => {
+            stopPolling();
+            setPolling(false);
+            console.error('Polling error:', err);
+            setError(err.response?.data?.detail ?? 'Failed to fetch results.');
+          });
+      }, POLL_INTERVAL_MS);
+    };
+
+    // wait the estimated duration before first poll to avoid hitting the server too early
+    setTimeout(beginPolling, estimatedDurationMs);
+  }
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
     setError('');
+    stopPolling();
 
     if (!origin) { setError('Please select an origin location.'); return; }
     if (!destination) { setError('Please select a destination location.'); return; }
@@ -45,18 +96,22 @@ export default function SearchTripsPage() {
       page,
     };
 
-    setLoading(true);
+    setSubmitting(true);
     tripApi
       .post('/trips/search', payload)
       .then((res) => {
-        console.log('Search job created:', res.data);
+        const { statusUrl, estimatedDurationMs } = res.data;
+        startPolling(statusUrl, estimatedDurationMs ?? 0);
       })
       .catch((err) => {
         console.error('Search failed:', err);
         setError(err.response?.data?.detail ?? 'Search failed. Please try again.');
       })
-      .finally(() => setLoading(false));
+      .finally(() => setSubmitting(false));
   }
+
+  // Clean up interval if user navigates away
+  useEffect(() => () => stopPolling(), []);
 
   return (
     <div className="min-h-screen bg-[#eaf6df]">
@@ -166,11 +221,13 @@ export default function SearchTripsPage() {
 
               <button
                 type="submit"
-                disabled={loading}
+                disabled={submitting || polling}
                 className="h-14 w-full rounded-2xl bg-[#8cc63f] font-bold text-white transition hover:bg-[#78b030] disabled:opacity-60"
               >
-                {loading ? 'Searching…' : 'Search rides'}
+                {submitting ? 'Submitting…' : 'Search rides'}
               </button>
+
+              {polling && <Spinner label="Finding matching rides…" />}
             </form>
           </div>
 
