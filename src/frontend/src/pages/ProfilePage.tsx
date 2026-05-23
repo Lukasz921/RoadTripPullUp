@@ -1,8 +1,9 @@
+import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import ProfileRow from './profile/components/ProfileRow';
-import TripList, { type Trip } from './profile/components/TripList';
-import { goTo } from '../utils/scroll';
+import TripList from './profile/components/TripList';
+import { useMyTrips } from '../hooks/useMyTrips';
 
 const user = {
   name: 'Imie',
@@ -11,57 +12,10 @@ const user = {
   sex: 'Not specified',
 };
 
-const joinedTrips: Trip[] = [
-  {
-    id: 'a1b2c3d4-0001',
-    driverId: 'drv-0001',
-    source: { lat: 52.2297, lng: 21.0122 },
-    target: { lat: 50.0647, lng: 19.9450 },
-    departureTime: '2026-02-14T08:30:00',
-    pricePerSeat: 45,
-    availableSeats: 2,
-    maxDetourMeters: 10000,
-    actualDetourMeters: 3200,
-  },
-  {
-    id: 'a1b2c3d4-0002',
-    driverId: 'drv-0002',
-    source: { lat: 52.2297, lng: 21.0122 },
-    target: { lat: 54.3520, lng: 18.6466 },
-    departureTime: '2026-02-22T06:00:00',
-    pricePerSeat: 80,
-    availableSeats: 1,
-    maxDetourMeters: 5000,
-    actualDetourMeters: 1500,
-  },
-];
-
-const publishedTrips: Trip[] = [
-  {
-    id: 'a1b2c3d4-0003',
-    driverId: 'drv-self',
-    source: { lat: 52.2297, lng: 21.0122 },
-    target: { lat: 52.4064, lng: 16.9252 },
-    departureTime: '2026-02-18T07:00:00',
-    pricePerSeat: 60,
-    availableSeats: 3,
-    maxDetourMeters: 8000,
-    actualDetourMeters: 0,
-  },
-  {
-    id: 'a1b2c3d4-0004',
-    driverId: 'drv-self',
-    source: { lat: 52.2297, lng: 21.0122 },
-    target: { lat: 51.1079, lng: 17.0385 },
-    departureTime: '2026-02-27T09:15:00',
-    pricePerSeat: 55,
-    availableSeats: 2,
-    maxDetourMeters: 12000,
-    actualDetourMeters: 0,
-  },
-];
-
 export default function ProfilePage() {
+  const navigate = useNavigate();
+  const { trips: publishedTrips, loading, error } = useMyTrips();
+
   return (
     <main className="flex min-h-screen flex-col bg-[#f3faee] text-[#12351f]">
       <Navbar />
@@ -78,20 +32,32 @@ export default function ProfilePage() {
           </div>
         </header>
 
-        <TripList
-          title="Trips joined"
-          trips={joinedTrips}
-          actionLabel="Join trip"
-          onAction={() => goTo('join-trip')}
-        />
+        <section className="mt-10">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-2xl font-bold text-[#12351f]">Trips published</h2>
+            <button
+              onClick={() => navigate('/add-trip')}
+              className="rounded-xl bg-[#8cc63f] px-4 py-2 text-sm font-semibold text-[#12351f] hover:bg-[#a6dd55]"
+            >
+              Add trip
+            </button>
+          </div>
 
-        <TripList
-          title="Trips published"
-          trips={publishedTrips}
-          actionLabel="Add trip"
-          onAction={() => goTo('add-trip')}
-          actionVariant="green"
-        />
+          {loading && (
+            <p className="text-sm text-[#5d7056]">Loading trips...</p>
+          )}
+
+          {error && (
+            <p className="rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600">{error}</p>
+          )}
+
+          {!loading && !error && (
+            <TripList
+              title=""
+              trips={publishedTrips}
+            />
+          )}
+        </section>
       </div>
 
       <Footer />

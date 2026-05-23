@@ -1,23 +1,8 @@
-export interface LatLng {
-  lat: number;
-  lng: number;
-}
-
-export interface Trip {
-  id: string;
-  driverId: string;
-  source: LatLng;
-  target: LatLng;
-  departureTime: string;
-  pricePerSeat: number;
-  availableSeats: number;
-  maxDetourMeters: number;
-  actualDetourMeters: number;
-}
+import type { TripSummary, LatLng } from '../../../types/trip';
 
 interface TripListProps {
   title: string;
-  trips: Trip[];
+  trips: TripSummary[];
   actionLabel?: string;
   onAction?: () => void;
   actionVariant?: 'dark' | 'green';
@@ -59,6 +44,9 @@ export default function TripList({ title, trips, actionLabel, onAction, actionVa
       </div>
 
       <div className="space-y-3">
+        {trips.length === 0 && (
+          <p className="text-sm text-[#5d7056]">No trips yet.</p>
+        )}
         {trips.map((trip) => (
           <div key={trip.id} className="rounded-xl border border-[#d7e8c8] bg-white px-5 py-4">
             <div className="grid gap-x-6 gap-y-2 sm:grid-cols-2">
@@ -68,7 +56,6 @@ export default function TripList({ title, trips, actionLabel, onAction, actionVa
               <Field label="Price per seat" value={`${trip.pricePerSeat} PLN`} />
               <Field label="Available seats" value={String(trip.availableSeats)} />
               <Field label="Max detour" value={metersToKm(trip.maxDetourMeters)} />
-              <Field label="Actual detour" value={metersToKm(trip.actualDetourMeters)} />
               <Field label="Trip ID" value={trip.id} mono />
             </div>
           </div>

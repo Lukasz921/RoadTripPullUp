@@ -17,7 +17,7 @@ public class TripV1Controller : ControllerBase
         _service = service;
     }
 
-    [HttpPost("trips")]
+    [HttpPost("trips/create")]
     [ProducesResponseType(typeof(TripV1DTO), 201)]
     public async Task<IActionResult> CreateTrip([FromBody] CreateTripV1DTO dto)
     {

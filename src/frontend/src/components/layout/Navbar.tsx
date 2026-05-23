@@ -1,6 +1,5 @@
 import { useNavigate } from 'react-router-dom';
 import logoSrc from '../../assets/logo.svg';
-import { goTo } from '../../utils/scroll';
 
 export default function Navbar() {
   const navigate = useNavigate();
@@ -14,9 +13,7 @@ export default function Navbar() {
         </button>
 
         <div className="ml-auto flex gap-2">
-          <button onClick={() => goTo('join-trip')} className="px-4 py-2 text-white/70 hover:text-white">Join trip</button>
-          <button onClick={() => goTo('benefits')} className="px-4 py-2 text-white/70 hover:text-white">Benefits</button>
-          <button onClick={() => goTo('add-trip')} className="px-4 py-2 text-white/70 hover:text-white">Add trip</button>
+          <button onClick={() => navigate(loggedIn ? '/add-trip' : '/login')} className="px-4 py-2 text-white/70 hover:text-white">Add trip</button>
           {loggedIn ? (
             <button onClick={() => navigate('/profile')} className="px-4 py-2 text-white/70 hover:text-white">Profile</button>
           ) : (
