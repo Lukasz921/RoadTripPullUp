@@ -72,6 +72,7 @@ dist-ssr/
 .vite/
 
 # Pliki środowiskowe (lokalne sekrety)
+.env
 .env.local
 .env.*.local
 
