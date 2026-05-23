@@ -1,9 +1,8 @@
-using Application.DTOs;
+using Application.TripPlanner;
 using Application.Exceptions;
-using Application.Interfaces.Trip;
-using Application.Services;
-using Application.Interfaces;
-using Core.Entities;
+using Application.Users;
+using Core.TripPlanner;
+using Core.Users;
 using FluentAssertions;
 using Moq;
 using Xunit;

@@ -1,7 +1,6 @@
 using System.Security.Claims;
-using API.Controllers;
-using Application.DTOs;
-using Application.Interfaces.Trip;
+using API.TripPlanner;
+using Application.TripPlanner;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

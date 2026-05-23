@@ -1,8 +1,7 @@
 using System.Net.Http.Json;
-using Application.DTOs;
-using Application.Interfaces;
-using Core.Entities;
-using Core.Enums;
+using Application.TripPlanner;
+using Application.Users;
+using Core.Users;
 using FluentAssertions;
 using Infrastructure;
 using Microsoft.Extensions.DependencyInjection;

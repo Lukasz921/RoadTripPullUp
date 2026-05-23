@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using Core.Entities;
+using Core.Users;
+using Core.Messages;
+using Core.TripPlanner;
 
 namespace Infrastructure;
 

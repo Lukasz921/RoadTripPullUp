@@ -2,7 +2,7 @@ using Application.TripPlanner;
 using Core.TripPlanner;
 using Microsoft.EntityFrameworkCore;
 
-namespace Infrastructure.Repositories;
+namespace Infrastructure.TripPlanner;
 
 using TripEntity = Core.TripPlanner.Trip;
 

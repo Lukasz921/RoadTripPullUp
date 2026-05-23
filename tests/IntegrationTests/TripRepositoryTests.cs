@@ -1,8 +1,9 @@
-using Application.DTOs;
-using Core.Entities;
+using Application.TripPlanner;
+using Core.TripPlanner;
+using Core.Users;
 using FluentAssertions;
 using Infrastructure;
-using Infrastructure.Repositories;
+using Infrastructure.TripPlanner;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
