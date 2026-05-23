@@ -47,7 +47,7 @@ export default function AddTripPage() {
 
     setSubmitting(true);
     tripApi
-      .post('/trips/create', payload)
+      .post('/trips', payload)
       .then(() => navigate('/profile'))
       .catch((err) => {
         console.error('Failed to create trip:', err);
