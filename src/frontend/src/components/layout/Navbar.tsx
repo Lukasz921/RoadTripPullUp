@@ -13,6 +13,7 @@ export default function Navbar() {
         </button>
 
         <div className="ml-auto flex gap-2">
+          <button onClick={() => navigate('/search')} className="px-4 py-2 text-white/70 hover:text-white">Find a ride</button>
           <button onClick={() => navigate(loggedIn ? '/add-trip' : '/login')} className="px-4 py-2 text-white/70 hover:text-white">Add trip</button>
           {loggedIn ? (
             <button onClick={() => navigate('/profile')} className="px-4 py-2 text-white/70 hover:text-white">Profile</button>
