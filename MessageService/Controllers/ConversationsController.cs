@@ -1,0 +1,63 @@
+using Microsoft.AspNetCore.Mvc;
+using MessageService.Services;
+using MessageService.DTOs;
+using System.Security.Claims;
+
+namespace MessageService.Controllers;
+
+[ApiController]
+[Route("api/conversations")]
+public class ConversationsController : ControllerBase
+{
+    private readonly IConversationService _conversations;
+
+    public ConversationsController(IConversationService conversations)
+    {
+        _conversations = conversations;
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Create([FromBody] CreateConversationDto dto)
+    {
+        var userId = GetUserId();
+        var id = await _conversations.CreateConversationAsync(dto, userId);
+        return CreatedAtAction(nameof(Get), new { conversationId = id }, new { conversationId = id });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> List([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+    {
+        var userId = GetUserId();
+        var skip = (page - 1) * pageSize;
+        var convs = await _conversations.GetForUserAsync(userId, skip, pageSize);
+        return Ok(convs);
+    }
+
+    [HttpGet("{conversationId}")]
+    public async Task<IActionResult> Get(Guid conversationId)
+    {
+        var conv = await _conversations.GetByIdAsync(conversationId);
+        if (conv == null) return NotFound();
+
+        // authorization: ensure current user is member
+        var userId = GetUserId();
+        if (!conv.Members.Any(m => m.UserId == userId)) return Forbid();
+
+        var dto = new ConversationDto
+        {
+            ConversationId = conv.Id,
+            IsGroup = conv.IsGroup,
+            Name = conv.Title,
+            Date = conv.Date,
+            Participants = conv.Members.Select(m => m.UserId).ToList()
+        };
+
+        return Ok(dto);
+    }
+
+    private Guid GetUserId()
+    {
+        var sub = User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        return string.IsNullOrEmpty(sub) ? Guid.Empty : Guid.Parse(sub);
+    }
+}

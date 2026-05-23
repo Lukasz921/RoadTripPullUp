@@ -1,0 +1,87 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json.Nodes;
+using System.Threading.Tasks;
+using FluentAssertions;
+using MessageService.Models;
+using MessageService.Repositories;
+using MessageService.Services;
+using Moq;
+using Xunit;
+
+namespace MessageService.UnitTests;
+
+public class MessageServiceTests
+{
+    [Fact]
+    public async Task CreateMessage_ShouldPersist_And_Publish()
+    {
+        // Arrange
+        var messageRepo = new Mock<IMessageRepository>();
+        var convRepo = new Mock<IConversationRepository>();
+        var notifier = new Mock<INotificationService>();
+
+        var conversationId = Guid.NewGuid();
+        var senderId = Guid.NewGuid();
+
+        var conv = new Conversation
+        {
+            Id = conversationId,
+            IsGroup = false,
+            Members = new List<ConversationMember>
+            {
+                new ConversationMember { ConversationId = conversationId, UserId = senderId }
+            }
+        };
+
+        convRepo.Setup(r => r.GetByIdAsync(conversationId)).ReturnsAsync(conv);
+        messageRepo.Setup(r => r.CreateAsync(It.IsAny<Message>())).ReturnsAsync((Message m) =>
+        {
+            m.Id = Guid.NewGuid();
+            return m;
+        });
+
+        var svc = new MessageService(messageRepo.Object, convRepo.Object, notifier.Object);
+
+        var dto = new DTOs.CreateMessageDto
+        {
+            Type = "TEXT",
+            Payload = new JsonObject { ["text"] = "hello" }
+        };
+
+        // Act
+        var id = await svc.CreateMessageAsync(conversationId, dto, senderId);
+
+        // Assert
+        id.Should().NotBe(Guid.Empty);
+        messageRepo.Verify(r => r.CreateAsync(It.Is<Message>(m => m.ConversationId == conversationId && m.SenderId == senderId && m.Type == "TEXT")), Times.Once);
+        notifier.Verify(n => n.PublishMessageCreatedAsync(It.IsAny<Message>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task MarkMessagesRead_ShouldCallRepository_And_Publish()
+    {
+        // Arrange
+        var messageRepo = new Mock<IMessageRepository>();
+        var convRepo = new Mock<IConversationRepository>();
+        var notifier = new Mock<INotificationService>();
+
+        var conversationId = Guid.NewGuid();
+        var readerId = Guid.NewGuid();
+        var msg1 = Guid.NewGuid();
+        var msg2 = Guid.NewGuid();
+
+        messageRepo.Setup(r => r.MarkMessagesReadAsync(conversationId, It.IsAny<IEnumerable<Guid>>(), readerId, It.IsAny<DateTime>())).Returns(Task.CompletedTask).Verifiable();
+
+        var svc = new MessageService(messageRepo.Object, convRepo.Object, notifier.Object);
+
+        // Act
+        await svc.MarkMessagesReadAsync(conversationId, new[] { msg1, msg2 }, readerId, DateTime.UtcNow);
+
+        // Assert
+        messageRepo.Verify();
+        notifier.Verify(n => n.PublishMessagesReadAsync(conversationId, It.IsAny<IEnumerable<Guid>>(), readerId, It.IsAny<DateTime>()), Times.Once);
+    }
+}
+
