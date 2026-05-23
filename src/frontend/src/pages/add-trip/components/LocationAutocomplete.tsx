@@ -108,7 +108,7 @@ export default function LocationAutocomplete({ label, value, selectedPlace, onQu
       )}
 
       {isOpen && suggestions.length > 0 && (
-        <div className="absolute left-0 right-0 top-[76px] z-20 overflow-hidden rounded-xl border border-[#d7e8c8] bg-white shadow-xl">
+        <div className="absolute left-0 right-0 top-19 z-20 overflow-hidden rounded-xl border border-[#d7e8c8] bg-white shadow-xl">
           {suggestions.map((place) => (
             <button
               key={`${place.placeId}-${place.lat}-${place.lng}`}
