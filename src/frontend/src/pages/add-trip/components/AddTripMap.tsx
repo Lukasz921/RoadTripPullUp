@@ -20,41 +20,33 @@ export default function AddTripMap({ origin, destination }: AddTripMapProps) {
 
       if (!mapRef.current) {
         mapRef.current = L.map(containerRef.current).setView([52.0, 19.0], 6);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '© OpenStreetMap contributors',
-        }).addTo(mapRef.current);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapRef.current);
       }
 
       // Remove previous markers / polyline
       layersRef.current.forEach((layer) => layer.remove());
       layersRef.current = [];
 
-      const greenIcon = L.divIcon({
+      const markerIcon = L.divIcon({
         className: '',
         html: `<div style="width:14px;height:14px;border-radius:50%;background:#8cc63f;border:3px solid #12351f;box-shadow:0 0 0 2px #fff"></div>`,
         iconSize: [14, 14],
         iconAnchor: [7, 7],
       });
 
-      const redIcon = L.divIcon({
-        className: '',
-        html: `<div style="width:14px;height:14px;border-radius:50%;background:#e05c5c;border:3px solid #7a1a1a;box-shadow:0 0 0 2px #fff"></div>`,
-        iconSize: [14, 14],
-        iconAnchor: [7, 7],
-      });
-
+      
       const points: [number, number][] = [];
 
       if (origin) {
-        const m = L.marker([origin.lat, origin.lng], { icon: greenIcon }).addTo(mapRef.current);
-        m.bindTooltip(origin.label, { permanent: false, direction: 'top' });
+        const m = L.marker([origin.lat, origin.lng], { icon: markerIcon }).addTo(mapRef.current);
+     
         layersRef.current.push(m);
         points.push([origin.lat, origin.lng]);
       }
 
       if (destination) {
-        const m = L.marker([destination.lat, destination.lng], { icon: redIcon }).addTo(mapRef.current);
-        m.bindTooltip(destination.label, { permanent: false, direction: 'top' });
+        const m = L.marker([destination.lat, destination.lng], { icon: markerIcon }).addTo(mapRef.current);
+    
         layersRef.current.push(m);
         points.push([destination.lat, destination.lng]);
       }

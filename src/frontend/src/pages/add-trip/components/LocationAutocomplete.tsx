@@ -44,7 +44,7 @@ export default function LocationAutocomplete({ label, value, selectedPlace, onQu
     const timeoutId = window.setTimeout(async () => {
       setIsLoading(true);
       try {
-        const params = new URLSearchParams({ text: query, limit: '5', lang: 'en', apiKey: API_KEY });
+        const params = new URLSearchParams({ text: query, limit: '5', lang: 'pl', apiKey: API_KEY });
         if (COUNTRY_CODE) params.set('filter', `countrycode:${COUNTRY_CODE}`);
 
         const res = await fetch(
