@@ -27,7 +27,7 @@ export default function AddTrip() {
         </div>
 
         <div className="rounded-[2.5rem] bg-[#f7fbf0] p-8 shadow-2xl shadow-emerald-950/10">
-          <div className="rounded-[2rem] bg-[#252a30] p-6 text-white">
+          <div className="rounded-4xl bg-[#252a30] p-6 text-white">
             <p className="text-sm font-black uppercase tracking-[0.25em] text-[#8cc63f]">Trip preview</p>
             <div className="mt-6 space-y-4">
               {TRIP_PREVIEW_FIELDS.map((field) => (
