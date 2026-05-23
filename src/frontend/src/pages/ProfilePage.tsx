@@ -52,10 +52,7 @@ export default function ProfilePage() {
           )}
 
           {!loading && !error && (
-            <TripList
-              title=""
-              trips={publishedTrips}
-            />
+            <TripList trips={publishedTrips} />
           )}
         </section>
       </div>

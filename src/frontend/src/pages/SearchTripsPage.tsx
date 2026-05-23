@@ -6,8 +6,10 @@ import MapPoint from '../components/ui/MapPoint';
 import TripRouteMap from '../components/TripRouteMap';
 import NumberInput from '../components/ui/NumberInput';
 import Spinner from '../components/ui/Spinner';
+import TripCard from '../components/TripCard';
 import { tripApi } from '../api/axiosConfig';
 import type { Place } from '../utils/geoapify';
+import type { TripSummary } from '../types/trip';
 
 const PAGE_SIZE = 10;
 const POLL_INTERVAL_MS = 1000;
@@ -26,8 +28,10 @@ export default function SearchTripsPage() {
   const [minSeats, setMinSeats] = useState('1');
   const [page, setPage] = useState(1);
 
+  // State
   const [submitting, setSubmitting] = useState(false);
   const [polling, setPolling] = useState(false);
+  const [results, setResults] = useState<TripSummary[] | null>(null);
   const [error, setError] = useState('');
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -40,8 +44,8 @@ export default function SearchTripsPage() {
 
   function startPolling(statusUrl: string, estimatedDurationMs: number) {
     setPolling(true);
+    setResults(null);
 
-    // strip /api/v1 prefix since tripApi base already includes it
     const path = statusUrl.replace('/api/v1', '');
 
     const beginPolling = () => {
@@ -49,37 +53,34 @@ export default function SearchTripsPage() {
         tripApi
           .get(path)
           .then((res) => {
-            const { status, trips } = res.data;
+            const { isProcessing, result } = res.data;
 
-            if (status === 'done') {
+            if (!isProcessing) {
               stopPolling();
               setPolling(false);
-              console.log('Search results:', trips);
-              // TODO: setResults(trips ?? []);
-            }
 
-            if (status === 'failed') {
-              stopPolling();
-              setPolling(false);
-              setError('Search job failed. Please try again.');
+              if (result?.error) {
+                setError(result.error.message || 'Search job failed.');
+              } else {
+                setResults(result?.items ?? []);
+              }
             }
           })
           .catch((err) => {
             stopPolling();
             setPolling(false);
-            console.error('Polling error:', err);
             setError(err.response?.data?.detail ?? 'Failed to fetch results.');
           });
       }, POLL_INTERVAL_MS);
     };
 
-    // wait the estimated duration before first poll to avoid hitting the server too early
     setTimeout(beginPolling, estimatedDurationMs);
   }
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
     setError('');
+    setResults(null);
     stopPolling();
 
     if (!origin) { setError('Please select an origin location.'); return; }
@@ -104,13 +105,11 @@ export default function SearchTripsPage() {
         startPolling(statusUrl, estimatedDurationMs ?? 0);
       })
       .catch((err) => {
-        console.error('Search failed:', err);
         setError(err.response?.data?.detail ?? 'Search failed. Please try again.');
       })
       .finally(() => setSubmitting(false));
   }
 
-  // Clean up interval if user navigates away
   useEffect(() => () => stopPolling(), []);
 
   return (
@@ -123,7 +122,7 @@ export default function SearchTripsPage() {
 
         <div className="grid gap-8 lg:grid-cols-2">
 
-          {/* ── Left column: form ── */}
+          {/* ── Left column: form + results ── */}
           <div className="flex flex-col gap-6">
             <form onSubmit={handleSearch} className="flex flex-col gap-6">
 
@@ -229,6 +228,27 @@ export default function SearchTripsPage() {
 
               {polling && <Spinner label="Finding matching rides…" />}
             </form>
+
+            {/* Results */}
+            {results !== null && (
+              <section className="flex flex-col gap-3">
+                <h2 className="text-xl font-bold text-[#12351f]">
+                  {results.length === 0 ? 'No rides found' : `${results.length} ride${results.length !== 1 ? 's' : ''} found`}
+                </h2>
+
+                {results.length === 0 && (
+                  <p className="text-sm text-[#5d7056]">Try adjusting your route or filters.</p>
+                )}
+
+                {results.map((trip) => (
+                  <TripCard
+                    key={trip.id}
+                    trip={trip}
+                    action={{ label: 'Join ride', onClick: (t) => console.log('Join ride:', t.id) }}
+                  />
+                ))}
+              </section>
+            )}
           </div>
 
           {/* ── Right column: map ── */}
@@ -248,3 +268,4 @@ export default function SearchTripsPage() {
     </div>
   );
 }
+
