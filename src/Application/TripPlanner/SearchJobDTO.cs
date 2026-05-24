@@ -12,14 +12,6 @@ public class SearchJobProgressDTO
 {
     public string JobId { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
-    public SearchProgressDetailsDTO Progress { get; set; } = new();
-}
-
-public class SearchProgressDetailsDTO
-{
-    public string Phase { get; set; } = string.Empty;
-    public int CandidatesFound { get; set; }
-    public int CandidatesProcessed { get; set; }
 }
 
 public class SearchJobResultDTO
@@ -28,7 +20,9 @@ public class SearchJobResultDTO
     public string Status { get; set; } = string.Empty;
     public DateTime? CompletedAt { get; set; }
     public List<TripSummaryV1DTO>? Items { get; set; }
-    public int? Count { get; set; }
+    public int? Page { get; set; }
+    public int? PageSize { get; set; }
+    public int? TotalCount { get; set; }
     public SearchJobErrorDTO? Error { get; set; }
 }
 

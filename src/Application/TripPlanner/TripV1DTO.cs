@@ -29,5 +29,7 @@ public class CreateTripV1DTO
 public class MyTripsV1ResultDTO
 {
     public List<TripV1DTO> Items { get; set; } = new();
-    public int Count { get; set; }
+    public int Page { get; set; }
+    public int PageSize { get; set; }
+    public int TotalCount { get; set; }
 }
