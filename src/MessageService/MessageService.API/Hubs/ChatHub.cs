@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.SignalR;
 using MessageService.Application.Services;
 using MessageService.Application.DTOs;
 using System.Security.Claims;
+using MessageService.Application.Common;
 
 namespace MessageService.API.Hubs;
 
@@ -10,10 +11,12 @@ namespace MessageService.API.Hubs;
 public class ChatHub : Hub
 {
     private readonly IMessageService _messageService;
+    private readonly IClock _clock;
 
-    public ChatHub(IMessageService messageService)
+    public ChatHub(IMessageService messageService, IClock clock)
     {
         _messageService = messageService;
+        _clock = clock;
     }
 
     public Task JoinConversation(string conversationId)
@@ -59,10 +62,10 @@ public class ChatHub : Hub
                 {
                     id = messageId,
                     conversationId = convId,
-                    senderId = senderId,
+                    senderId,
                     type = dto.Type,
                     payload = dto.Payload,
-                    createdAt = System.DateTime.UtcNow
+                    createdAt = _clock.Now
                 }
             };
 
