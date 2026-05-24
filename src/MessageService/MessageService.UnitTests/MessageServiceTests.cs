@@ -4,7 +4,6 @@ using MessageService.Application.DTOs;
 using MessageService.Application.Services;
 using MessageService.Core.Models;
 using MessageService.Core.RepositoryInterfaces;
-using MessageService.Infrastructure.Repositories;
 using Moq;
 
 namespace MessageService.UnitTests;
@@ -26,10 +25,7 @@ public class MessageServiceTests
         {
             Id = conversationId,
             IsGroup = false,
-            Members = new List<ConversationMember>
-            {
-                new ConversationMember { ConversationId = conversationId, UserId = senderId }
-            }
+            Members = [new ConversationMember { ConversationId = conversationId, UserId = senderId }]
         };
 
         convRepo.Setup(r => r.GetByIdAsync(conversationId)).ReturnsAsync(conv);
@@ -74,7 +70,7 @@ public class MessageServiceTests
         var svc = new Application.Services.MessageService(messageRepo.Object, convRepo.Object, notifier.Object);
 
         // Act
-        await svc.MarkMessagesReadAsync(conversationId, new[] { msg1, msg2 }, readerId, DateTime.UtcNow);
+        await svc.MarkMessagesReadAsync(conversationId, [msg1, msg2], readerId, DateTime.UtcNow);
 
         // Assert
         messageRepo.Verify();

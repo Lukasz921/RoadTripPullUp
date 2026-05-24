@@ -51,10 +51,10 @@ public class RedisNotificationService : INotificationService
             eventType = "message.read",
             data = new
             {
-                conversationId = conversationId,
-                messageIds = messageIds,
-                readerId = readerId,
-                readAt = readAt
+                conversationId,
+                messageIds,
+                readerId,
+                readAt
             }
         };
 

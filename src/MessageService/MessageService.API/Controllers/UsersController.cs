@@ -1,5 +1,4 @@
 using MessageService.Core.RepositoryInterfaces;
-using MessageService.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MessageService.API.Controllers;
@@ -11,8 +10,8 @@ public class UsersController : ControllerBase
     private readonly IUserRepository _users;
     public UsersController(IUserRepository users) => _users = users;
 
-    [HttpGet("{userId}")]
-    public async Task<IActionResult> Get(System.Guid userId)
+    [HttpGet("{userId:guid}")]
+    public async Task<IActionResult> Get(Guid userId)
     {
         var u = await _users.GetByIdAsync(userId);
         if (u == null) return NotFound();

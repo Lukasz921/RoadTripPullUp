@@ -8,7 +8,7 @@ public class ReadMessagesRequestValidator : AbstractValidator<ReadMessagesReques
     public ReadMessagesRequestValidator()
     {
         RuleFor(x => x.MessageIds).NotNull().WithMessage("messageIds required");
-        RuleFor(x => x.MessageIds).Must(list => list != null && list.Count > 0).WithMessage("at least one messageId required");
+        RuleFor(x => x.MessageIds).Must(list => list is { Count: > 0 }).WithMessage("at least one messageId required");
     }
 }
 

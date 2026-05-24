@@ -3,7 +3,6 @@ using MessageService.Application.DTOs;
 using MessageService.Application.Services;
 using MessageService.Core.Models;
 using MessageService.Core.RepositoryInterfaces;
-using MessageService.Infrastructure.Repositories;
 using Moq;
 
 namespace MessageService.UnitTests;
@@ -19,7 +18,7 @@ public class ConversationServiceTests
 
         await Assert.ThrowsAsync<ArgumentException>(async () =>
         {
-            await svc.CreateConversationAsync(new CreateConversationDto { Participants = new List<Guid>() }, Guid.NewGuid());
+            await svc.CreateConversationAsync(new CreateConversationDto { Participants = [] }, Guid.NewGuid());
         });
     }
 
@@ -35,18 +34,16 @@ public class ConversationServiceTests
             Id = Guid.NewGuid(),
             IsGroup = false,
             Title = "",
-            Members = new List<ConversationMember>
-            {
-                new ConversationMember { UserId = userId }
-            }
+            Members = [new ConversationMember() { UserId = userId }]
         };
 
-        convRepo.Setup(r => r.GetForUserAsync(userId, 0, 20)).ReturnsAsync(new List<Conversation> { conv });
+        convRepo.Setup(r => r.GetForUserAsync(userId, 0, 20)).ReturnsAsync([conv]);
 
         var svc = new ConversationService(convRepo.Object, userRepo.Object);
         var list = await svc.GetForUserAsync(userId, 0, 20);
-        list.Should().HaveCount(1);
-        var dto = list.First();
+        var conversationDtos = list.ToList();
+        conversationDtos.Should().HaveCount(1);
+        var dto = conversationDtos.First();
         dto.Participants.Should().Contain(userId);
     }
 }

@@ -40,7 +40,7 @@ public class ConversationService : IConversationService
         }
 
         // ensure creator is member
-        if (!conv.Members.Any(m => m.UserId == creatorId))
+        if (conv.Members.All(m => m.UserId != creatorId))
         {
             conv.Members.Add(new ConversationMember
             {
@@ -64,7 +64,7 @@ public class ConversationService : IConversationService
             Name = tuple.conversation.Title,
             Date = tuple.conversation.Date,
             Participants = tuple.conversation.Members.Select(m => m.UserId).ToList(),
-            LastMessage = tuple.lastMessage == null ? null : new DTOs.LastMessageDto
+            LastMessage = tuple.lastMessage == null ? null : new LastMessageDto
             {
                 MessageId = tuple.lastMessage.Id,
                 SenderId = tuple.lastMessage.SenderId,

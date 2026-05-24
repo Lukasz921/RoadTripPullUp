@@ -15,6 +15,6 @@ public class ConversationDto
     public bool IsGroup { get; set; }
     public string? Name { get; set; }
     public DateTime? Date { get; set; }
-    public List<Guid> Participants { get; set; } = new();
+    public List<Guid> Participants { get; set; } = [];
     public LastMessageDto? LastMessage { get; set; }
 }

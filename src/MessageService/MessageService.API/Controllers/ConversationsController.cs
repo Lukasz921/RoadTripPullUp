@@ -33,7 +33,7 @@ public class ConversationsController : ControllerBase
         return Ok(convs);
     }
 
-    [HttpGet("{conversationId}")]
+    [HttpGet("{conversationId:guid}")]
     public async Task<IActionResult> Get(Guid conversationId)
     {
         var conv = await _conversations.GetByIdAsync(conversationId);
@@ -41,7 +41,7 @@ public class ConversationsController : ControllerBase
 
         // authorization: ensure current user is member
         var userId = GetUserId();
-        if (!conv.Members.Any(m => m.UserId == userId)) return Forbid();
+        if (conv.Members.All(m => m.UserId != userId)) return Forbid();
 
         var dto = new ConversationDto
         {
@@ -57,7 +57,7 @@ public class ConversationsController : ControllerBase
 
     private Guid GetUserId()
     {
-        var sub = User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var sub = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         return string.IsNullOrEmpty(sub) ? Guid.Empty : Guid.Parse(sub);
     }
 }

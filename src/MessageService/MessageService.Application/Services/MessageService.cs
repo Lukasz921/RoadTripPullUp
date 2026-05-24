@@ -23,7 +23,7 @@ public class MessageService : IMessageService
         if (conv == null) throw new KeyNotFoundException("conversation not found");
 
         // validate sender is member
-        if (!conv.Members.Any(m => m.UserId == senderId)) throw new UnauthorizedAccessException("sender not in conversation");
+        if (conv.Members.All(m => m.UserId != senderId)) throw new UnauthorizedAccessException("sender not in conversation");
 
         // type restrictions per spec
         if (!conv.IsGroup)

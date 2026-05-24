@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace MessageService.API.Controllers;
 
 [ApiController]
-[Route("api/conversations/{conversationId}/messages")]
+[Route("api/conversations/{conversationId:guid}/messages")]
 public class MessagesController : ControllerBase
 {
     private readonly IMessageService _messages;
@@ -21,7 +21,7 @@ public class MessagesController : ControllerBase
     {
         var userId = GetUserId();
         var id = await _messages.CreateMessageAsync(conversationId, dto, userId);
-        return CreatedAtAction(nameof(Get), new { conversationId = conversationId, messageId = id }, new { messageId = id });
+        return CreatedAtAction(nameof(Get), new { conversationId, messageId = id }, new { messageId = id });
     }
 
     [HttpGet]
@@ -32,7 +32,7 @@ public class MessagesController : ControllerBase
         return Ok(list);
     }
 
-    [HttpGet("{messageId}")]
+    [HttpGet("{messageId:guid}")]
     public async Task<IActionResult> Get(Guid conversationId, Guid messageId)
     {
         var m = await _messages.GetByIdAsync(messageId);
@@ -58,7 +58,7 @@ public class MessagesController : ControllerBase
 
     private Guid GetUserId()
     {
-        var sub = User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var sub = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         return string.IsNullOrEmpty(sub) ? Guid.Empty : Guid.Parse(sub);
     }
 }

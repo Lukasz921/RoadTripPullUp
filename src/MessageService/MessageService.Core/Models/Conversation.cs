@@ -8,7 +8,7 @@ public class Conversation
     public DateTime? Date { get; set; }
     public DateTime CreatedAt { get; set; }
 
-    public List<ConversationMember> Members { get; set; } = new();
-    public List<Message> Messages { get; set; } = new();
+    public List<ConversationMember> Members { get; set; } = [];
+    public List<Message> Messages { get; set; } = [];
 }
 

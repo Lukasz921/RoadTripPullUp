@@ -69,7 +69,7 @@ public class ConversationRepository : IConversationRepository
 
         var lastByConv = lastMessages.Where(m => m != null).ToDictionary(m => m!.ConversationId, m => m!);
 
-        var result = convs.Select(c => (c, lastByConv.ContainsKey(c.Id) ? lastByConv[c.Id] : null)).ToList();
+        var result = convs.Select(c => (c, lastByConv.GetValueOrDefault(c.Id))).ToList();
         return result;
     }
 }

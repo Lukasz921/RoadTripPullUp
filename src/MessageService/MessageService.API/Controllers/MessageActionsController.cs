@@ -16,7 +16,7 @@ public class MessageActionsController : ControllerBase
         _messages = messages;
     }
 
-    [HttpPost("{messageId}/read")]
+    [HttpPost("{messageId:guid}/read")]
     public async Task<IActionResult> MarkReadSingle(Guid messageId, [FromBody] ReadMessagesRequest req)
     {
         var userId = GetUserId();
@@ -29,7 +29,7 @@ public class MessageActionsController : ControllerBase
 
     private Guid GetUserId()
     {
-        var sub = User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var sub = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         return string.IsNullOrEmpty(sub) ? Guid.Empty : Guid.Parse(sub);
     }
 }

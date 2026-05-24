@@ -43,7 +43,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 // Redis
 var redisCfg = configuration.GetValue<string>("Redis:Configuration") ?? "localhost:6379";
-builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
     ConnectionMultiplexer.Connect(redisCfg)
 );
 
@@ -57,7 +57,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         // configure as needed by main project
         options.Events = new JwtBearerEvents
         {
-            OnMessageReceived = context => Task.CompletedTask
+            OnMessageReceived = _ => Task.CompletedTask
         };
     });
 
@@ -86,7 +86,7 @@ app.Use(async (context, next) =>
     {
         await next();
     }
-    catch (FluentValidation.ValidationException fvex)
+    catch (ValidationException fvex)
     {
         context.Response.StatusCode = StatusCodes.Status400BadRequest;
         context.Response.ContentType = "application/json";
