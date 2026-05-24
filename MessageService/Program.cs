@@ -6,6 +6,8 @@ using MessageService.Infrastructure;
 using MessageService.Services;
 using MessageService.Repositories;
 using MessageService.Hubs;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +19,12 @@ builder.Services.AddControllers().AddJsonOptions(opts =>
 {
     opts.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
 });
+
+// FluentValidation
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+
+// Unified error handling middleware will be added to the pipeline later
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -65,6 +73,29 @@ using (var scope = app.Services.CreateScope())
     db.Database.Migrate();
 }
 
+// Global exception / validation handler
+app.Use(async (context, next) =>
+{
+    try
+    {
+        await next();
+    }
+    catch (FluentValidation.ValidationException fvex)
+    {
+        context.Response.StatusCode = StatusCodes.Status400BadRequest;
+        context.Response.ContentType = "application/json";
+        var errors = fvex.Errors.Select(e => new { field = e.PropertyName, message = e.ErrorMessage });
+        var payload = new { error = "validation_failed", details = errors };
+        await context.Response.WriteAsJsonAsync(payload);
+    }
+    catch (Exception ex)
+    {
+        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+        context.Response.ContentType = "application/json";
+        var payload = new { error = "internal_server_error", message = ex.Message };
+        await context.Response.WriteAsJsonAsync(payload);
+    }
+});
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
