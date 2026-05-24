@@ -12,7 +12,7 @@ public class Trip
     public Guid Id { get; set; }
     public required Guid DriverId { get; set; }
     public required Guid RouteId { get; set; }
-    public float Price { get; set; }
+    public decimal Price { get; set; }
     public DateTime Date { get; set; }
     public int MaxPassengers { get; set; }
     public List<User> Passengers { get; private set; } = new();
