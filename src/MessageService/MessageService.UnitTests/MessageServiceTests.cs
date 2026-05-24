@@ -39,7 +39,7 @@ public class MessageServiceTests
 
         var dto = new CreateMessageDto
         {
-            Type = "TEXT",
+            Type = MessageType.Text,
             Payload = new JsonObject { ["text"] = "hello" }
         };
 
@@ -48,7 +48,7 @@ public class MessageServiceTests
 
         // Assert
         id.Should().NotBe(Guid.Empty);
-        messageRepo.Verify(r => r.CreateAsync(It.Is<Message>(m => m.ConversationId == conversationId && m.SenderId == senderId && m.Type == "TEXT")), Times.Once);
+        messageRepo.Verify(r => r.CreateAsync(It.Is<Message>(m => m.ConversationId == conversationId && m.SenderId == senderId && m.Type == MessageType.Text)), Times.Once);
         notifier.Verify(n => n.PublishMessageCreatedAsync(It.IsAny<Message>()), Times.Once);
     }
 

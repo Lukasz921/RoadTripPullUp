@@ -28,11 +28,11 @@ public class MessageService : IMessageService
         // type restrictions per spec
         if (conv.Type == ConversationType.Direct)
         {
-            if (dto.Type == "LOCATION") throw new InvalidOperationException("LOCATION not allowed in DIRECT");
+            if (dto.Type == MessageType.Location) throw new InvalidOperationException("LOCATION not allowed in DIRECT");
         }
         else
         {
-            if (dto.Type is "PRICE_OFFER" or "PRICE_ACCEPT" or "OFFER_APPROVAL")
+            if(dto.Type is MessageType.PriceOffer or MessageType.PriceAccept or MessageType.OfferApproval)
                 throw new InvalidOperationException("price negotiation not allowed in GROUP");
         }
 
