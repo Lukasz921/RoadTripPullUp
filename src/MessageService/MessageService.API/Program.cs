@@ -50,6 +50,18 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
 // SignalR
 builder.Services.AddSignalR();
 
+// CORS - allow frontend to connect to SignalR and API
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
+
 // Auth (placeholder - integrate with main project's auth)
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -57,7 +69,18 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         // configure as needed by main project
         options.Events = new JwtBearerEvents
         {
-            OnMessageReceived = _ => Task.CompletedTask
+            // This extracts access_token from query string for SignalR websocket requests.
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"].FirstOrDefault();
+                // If the request is for our hub endpoint, read the token out of the query string
+                var path = context.HttpContext.Request.Path;
+                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hub/chat"))
+                {
+                    context.Token = accessToken;
+                }
+                return Task.CompletedTask;
+            }
         };
     });
 
@@ -109,6 +132,10 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseRouting();
+
+// enable CORS so browser clients can connect to SignalR hub
+app.UseCors("AllowFrontend");
+
 app.UseAuthentication();
 app.UseAuthorization();
 
