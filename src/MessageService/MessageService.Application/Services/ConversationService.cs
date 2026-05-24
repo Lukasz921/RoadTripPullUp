@@ -67,19 +67,29 @@ public class ConversationService : IConversationService
             Name = tuple.conversation.Title,
             Date = tuple.conversation.Date,
             Participants = tuple.conversation.Members.Select(m => m.UserId).ToList(),
-            LastMessage = tuple.lastMessage == null ? null : new LastMessageDto
-            {
-                MessageId = tuple.lastMessage.Id,
-                SenderId = tuple.lastMessage.SenderId,
-                Type = tuple.lastMessage.Type,
-                Payload = tuple.lastMessage.Payload,
-                CreatedAt = tuple.lastMessage.CreatedAt
-            }
+            LastMessageId = tuple.lastMessage?.Id ?? Guid.Empty,
+            LastMessagePreview = GetMessagePreview(tuple.lastMessage),
+            LastMessageCreatedAt = tuple.lastMessage?.CreatedAt ?? DateTime.UnixEpoch
         });
     }
 
     public async Task<Conversation?> GetByIdAsync(Guid id)
     {
         return await _conversations.GetByIdAsync(id);
+    }
+    
+    private static string GetMessagePreview(Message? msg) // TODO: move to a helper/extension method
+    {
+        if (msg == null) return string.Empty;
+
+        return msg.Type switch
+        {
+            MessageType.Text => msg.Payload?["text"]?.ToString() ?? string.Empty,
+            MessageType.Location => "[Location]",
+            MessageType.PriceOffer => "[Price Offer]",
+            MessageType.PriceAccept => "[Price Accept]",
+            MessageType.OfferApproval => "[Offer Approval]",
+            _ => string.Empty
+        };
     }
 }
