@@ -1,8 +1,7 @@
-using MessageService.Infrastructure;
-using MessageService.Models;
+using MessageService.Core.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace MessageService.Repositories;
+namespace MessageService.Infrastructure.Repositories;
 
 public class UserRepository : IUserRepository
 {

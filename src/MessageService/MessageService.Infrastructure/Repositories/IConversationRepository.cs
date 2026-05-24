@@ -1,6 +1,6 @@
-using MessageService.Models;
+using MessageService.Core.Models;
 
-namespace MessageService.Repositories;
+namespace MessageService.Infrastructure.Repositories;
 
 public interface IConversationRepository
 {

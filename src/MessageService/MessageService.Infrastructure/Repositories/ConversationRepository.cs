@@ -1,8 +1,7 @@
+using MessageService.Core.Models;
 using Microsoft.EntityFrameworkCore;
-using MessageService.Infrastructure;
-using MessageService.Models;
 
-namespace MessageService.Repositories;
+namespace MessageService.Infrastructure.Repositories;
 
 public class ConversationRepository : IConversationRepository
 {

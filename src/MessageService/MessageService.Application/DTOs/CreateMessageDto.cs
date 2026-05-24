@@ -1,6 +1,6 @@
 using System.Text.Json.Nodes;
 
-namespace MessageService.DTOs;
+namespace MessageService.Application.DTOs;
 
 public class CreateMessageDto
 {

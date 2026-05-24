@@ -1,7 +1,7 @@
+using MessageService.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Mvc;
-using MessageService.Repositories;
 
-namespace MessageService.Controllers;
+namespace MessageService.API.Controllers;
 
 [ApiController]
 [Route("api/users")]

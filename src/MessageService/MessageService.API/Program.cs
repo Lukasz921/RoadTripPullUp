@@ -3,11 +3,11 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using StackExchange.Redis;
 using MessageService.Infrastructure;
-using MessageService.Services;
-using MessageService.Repositories;
-using MessageService.Hubs;
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using MessageService.API.Hubs;
+using MessageService.Application.Services;
+using MessageService.Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -60,7 +60,7 @@ builder.Services.AddScoped<IConversationRepository, ConversationRepository>();
 builder.Services.AddScoped<IMessageRepository, MessageRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 
-builder.Services.AddScoped<IMessageService, MessageService.Services.MessageService>();
+builder.Services.AddScoped<IMessageService, MessageService.Application.Services.MessageService>();
 builder.Services.AddScoped<IConversationService, ConversationService>();
 builder.Services.AddScoped<INotificationService, RedisNotificationService>();
 

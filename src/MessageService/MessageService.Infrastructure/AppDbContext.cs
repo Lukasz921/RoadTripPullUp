@@ -1,5 +1,5 @@
+using MessageService.Core.Models;
 using Microsoft.EntityFrameworkCore;
-using MessageService.Models;
 
 namespace MessageService.Infrastructure;
 

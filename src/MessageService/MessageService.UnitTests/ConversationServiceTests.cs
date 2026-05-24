@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
-using MessageService.Repositories;
-using MessageService.Services;
+using MessageService.Application.DTOs;
+using MessageService.Application.Services;
+using MessageService.Core.Models;
+using MessageService.Infrastructure.Repositories;
 using Moq;
 using Xunit;
 
@@ -21,7 +23,7 @@ public class ConversationServiceTests
 
         await Assert.ThrowsAsync<ArgumentException>(async () =>
         {
-            await svc.CreateConversationAsync(new DTOs.CreateConversationDto { Participants = new List<Guid>() }, Guid.NewGuid());
+            await svc.CreateConversationAsync(new CreateConversationDto { Participants = new List<Guid>() }, Guid.NewGuid());
         });
     }
 
@@ -32,18 +34,18 @@ public class ConversationServiceTests
         var userRepo = new Mock<IUserRepository>();
 
         var userId = Guid.NewGuid();
-        var conv = new MessageService.Models.Conversation
+        var conv = new Conversation
         {
             Id = Guid.NewGuid(),
             IsGroup = false,
             Title = "",
-            Members = new List<MessageService.Models.ConversationMember>
+            Members = new List<ConversationMember>
             {
-                new MessageService.Models.ConversationMember { UserId = userId }
+                new ConversationMember { UserId = userId }
             }
         };
 
-        convRepo.Setup(r => r.GetForUserAsync(userId, 0, 20)).ReturnsAsync(new List<MessageService.Models.Conversation> { conv });
+        convRepo.Setup(r => r.GetForUserAsync(userId, 0, 20)).ReturnsAsync(new List<Conversation> { conv });
 
         var svc = new ConversationService(convRepo.Object, userRepo.Object);
         var list = await svc.GetForUserAsync(userId, 0, 20);

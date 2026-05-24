@@ -1,10 +1,9 @@
 using System.Text.Json;
-using MessageService.Models;
-using StackExchange.Redis;
-using MessageService.Hubs;
+using MessageService.Core.Models;
 using Microsoft.AspNetCore.SignalR;
+using StackExchange.Redis;
 
-namespace MessageService.Services;
+namespace MessageService.Application.Services;
 
 public class RedisNotificationService : INotificationService
 {

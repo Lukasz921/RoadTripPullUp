@@ -1,9 +1,9 @@
-using Microsoft.AspNetCore.Mvc;
-using MessageService.Services;
-using MessageService.DTOs;
 using System.Security.Claims;
+using MessageService.Application.DTOs;
+using MessageService.Application.Services;
+using Microsoft.AspNetCore.Mvc;
 
-namespace MessageService.Controllers;
+namespace MessageService.API.Controllers;
 
 [ApiController]
 [Route("api/conversations/{conversationId}/messages")]
@@ -48,7 +48,7 @@ public class MessagesController : ControllerBase
     }
 
     [HttpPost("read")]
-    public async Task<IActionResult> MarkRead(Guid conversationId, [FromBody] MessageService.DTOs.ReadMessagesRequest req)
+    public async Task<IActionResult> MarkRead(Guid conversationId, [FromBody] ReadMessagesRequest req)
     {
         var userId = GetUserId();
         var readAt = req.ReadAt ?? DateTime.UtcNow;

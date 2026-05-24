@@ -1,8 +1,7 @@
+using MessageService.Core.Models;
 using Microsoft.EntityFrameworkCore;
-using MessageService.Infrastructure;
-using MessageService.Models;
 
-namespace MessageService.Repositories;
+namespace MessageService.Infrastructure.Repositories;
 
 public class MessageRepository : IMessageRepository
 {
@@ -59,7 +58,7 @@ public class MessageRepository : IMessageRepository
             var exists = await _db.MessageReads.AnyAsync(r => r.MessageId == m.Id && r.ReaderId == readerId);
             if (!exists)
             {
-                _db.MessageReads.Add(new MessageService.Models.MessageRead
+                _db.MessageReads.Add(new MessageRead
                 {
                     MessageId = m.Id,
                     ReaderId = readerId,

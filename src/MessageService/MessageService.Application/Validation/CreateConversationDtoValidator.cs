@@ -1,7 +1,7 @@
 using FluentValidation;
-using MessageService.DTOs;
+using MessageService.Application.DTOs;
 
-namespace MessageService.Validation;
+namespace MessageService.Application.Validation;
 
 public class CreateConversationDtoValidator : AbstractValidator<CreateConversationDto>
 {

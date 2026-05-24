@@ -4,9 +4,10 @@ using System.Linq;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using FluentAssertions;
-using MessageService.Models;
-using MessageService.Repositories;
-using MessageService.Services;
+using MessageService.Application.DTOs;
+using MessageService.Application.Services;
+using MessageService.Core.Models;
+using MessageService.Infrastructure.Repositories;
 using Moq;
 using Xunit;
 
@@ -44,7 +45,7 @@ public class MessageServiceTests
 
         var svc = new MessageService(messageRepo.Object, convRepo.Object, notifier.Object);
 
-        var dto = new DTOs.CreateMessageDto
+        var dto = new CreateMessageDto
         {
             Type = "TEXT",
             Payload = new JsonObject { ["text"] = "hello" }

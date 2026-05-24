@@ -1,6 +1,6 @@
-using MessageService.Models;
+using MessageService.Core.Models;
 
-namespace MessageService.Services;
+namespace MessageService.Application.Services;
 
 public interface INotificationService
 {

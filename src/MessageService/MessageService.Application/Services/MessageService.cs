@@ -1,9 +1,7 @@
-using MessageService.DTOs;
-using MessageService.Models;
-using MessageService.Repositories;
-using System.Text.Json.Nodes;
+using MessageService.Application.DTOs;
+using MessageService.Core.Models;
 
-namespace MessageService.Services;
+namespace MessageService.Application.Services;
 
 public class MessageService : IMessageService
 {

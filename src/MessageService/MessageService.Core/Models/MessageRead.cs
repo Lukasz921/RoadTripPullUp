@@ -1,6 +1,4 @@
-using System;
-
-namespace MessageService.Models;
+namespace MessageService.Core.Models;
 
 public class MessageRead
 {

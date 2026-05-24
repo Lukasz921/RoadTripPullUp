@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
-
-namespace MessageService.Models;
+namespace MessageService.Core.Models;
 
 public class Conversation
 {

@@ -1,8 +1,9 @@
-using Microsoft.AspNetCore.Mvc;
-using MessageService.Services;
 using System.Security.Claims;
+using MessageService.Application.DTOs;
+using MessageService.Application.Services;
+using Microsoft.AspNetCore.Mvc;
 
-namespace MessageService.Controllers;
+namespace MessageService.API.Controllers;
 
 [ApiController]
 [Route("api/messages")]
@@ -16,7 +17,7 @@ public class MessageActionsController : ControllerBase
     }
 
     [HttpPost("{messageId}/read")]
-    public async Task<IActionResult> MarkReadSingle(Guid messageId, [FromBody] MessageService.DTOs.ReadMessagesRequest req)
+    public async Task<IActionResult> MarkReadSingle(Guid messageId, [FromBody] ReadMessagesRequest req)
     {
         var userId = GetUserId();
         var m = await _messages.GetByIdAsync(messageId);

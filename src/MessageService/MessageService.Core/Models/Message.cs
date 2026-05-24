@@ -1,7 +1,6 @@
-using System;
 using System.Text.Json.Nodes;
 
-namespace MessageService.Models;
+namespace MessageService.Core.Models;
 
 public class Message
 {
