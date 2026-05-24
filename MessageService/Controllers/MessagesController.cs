@@ -48,7 +48,7 @@ public class MessagesController : ControllerBase
     }
 
     [HttpPost("read")]
-    public async Task<IActionResult> MarkRead(Guid conversationId, [FromBody] ReadMessagesRequest req)
+    public async Task<IActionResult> MarkRead(Guid conversationId, [FromBody] MessageService.DTOs.ReadMessagesRequest req)
     {
         var userId = GetUserId();
         var readAt = req.ReadAt ?? DateTime.UtcNow;
@@ -61,10 +61,4 @@ public class MessagesController : ControllerBase
         var sub = User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         return string.IsNullOrEmpty(sub) ? Guid.Empty : Guid.Parse(sub);
     }
-}
-
-public class ReadMessagesRequest
-{
-    public List<Guid> MessageIds { get; set; } = new();
-    public DateTime? ReadAt { get; set; }
 }

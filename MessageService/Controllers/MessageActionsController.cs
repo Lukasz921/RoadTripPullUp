@@ -16,13 +16,13 @@ public class MessageActionsController : ControllerBase
     }
 
     [HttpPost("{messageId}/read")]
-    public async Task<IActionResult> MarkReadSingle(Guid messageId, [FromBody] SingleReadRequest req)
+    public async Task<IActionResult> MarkReadSingle(Guid messageId, [FromBody] MessageService.DTOs.ReadMessagesRequest req)
     {
         var userId = GetUserId();
         var m = await _messages.GetByIdAsync(messageId);
         if (m == null) return NotFound();
         var readAt = req.ReadAt ?? DateTime.UtcNow;
-        await _messages.MarkMessagesReadAsync(m.ConversationId, new[] { messageId }, userId, readAt);
+        await _messages.MarkMessagesReadAsync(m.ConversationId, req.MessageIds.Count > 0 ? req.MessageIds : new[] { messageId }, userId, readAt);
         return NoContent();
     }
 
@@ -32,9 +32,3 @@ public class MessageActionsController : ControllerBase
         return string.IsNullOrEmpty(sub) ? Guid.Empty : Guid.Parse(sub);
     }
 }
-
-public class SingleReadRequest
-{
-    public DateTime? ReadAt { get; set; }
-}
-
