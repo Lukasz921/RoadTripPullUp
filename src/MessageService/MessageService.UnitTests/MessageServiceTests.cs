@@ -1,15 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text.Json.Nodes;
-using System.Threading.Tasks;
 using FluentAssertions;
 using MessageService.Application.DTOs;
 using MessageService.Application.Services;
 using MessageService.Core.Models;
+using MessageService.Core.RepositoryInterfaces;
 using MessageService.Infrastructure.Repositories;
 using Moq;
-using Xunit;
 
 namespace MessageService.UnitTests;
 
@@ -43,7 +39,7 @@ public class MessageServiceTests
             return m;
         });
 
-        var svc = new MessageService(messageRepo.Object, convRepo.Object, notifier.Object);
+        var svc = new Application.Services.MessageService(messageRepo.Object, convRepo.Object, notifier.Object);
 
         var dto = new CreateMessageDto
         {
@@ -75,7 +71,7 @@ public class MessageServiceTests
 
         messageRepo.Setup(r => r.MarkMessagesReadAsync(conversationId, It.IsAny<IEnumerable<Guid>>(), readerId, It.IsAny<DateTime>())).Returns(Task.CompletedTask).Verifiable();
 
-        var svc = new MessageService(messageRepo.Object, convRepo.Object, notifier.Object);
+        var svc = new Application.Services.MessageService(messageRepo.Object, convRepo.Object, notifier.Object);
 
         // Act
         await svc.MarkMessagesReadAsync(conversationId, new[] { msg1, msg2 }, readerId, DateTime.UtcNow);

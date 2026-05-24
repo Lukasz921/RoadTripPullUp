@@ -1,14 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using FluentAssertions;
 using MessageService.Application.DTOs;
 using MessageService.Application.Services;
 using MessageService.Core.Models;
+using MessageService.Core.RepositoryInterfaces;
 using MessageService.Infrastructure.Repositories;
 using Moq;
-using Xunit;
 
 namespace MessageService.UnitTests;
 
