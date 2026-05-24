@@ -1,3 +1,4 @@
+using MessageService.Application.Common;
 using MessageService.Application.DTOs;
 using MessageService.Core.Models;
 using MessageService.Core.RepositoryInterfaces;
@@ -8,11 +9,13 @@ public class ConversationService : IConversationService
 {
     private readonly IConversationRepository _conversations;
     private readonly IUserRepository _users;
+    private readonly IClock _clock;
 
-    public ConversationService(IConversationRepository conversations, IUserRepository users)
+    public ConversationService(IConversationRepository conversations, IUserRepository users, IClock clock)
     {
         _conversations = conversations;
         _users = users;
+        _clock = clock;
     }
 
     public async Task<Guid> CreateConversationAsync(CreateConversationDto dto, Guid creatorId)
@@ -26,7 +29,7 @@ public class ConversationService : IConversationService
             IsGroup = dto.IsGroup,
             Title = dto.Title,
             Date = dto.Date,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = _clock.Now
         };
 
         foreach (var p in dto.Participants.Distinct())
@@ -34,7 +37,7 @@ public class ConversationService : IConversationService
             conv.Members.Add(new ConversationMember
             {
                 UserId = p,
-                JoinedAt = DateTime.UtcNow,
+                JoinedAt = _clock.Now,
                 Role = 0
             });
         }
@@ -45,7 +48,7 @@ public class ConversationService : IConversationService
             conv.Members.Add(new ConversationMember
             {
                 UserId = creatorId,
-                JoinedAt = DateTime.UtcNow,
+                JoinedAt = _clock.Now,
                 Role = 1
             });
         }

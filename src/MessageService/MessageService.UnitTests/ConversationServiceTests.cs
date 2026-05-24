@@ -1,8 +1,10 @@
 using FluentAssertions;
+using MessageService.Application.Common;
 using MessageService.Application.DTOs;
 using MessageService.Application.Services;
 using MessageService.Core.Models;
 using MessageService.Core.RepositoryInterfaces;
+using Microsoft.AspNetCore.Authentication;
 using Moq;
 
 namespace MessageService.UnitTests;
@@ -14,7 +16,8 @@ public class ConversationServiceTests
     {
         var convRepo = new Mock<IConversationRepository>();
         var userRepo = new Mock<IUserRepository>();
-        var svc = new ConversationService(convRepo.Object, userRepo.Object);
+        var clock = new Mock<IClock>();
+        var svc = new ConversationService(convRepo.Object, userRepo.Object, clock.Object);
 
         await Assert.ThrowsAsync<ArgumentException>(async () =>
         {
@@ -27,6 +30,7 @@ public class ConversationServiceTests
     {
         var convRepo = new Mock<IConversationRepository>();
         var userRepo = new Mock<IUserRepository>();
+        var clock = new Mock<IClock>();
 
         var userId = Guid.NewGuid();
         var conv = new Conversation
@@ -39,7 +43,7 @@ public class ConversationServiceTests
 
         convRepo.Setup(r => r.GetForUserAsync(userId, 0, 20)).ReturnsAsync([conv]);
 
-        var svc = new ConversationService(convRepo.Object, userRepo.Object);
+        var svc = new ConversationService(convRepo.Object, userRepo.Object, clock.Object);
         var list = await svc.GetForUserAsync(userId, 0, 20);
         var conversationDtos = list.ToList();
         conversationDtos.Should().HaveCount(1);
