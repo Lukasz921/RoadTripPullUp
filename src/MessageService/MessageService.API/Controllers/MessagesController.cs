@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace MessageService.API.Controllers;
 
 [ApiController]
-[Route("api/conversations/{conversationId:guid}/messages")]
+[Route("api/v1/message")]
 public class MessagesController : ControllerBase
 {
     private readonly IMessageService _messages;

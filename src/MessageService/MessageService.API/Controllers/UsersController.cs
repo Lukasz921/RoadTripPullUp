@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace MessageService.API.Controllers;
 
 [ApiController]
-[Route("api/users")]
+[Route("api/v1/message/users")]
 public class UsersController : ControllerBase
 {
     private readonly IUserRepository _users;

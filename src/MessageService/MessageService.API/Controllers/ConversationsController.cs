@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace MessageService.API.Controllers;
 
 [ApiController]
-[Route("api/conversations")]
+[Route("api/v1/message/conversations")]
 public class ConversationsController : ControllerBase
 {
     private readonly IConversationService _conversations;
