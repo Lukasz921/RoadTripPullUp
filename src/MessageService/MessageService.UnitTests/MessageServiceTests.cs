@@ -24,7 +24,7 @@ public class MessageServiceTests
         var conv = new Conversation
         {
             Id = conversationId,
-            IsGroup = false,
+            Type = ConversationType.Direct,
             Members = [new ConversationMember { ConversationId = conversationId, UserId = senderId }]
         };
 

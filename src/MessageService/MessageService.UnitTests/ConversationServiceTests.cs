@@ -36,7 +36,7 @@ public class ConversationServiceTests
         var conv = new Conversation
         {
             Id = Guid.NewGuid(),
-            IsGroup = false,
+            Type = ConversationType.Direct,
             Title = "",
             Members = [new ConversationMember() { UserId = userId }]
         };

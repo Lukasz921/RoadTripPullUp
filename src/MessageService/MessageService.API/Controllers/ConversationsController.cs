@@ -46,7 +46,7 @@ public class ConversationsController : ControllerBase
         var dto = new ConversationDto
         {
             ConversationId = conv.Id,
-            IsGroup = conv.IsGroup,
+            Type = conv.Type,
             Name = conv.Title,
             Date = conv.Date,
             Participants = conv.Members.Select(m => m.UserId).ToList()

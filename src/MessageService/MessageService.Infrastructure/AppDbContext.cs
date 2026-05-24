@@ -34,7 +34,7 @@ public class AppDbContext : DbContext
             b.ToTable("conversations");
             b.HasKey(c => c.Id);
             b.Property(c => c.Id).HasColumnName("id").HasDefaultValueSql("gen_random_uuid()");
-            b.Property(c => c.IsGroup).HasColumnName("is_group");
+            b.Property(c => c.Type).HasColumnName("type");
             b.Property(c => c.Title).HasColumnName("title");
             b.Property(c => c.Date).HasColumnName("date");
             b.Property(c => c.CreatedAt).HasColumnName("created_at");

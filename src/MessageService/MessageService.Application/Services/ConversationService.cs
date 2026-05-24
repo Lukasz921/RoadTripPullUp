@@ -26,7 +26,7 @@ public class ConversationService : IConversationService
 
         var conv = new Conversation
         {
-            IsGroup = dto.IsGroup,
+            Type = dto.Type,
             Title = dto.Title,
             Date = dto.Date,
             CreatedAt = _clock.Now
@@ -63,7 +63,7 @@ public class ConversationService : IConversationService
         return items.Select(tuple => new ConversationDto
         {
             ConversationId = tuple.conversation.Id,
-            IsGroup = tuple.conversation.IsGroup,
+            Type = tuple.conversation.Type,
             Name = tuple.conversation.Title,
             Date = tuple.conversation.Date,
             Participants = tuple.conversation.Members.Select(m => m.UserId).ToList(),

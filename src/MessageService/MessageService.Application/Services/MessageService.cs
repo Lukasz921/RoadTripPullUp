@@ -26,13 +26,13 @@ public class MessageService : IMessageService
         if (conv.Members.All(m => m.UserId != senderId)) throw new UnauthorizedAccessException("sender not in conversation");
 
         // type restrictions per spec
-        if (!conv.IsGroup)
+        if (conv.Type == ConversationType.Direct)
         {
             if (dto.Type == "LOCATION") throw new InvalidOperationException("LOCATION not allowed in DIRECT");
         }
         else
         {
-            if (dto.Type == "PRICE_OFFER" || dto.Type == "PRICE_ACCEPT" || dto.Type == "OFFER_APPROVAL")
+            if (dto.Type is "PRICE_OFFER" or "PRICE_ACCEPT" or "OFFER_APPROVAL")
                 throw new InvalidOperationException("price negotiation not allowed in GROUP");
         }
 

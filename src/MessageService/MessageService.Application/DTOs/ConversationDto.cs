@@ -1,3 +1,5 @@
+using MessageService.Core.Models;
+
 namespace MessageService.Application.DTOs;
 
 public class LastMessageDto
@@ -12,7 +14,7 @@ public class LastMessageDto
 public class ConversationDto
 {
     public Guid ConversationId { get; set; }
-    public bool IsGroup { get; set; }
+    public ConversationType Type { get; set; }
     public string? Name { get; set; }
     public DateTime? Date { get; set; }
     public List<Guid> Participants { get; set; } = [];
