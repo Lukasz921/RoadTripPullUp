@@ -62,7 +62,7 @@ public class TripService : ITripService
             Id = Guid.NewGuid(),
             DriverId = driverId,
             RouteId = route.Id,
-            Price = dto.Price,
+            Price = (decimal)dto.Price,
             Date = tripDateUtc,
             MaxPassengers = dto.MaxPassengers,
             OfferStatus = TripStatus.Active
@@ -74,7 +74,7 @@ public class TripService : ITripService
         {
             TripId = trip.Id,
             RouteId = route.Id,
-            Price = trip.Price,
+            Price = (decimal)trip.Price,
             Date = trip.Date,
             MaxPassengers = trip.MaxPassengers
         };
