@@ -7,7 +7,13 @@ using FluentValidation;
 using FluentValidation.AspNetCore;
 using MessageService.API.Hubs;
 using MessageService.Application.Services;
+using MessageService.Core.RepositoryInterfaces;
 using MessageService.Infrastructure.Repositories;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 var builder = WebApplication.CreateBuilder(args);
 

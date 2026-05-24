@@ -1,4 +1,5 @@
 using MessageService.Core.Models;
+using MessageService.Core.RepositoryInterfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace MessageService.Infrastructure.Repositories;

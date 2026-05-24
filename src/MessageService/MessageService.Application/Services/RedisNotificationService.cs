@@ -8,10 +8,10 @@ namespace MessageService.Application.Services;
 public class RedisNotificationService : INotificationService
 {
     private readonly IConnectionMultiplexer _redis;
-    private readonly IHubContext<ChatHub> _hub;
+    private readonly IHubContext _hub;
     private readonly IDatabase _db;
 
-    public RedisNotificationService(IConnectionMultiplexer redis, IHubContext<ChatHub> hub)
+    public RedisNotificationService(IConnectionMultiplexer redis, IHubContext hub)
     {
         _redis = redis;
         _hub = hub;

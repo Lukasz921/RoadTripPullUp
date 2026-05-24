@@ -1,5 +1,6 @@
 using MessageService.Application.DTOs;
 using MessageService.Core.Models;
+using MessageService.Core.RepositoryInterfaces;
 
 namespace MessageService.Application.Services;
 

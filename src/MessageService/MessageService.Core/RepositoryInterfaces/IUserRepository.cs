@@ -1,6 +1,6 @@
 using MessageService.Core.Models;
 
-namespace MessageService.Infrastructure.Repositories;
+namespace MessageService.Core.RepositoryInterfaces;
 
 public interface IUserRepository
 {

@@ -1,3 +1,4 @@
+using MessageService.Core.RepositoryInterfaces;
 using MessageService.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Mvc;
 
