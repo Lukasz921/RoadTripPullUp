@@ -56,14 +56,22 @@ public class ConversationService : IConversationService
 
     public async Task<IEnumerable<ConversationDto>> GetForUserAsync(Guid userId, int skip, int take)
     {
-        var convs = await _conversations.GetForUserAsync(userId, skip, take);
-        return convs.Select(c => new ConversationDto
+        var items = await _conversations.GetForUserWithLastMessageAsync(userId, skip, take);
+        return items.Select(tuple => new ConversationDto
         {
-            ConversationId = c.Id,
-            IsGroup = c.IsGroup,
-            Name = c.Title,
-            Date = c.Date,
-            Participants = c.Members.Select(m => m.UserId).ToList()
+            ConversationId = tuple.conversation.Id,
+            IsGroup = tuple.conversation.IsGroup,
+            Name = tuple.conversation.Title,
+            Date = tuple.conversation.Date,
+            Participants = tuple.conversation.Members.Select(m => m.UserId).ToList(),
+            LastMessage = tuple.lastMessage == null ? null : new DTOs.LastMessageDto
+            {
+                MessageId = tuple.lastMessage.Id,
+                SenderId = tuple.lastMessage.SenderId,
+                Type = tuple.lastMessage.Type,
+                Payload = tuple.lastMessage.Payload,
+                CreatedAt = tuple.lastMessage.CreatedAt
+            }
         });
     }
 
