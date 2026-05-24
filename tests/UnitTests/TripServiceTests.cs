@@ -44,7 +44,7 @@ public class TripServiceTests
                 To = "Cracow",
                 BetweenPoints = new List<string> { " Radom " }
             },
-            Price = 50.5f,
+            Price = 50.5m,
             Date = DateTime.UtcNow.AddDays(1),
             MaxPassengers = 3
         };
@@ -75,13 +75,13 @@ public class TripServiceTests
     [InlineData("Warsaw", "Warsaw", "Route origin and destination cannot be the same.")]
     [InlineData("Warsaw", "Cracow", "Trip price must be greater than zero.", -1f)]
     [InlineData("Warsaw", "Cracow", "Max passengers must be greater than zero.", 50f, 0)]
-    public async Task CreateTrip_InvalidInput_ThrowsValidationException(string from, string to, string expectedMessage, float price = 50f, int maxPassengers = 3)
+    public async Task CreateTrip_InvalidInput_ThrowsValidationException(string from, string to, string expectedMessage, double price = 50.0, int maxPassengers = 3)
     {
         // Arrange
         var dto = new CreateTripDTO
         {
             Route = new CreateRouteDTO { From = from, To = to },
-            Price = price,
+            Price = (decimal)price,
             Date = DateTime.UtcNow.AddDays(1),
             MaxPassengers = maxPassengers
         };
@@ -100,7 +100,7 @@ public class TripServiceTests
         var dto = new CreateTripDTO
         {
             Route = new CreateRouteDTO { From = "Warsaw", To = "Cracow" },
-            Price = 50f,
+            Price = 50m,
             Date = DateTime.UtcNow.AddDays(-1),
             MaxPassengers = 3
         };
@@ -120,7 +120,7 @@ public class TripServiceTests
         var routeId = Guid.NewGuid();
         var trips = new List<Trip>
         {
-            new Trip { Id = Guid.NewGuid(), DriverId = Guid.NewGuid(), RouteId = routeId, Price = 50f, Date = DateTime.UtcNow.AddDays(1), MaxPassengers = 3, OfferStatus = TripStatus.Active }
+            new Trip { Id = Guid.NewGuid(), DriverId = Guid.NewGuid(), RouteId = routeId, Price = 50m, Date = DateTime.UtcNow.AddDays(1), MaxPassengers = 3, OfferStatus = TripStatus.Active }
         };
         var route = new Route { Id = routeId, From = "Warsaw", To = "Cracow" };
 
@@ -142,7 +142,7 @@ public class TripServiceTests
         // Arrange
         var tripId = Guid.NewGuid();
         var routeId = Guid.NewGuid();
-        var trip = new Trip { Id = tripId, DriverId = Guid.NewGuid(), RouteId = routeId, Price = 50f, Date = DateTime.UtcNow.AddDays(1), MaxPassengers = 3, OfferStatus = TripStatus.Active };
+        var trip = new Trip { Id = tripId, DriverId = Guid.NewGuid(), RouteId = routeId, Price = 50m, Date = DateTime.UtcNow.AddDays(1), MaxPassengers = 3, OfferStatus = TripStatus.Active };
         var route = new Route { Id = routeId, From = "Warsaw", To = "Cracow" };
 
         _tripRepositoryMock.Setup(t => t.GetById(tripId)).ReturnsAsync(trip);

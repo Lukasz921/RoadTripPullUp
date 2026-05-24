@@ -22,10 +22,16 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<User>(entity =>
         {
             entity.HasKey(u => u.Id);
-            entity.Property(u => u.Name).IsRequired();
-            entity.Property(u => u.Surname).IsRequired();
-            entity.Property(u => u.Email).IsRequired();
+            entity.Property(u => u.Name).IsRequired().HasMaxLength(50);
+            entity.Property(u => u.Surname).IsRequired().HasMaxLength(50);
+            
+            entity.Property(u => u.Email).IsRequired().HasMaxLength(255);
+            entity.HasIndex(u => u.Email).IsUnique();
+
             entity.Property(u => u.PasswordHash).IsRequired();
+
+            entity.Property(u => u.PhoneNumber).HasMaxLength(20);
+            entity.Property(u => u.DateOfBirth).IsRequired();
         });
 
         modelBuilder.Entity<Route>(entity =>

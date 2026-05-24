@@ -3,7 +3,7 @@ namespace Application.DTOs;
 public class CreateTripDTO
 {
     public CreateRouteDTO Route { get; set; } = new();
-    public float Price { get; set; }
+    public decimal Price { get; set; }
     public DateTime Date { get; set; }
     public int MaxPassengers { get; set; }
 }
