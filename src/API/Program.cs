@@ -1,7 +1,6 @@
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
-using Application.Interfaces;
 using Application.Interfaces.Trip;
 using Application.Interfaces.Messaging;
 using Infrastructure.Authentication;
@@ -11,6 +10,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using API.Middleware;
+using Application.Interfaces.Auth;
 
 var builder = WebApplication.CreateBuilder(args);
 

@@ -1,5 +1,6 @@
-using Application.DTOs;
-using Application.Interfaces;
+using Application.DTOs.Auth;
+using Application.Interfaces.Auth;
+using Application.Interfaces.Trip;
 using Core.Entities;
 using Core.Enums;
 using Google.Apis.Auth;

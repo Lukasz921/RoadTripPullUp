@@ -1,6 +1,6 @@
 using Core.Entities;
 
-namespace Application.Interfaces;
+namespace Application.Interfaces.Auth;
 
 public interface IJwtProvider
 {

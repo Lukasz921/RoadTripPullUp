@@ -2,7 +2,6 @@ using Application.DTOs;
 using Application.Interfaces.Trip;
 using Core.Entities;
 using Application.Exceptions;
-using Application.Interfaces;
 
 namespace Application.Services;
 

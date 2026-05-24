@@ -1,4 +1,4 @@
-using Application.Interfaces;
+using Application.Interfaces.Trip;
 using Core.Entities;
 using Microsoft.EntityFrameworkCore;
 

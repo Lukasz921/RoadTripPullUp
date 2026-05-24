@@ -1,7 +1,7 @@
 using Application.DTOs.Messaging;
 using Application.Exceptions;
-using Application.Interfaces;
 using Application.Interfaces.Messaging;
+using Application.Interfaces.Trip;
 using Core.Entities;
 
 namespace Application.Services;

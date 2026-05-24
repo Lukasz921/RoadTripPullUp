@@ -2,7 +2,6 @@ using Application.DTOs;
 using Application.Exceptions;
 using Application.Interfaces.Trip;
 using Application.Services;
-using Application.Interfaces;
 using Core.Entities;
 using FluentAssertions;
 using Moq;

@@ -1,6 +1,6 @@
 using System.Net.Http.Json;
 using Application.DTOs;
-using Application.Interfaces;
+using Application.Interfaces.Auth;
 using Core.Entities;
 using Core.Enums;
 using FluentAssertions;
