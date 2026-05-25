@@ -1,6 +1,7 @@
+using Microsoft.OpenApi;
+using Scalar.AspNetCore;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.OpenApi.Models;
 using Application.Users;
 using Application.Messages;
 using Application.TripPlanner;
@@ -14,6 +15,24 @@ using API.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddOpenApi(options =>
+{
+    options.AddDocumentTransformer((document, context, cancellationToken) =>
+    {
+        document.Info.Title = "RoadTripPullUp API";
+        document.Components ??= new OpenApiComponents();
+        document.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
+        document.Components.SecuritySchemes.Add("Bearer", new OpenApiSecurityScheme
+        {
+            Type = SecuritySchemeType.Http,
+            Scheme = "bearer",
+            BearerFormat = "JWT",
+            In = ParameterLocation.Header,
+            Description = "JWT Authorization header using the Bearer scheme."
+        });
+        return Task.CompletedTask;
+    });
+});
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddControllers();
 
@@ -26,34 +45,6 @@ builder.Services.AddCors(options =>
                   .AllowAnyHeader()
                   .AllowAnyMethod();
         });
-});
-
-builder.Services.AddSwaggerGen(c =>
-{
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Description = "JWT Authorization header using the Bearer scheme.",
-        Name = "Authorization",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.Http,
-        Scheme = "bearer",
-        BearerFormat = "JWT"
-    });
-
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            Array.Empty<string>()
-        }
-    });
 });
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -97,8 +88,11 @@ var app = builder.Build();
 // use exception middleware early to catch exceptions from downstream
 app.UseMiddleware<ApiExceptionMiddleware>();
 
-app.UseSwagger();
-app.UseSwaggerUI();
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+    app.MapScalarApiReference();
+}
 
 app.UseCors("AllowFrontend");
 app.UseHttpsRedirection();
