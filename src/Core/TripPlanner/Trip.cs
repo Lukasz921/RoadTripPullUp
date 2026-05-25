@@ -1,5 +1,3 @@
-using Core.Users;
-
 namespace Core.TripPlanner;
 
 public enum TripStatus
@@ -15,32 +13,32 @@ public class Trip
     public decimal Price { get; set; }
     public DateTime Date { get; set; }
     public int MaxPassengers { get; set; }
-    public List<User> Passengers { get; private set; } = new();
+    public List<Guid> PassengerIds { get; private set; } = new();
 
     public TripStatus OfferStatus { get; set; } = TripStatus.InActive;
 
     public uint RowVersion { get; set; }
 
-    public bool TryAddPassenger(User passenger)
+    public bool TryAddPassenger(Guid passengerId)
     {
-        if (passenger == null)
+        if (passengerId == Guid.Empty)
             return false;
 
         if (OfferStatus != TripStatus.Active)
             return false;
 
-        if (Passengers.Count >= MaxPassengers)
+        if (PassengerIds.Count >= MaxPassengers)
             return false;
 
-        if (passenger.Id == DriverId)
+        if (passengerId == DriverId)
             return false;
 
-        if (Passengers.Any(p => p.Id == passenger.Id))
+        if (PassengerIds.Contains(passengerId))
             return false;
 
-        Passengers.Add(passenger);
+        PassengerIds.Add(passengerId);
 
-        if (Passengers.Count >= MaxPassengers)
+        if (PassengerIds.Count >= MaxPassengers)
         {
             OfferStatus = TripStatus.Full;
         }

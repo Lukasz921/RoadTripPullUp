@@ -1,14 +1,14 @@
-using Application.Users;
-using Core.Users;
+using Users.Application;
+using Users.Core;
 using Microsoft.EntityFrameworkCore;
 
-namespace Infrastructure.Repositories;
+namespace Users.Infrastructure;
 
 public class UserRepository : IUserRepository
 {
-    private readonly AppDbContext _context;
+    private readonly UsersDbContext _context;
 
-    public UserRepository(AppDbContext context)
+    public UserRepository(UsersDbContext context)
     {
         _context = context;
     }

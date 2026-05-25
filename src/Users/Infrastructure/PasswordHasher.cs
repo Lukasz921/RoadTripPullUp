@@ -1,6 +1,6 @@
-using Application.Users;
+using Users.Application;
 
-namespace Infrastructure.Users;
+namespace Users.Infrastructure;
 
 public class PasswordHasher : IPasswordHasher
 {

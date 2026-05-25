@@ -1,7 +1,8 @@
 using System.Net.Http.Json;
 using Application.TripPlanner;
-using Application.Users;
-using Core.Users;
+using Users.Application;
+using Users.Core;
+using Users.Infrastructure;
 using FluentAssertions;
 using Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,7 +24,7 @@ public class TripEndpointsTests : IClassFixture<IntegrationTestFactory>
     private async Task<string> GetAuthToken(User user)
     {
         using var scope = _factory.Services.CreateScope();
-        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var context = scope.ServiceProvider.GetRequiredService<UsersDbContext>();
         context.Users.Add(user);
         await context.SaveChangesAsync();
 

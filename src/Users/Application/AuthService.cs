@@ -1,7 +1,7 @@
-using Core.Users;
+using Users.Core;
 using Google.Apis.Auth;
 
-namespace Application.Users;
+namespace Users.Application;
 
 public class AuthService : IAuthService
 {

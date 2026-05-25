@@ -1,11 +1,10 @@
+using Users;
 using Microsoft.OpenApi;
 using Scalar.AspNetCore;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
-using Application.Users;
 using Application.Messages;
 using Application.TripPlanner;
-using Infrastructure.Users;
 using Infrastructure.Messages;
 using Infrastructure.TripPlanner;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -67,14 +66,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
-builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
-builder.Services.AddScoped<IJwtProvider, JwtProvider>();
-builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddUsersModule(builder.Configuration);
+
 // definicje dla controlerow
 builder.Services.AddScoped<ITripRepository, TripRepository>();
 builder.Services.AddScoped<IRouteRepository, RouteRepository>();
 builder.Services.AddScoped<ITripRequestRepository, TripRequestRepository>();
-builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITripService, TripService>();
 builder.Services.AddSingleton<ITripsV1Service, MockTripsV1Service>();
 builder.Services.AddScoped<IMessageRepository, MessageRepository>();
@@ -103,6 +100,9 @@ using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     dbContext.Database.Migrate();
+    
+    var userDbContext = scope.ServiceProvider.GetRequiredService<Users.Infrastructure.UsersDbContext>();
+    userDbContext.Database.Migrate();
 }
 
 app.MapControllers();

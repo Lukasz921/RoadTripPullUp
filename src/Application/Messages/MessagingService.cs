@@ -1,5 +1,5 @@
 using Application.Exceptions;
-using Application.Users;
+using Users.Application;
 using Core.Messages;
 
 namespace Application.Messages;

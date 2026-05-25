@@ -1,7 +1,7 @@
-using Application.Users;
+using Users.Application;
 using Microsoft.AspNetCore.Mvc;
 
-namespace API.Users;
+namespace Users.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
