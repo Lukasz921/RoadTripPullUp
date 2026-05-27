@@ -23,6 +23,8 @@ services:
     container_name: app_api
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=app_db;Username=postgres;Password=admin
+      - ConnectionStrings__UsersConnection=Host=db;Port=5432;Database=app_db;Username=postgres;Password=admin
     ports:
       - "8080:8080"
     depends_on:
