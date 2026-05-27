@@ -1,8 +1,8 @@
 using Application.TripPlanner;
 using Application.Exceptions;
-using Application.Users;
+using Users.Application.Interfaces;
 using Core.TripPlanner;
-using Core.Users;
+using Users.Core;
 using FluentAssertions;
 using Moq;
 using Xunit;
@@ -209,7 +209,7 @@ public class TripServiceTests
         await _tripService.AcceptRequest(requestId, driverId);
 
         // Assert
-        trip.Passengers.Should().Contain(passenger);
+        trip.PassengerIds.Should().Contain(passengerId);
         request.TripRequestStatus.Should().Be(TripRequestStatus.Accepted);
         _tripRequestRepositoryMock.Verify(r => r.Save(request), Times.Once);
         _tripRepositoryMock.Verify(t => t.Save(trip), Times.Once);

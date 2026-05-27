@@ -1,4 +1,5 @@
 using Infrastructure;
+using Users.Infrastructure;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -31,6 +32,17 @@ public class IntegrationTestFactory : WebApplicationFactory<Program>, IAsyncLife
             {
                 options.UseNpgsql(_dbContainer.GetConnectionString());
             });
+
+            var userDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<UsersDbContext>));
+            if (userDescriptor != null)
+            {
+                services.Remove(userDescriptor);
+            }
+
+            services.AddDbContext<UsersDbContext>(options =>
+            {
+                options.UseNpgsql(_dbContainer.GetConnectionString());
+            });
         });
     }
 
@@ -41,6 +53,9 @@ public class IntegrationTestFactory : WebApplicationFactory<Program>, IAsyncLife
         using var scope = Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         await db.Database.MigrateAsync();
+
+        var userDb = scope.ServiceProvider.GetRequiredService<UsersDbContext>();
+        await userDb.Database.MigrateAsync();
     }
 
     public new async Task DisposeAsync()

@@ -2,10 +2,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Core\Core.csproj" />
+    <ProjectReference Include="..\Users\Users.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Google.Apis.Auth" Version="1.73.0" />
+    <PackageReference Include="Google.Apis.Auth" Version="1.74.0" />
   </ItemGroup>
 
   <PropertyGroup>

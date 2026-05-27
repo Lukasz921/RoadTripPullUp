@@ -1,4 +1,6 @@
-namespace Application.Users;
+using Users.Application.DTOs;
+
+namespace Users.Application.Interfaces;
 
 public interface IAuthService
 {

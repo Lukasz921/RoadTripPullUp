@@ -6,8 +6,10 @@ COPY ["src/API/API.csproj", "src/API/"]
 COPY ["src/Application/Application.csproj", "src/Application/"]
 COPY ["src/Infrastructure/Infrastructure.csproj", "src/Infrastructure/"]
 COPY ["src/Core/Core.csproj", "src/Core/"]
+COPY ["src/Users/Users.csproj", "src/Users/"]
 COPY ["tests/UnitTests/UnitTests.csproj", "tests/UnitTests/"]
 COPY ["tests/IntegrationTests/IntegrationTests.csproj", "tests/IntegrationTests/"]
+COPY ["tests/Users.Tests/Users.Tests.csproj", "tests/Users.Tests/"]
 
 RUN dotnet restore "Backend.sln"
 

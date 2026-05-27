@@ -1,7 +1,8 @@
-using Application.Users;
+using Users.Application.Interfaces;
+using Users.Application.DTOs;
 using Microsoft.AspNetCore.Mvc;
 
-namespace API.Users;
+namespace Users.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]

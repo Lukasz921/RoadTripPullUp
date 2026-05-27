@@ -1,5 +1,4 @@
 using Core.TripPlanner;
-using Core.Users;
 using FluentAssertions;
 using Xunit;
 
@@ -20,14 +19,14 @@ public class TripDomainTests
             MaxPassengers = 2,
             OfferStatus = TripStatus.Active
         };
-        var passenger = new User { Id = Guid.NewGuid() };
+        var passengerId = Guid.NewGuid();
 
         // Act
-        var result = trip.TryAddPassenger(passenger);
+        var result = trip.TryAddPassenger(passengerId);
 
         // Assert
         result.Should().BeTrue();
-        trip.Passengers.Should().Contain(passenger);
+        trip.PassengerIds.Should().Contain(passengerId);
         trip.OfferStatus.Should().Be(TripStatus.Active);
     }
 
@@ -44,14 +43,14 @@ public class TripDomainTests
             MaxPassengers = 1,
             OfferStatus = TripStatus.Active
         };
-        var passenger = new User { Id = Guid.NewGuid() };
+        var passengerId = Guid.NewGuid();
 
         // Act
-        var result = trip.TryAddPassenger(passenger);
+        var result = trip.TryAddPassenger(passengerId);
 
         // Assert
         result.Should().BeTrue();
-        trip.Passengers.Should().HaveCount(1);
+        trip.PassengerIds.Should().HaveCount(1);
         trip.OfferStatus.Should().Be(TripStatus.Full);
     }
 
@@ -66,14 +65,14 @@ public class TripDomainTests
             MaxPassengers = 5,
             OfferStatus = TripStatus.InActive
         };
-        var passenger = new User { Id = Guid.NewGuid() };
+        var passengerId = Guid.NewGuid();
 
         // Act
-        var result = trip.TryAddPassenger(passenger);
+        var result = trip.TryAddPassenger(passengerId);
 
         // Assert
         result.Should().BeFalse();
-        trip.Passengers.Should().BeEmpty();
+        trip.PassengerIds.Should().BeEmpty();
     }
 
     [Fact]
@@ -89,16 +88,16 @@ public class TripDomainTests
             MaxPassengers = 1,
             OfferStatus = TripStatus.Active
         };
-        trip.TryAddPassenger(new User { Id = Guid.NewGuid() }); // Now status is Full
+        trip.TryAddPassenger(Guid.NewGuid()); // Now status is Full
 
-        var secondPassenger = new User { Id = Guid.NewGuid() };
+        var secondPassengerId = Guid.NewGuid();
 
         // Act
-        var result = trip.TryAddPassenger(secondPassenger);
+        var result = trip.TryAddPassenger(secondPassengerId);
 
         // Assert
         result.Should().BeFalse();
-        trip.Passengers.Should().HaveCount(1);
+        trip.PassengerIds.Should().HaveCount(1);
     }
 
     [Fact]
@@ -113,14 +112,14 @@ public class TripDomainTests
             MaxPassengers = 5,
             OfferStatus = TripStatus.Active
         };
-        var driverAsPassenger = new User { Id = driverId };
+        var driverAsPassengerId = driverId;
 
         // Act
-        var result = trip.TryAddPassenger(driverAsPassenger);
+        var result = trip.TryAddPassenger(driverAsPassengerId);
 
         // Assert
         result.Should().BeFalse();
-        trip.Passengers.Should().BeEmpty();
+        trip.PassengerIds.Should().BeEmpty();
     }
 
     [Fact]
@@ -134,14 +133,14 @@ public class TripDomainTests
             MaxPassengers = 5,
             OfferStatus = TripStatus.Active
         };
-        var passenger = new User { Id = Guid.NewGuid() };
-        trip.TryAddPassenger(passenger);
+        var passengerId = Guid.NewGuid();
+        trip.TryAddPassenger(passengerId);
 
         // Act
-        var result = trip.TryAddPassenger(passenger);
+        var result = trip.TryAddPassenger(passengerId);
 
         // Assert
         result.Should().BeFalse();
-        trip.Passengers.Should().HaveCount(1);
+        trip.PassengerIds.Should().HaveCount(1);
     }
 }
