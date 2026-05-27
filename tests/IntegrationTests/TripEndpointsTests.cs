@@ -1,6 +1,6 @@
 using System.Net.Http.Json;
 using Application.TripPlanner;
-using Users.Application;
+using Users.Application.Interfaces;
 using Users.Core;
 using Users.Infrastructure;
 using FluentAssertions;

@@ -1,4 +1,5 @@
-using Users.Application;
+using Users.Application.Interfaces;
+using Users.Application.DTOs;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Users.API.Controllers;

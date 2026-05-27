@@ -1,5 +1,5 @@
 using Application.Exceptions;
-using Users.Application;
+using Users.Application.Interfaces;
 using Users.Core;
 using Core.TripPlanner;
 

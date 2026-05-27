@@ -1,4 +1,5 @@
 using Users;
+using Users.Infrastructure;
 using Microsoft.OpenApi;
 using Scalar.AspNetCore;
 using Infrastructure;
@@ -66,7 +67,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
-builder.Services.AddUsersModule(builder.Configuration);
+builder.Services.AddUsersModule();
 
 // definicje dla controlerow
 builder.Services.AddScoped<ITripRepository, TripRepository>();
@@ -76,6 +77,9 @@ builder.Services.AddScoped<ITripService, TripService>();
 builder.Services.AddSingleton<ITripsV1Service, MockTripsV1Service>();
 builder.Services.AddScoped<IMessageRepository, MessageRepository>();
 builder.Services.AddScoped<IMessagingService, MessagingService>();
+
+builder.Services.AddDbContext<UsersDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -101,7 +105,7 @@ using (var scope = app.Services.CreateScope())
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     dbContext.Database.Migrate();
     
-    var userDbContext = scope.ServiceProvider.GetRequiredService<Users.Infrastructure.UsersDbContext>();
+    var userDbContext = scope.ServiceProvider.GetRequiredService<UsersDbContext>();
     userDbContext.Database.Migrate();
 }
 

@@ -1,4 +1,4 @@
-namespace Users.Application;
+namespace Users.Application.DTOs;
 
 public class UserDTO
 {

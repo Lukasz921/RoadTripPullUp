@@ -1,6 +1,6 @@
 using Application.TripPlanner;
 using Application.Exceptions;
-using Users.Application;
+using Users.Application.Interfaces;
 using Core.TripPlanner;
 using Users.Core;
 using FluentAssertions;

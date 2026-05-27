@@ -1,4 +1,4 @@
-using Users.Application;
+using Users.Application.Interfaces;
 
 namespace Users.Infrastructure;
 

@@ -1,4 +1,4 @@
-using Users.Application;
+using Users.Application.Interfaces;
 using Users.Core;
 using Microsoft.EntityFrameworkCore;
 
