@@ -15,6 +15,7 @@ public static class UsersModule
         services.AddScoped<IJwtProvider, JwtProvider>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IUserService, UserService>();
 
         return services;
     }

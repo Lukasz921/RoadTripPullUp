@@ -35,9 +35,20 @@ public class AuthService : IAuthService
             Name = dto.Name,
             Surname = dto.Surname,
             Email = dto.Email,
+            PhoneNumber = dto.PhoneNumber,
+            DateOfBirth = dto.DateOfBirth,
             PasswordHash = _passwordHasher.Hash(dto.Password),
             Role = UserRole.REGULAR_USER,
         };
+
+        if (Enum.TryParse<Sex>(dto.Sex, true, out var sex))
+        {
+            user.Sex = sex;
+        }
+        else
+        {
+            throw new Exception("Invalid value for Sex.");
+        }
 
         await _userRepository.Save(user);
     }
@@ -60,7 +71,7 @@ public class AuthService : IAuthService
             User = new AuthUserDTO
             {
                 Id = user.Id,
-                FirstName = user.Name,
+                Name = user.Name,
                 Role = user.Role.ToString()
             }
         };
@@ -81,6 +92,8 @@ public class AuthService : IAuthService
                 Email = payload.Email,
                 PasswordHash = string.Empty,
                 Role = UserRole.REGULAR_USER,
+                DateOfBirth = DateTime.UtcNow,
+                Sex = Sex.OTHER
             };
             await _userRepository.Save(user);
         }
@@ -94,7 +107,7 @@ public class AuthService : IAuthService
             User = new AuthUserDTO
             {
                 Id = user.Id,
-                FirstName = user.Name,
+                Name = user.Name,
                 Role = user.Role.ToString()
             }
         };
