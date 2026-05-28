@@ -12,8 +12,12 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using API.Middleware;
+using MessageService.API; // add extension methods from MessageService project
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Register MessageService services (DbContext, SignalR, Redis, DI, validators, etc.)
+builder.AddMessageService();
 
 builder.Services.AddOpenApi(options =>
 {
@@ -81,9 +85,6 @@ builder.Services.AddScoped<IMessagingService, MessagingService>();
 builder.Services.AddDbContext<UsersDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
-
 var app = builder.Build();
 
 // use exception middleware early to catch exceptions from downstream
@@ -94,6 +95,9 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
     app.MapScalarApiReference();
 }
+
+// wire message service (maps hub, applies migrations for message DB, enables message swagger in dev)
+app.UseMessageService();
 
 app.UseCors("AllowFrontend");
 app.UseHttpsRedirection();
