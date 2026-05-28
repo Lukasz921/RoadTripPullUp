@@ -107,7 +107,7 @@ public class ConversationsController : ControllerBase
         return Ok(dto);
     }
 
-    [HttpGet("group/{tripId:guid}")]
+    [HttpGet("byTripId/group/{tripId:guid}")]
     public async Task<IActionResult> GetGroupForTrip(Guid tripId)
     {
         var conv = await _conversations.GetGroupForTripAsync(tripId);
@@ -128,6 +128,27 @@ public class ConversationsController : ControllerBase
                                    DateTime.UnixEpoch
         };
         return Ok(dto);
+    }
+    
+    [HttpGet("/byTripId/direct/{tripId:guid}")]
+    public async Task<IActionResult> GetDirectForTrip(Guid tripId)
+    {
+        var userId = GetUserId();
+        var convs = await _conversations.GetDirectForTripAsync(tripId, userId);
+        var dtos = convs.Select(conv => new ConversationDto
+        {
+            ConversationId = conv.Id,
+            Type = conv.Type,
+            Name = conv.Title,
+            Date = conv.Date,
+            TripId = conv.TripId,
+            Participants = conv.Members.Select(m => m.UserId).ToList(),
+            LastMessageId = conv.Messages.OrderByDescending(m => m.CreatedAt).FirstOrDefault()?.Id ?? Guid.Empty,
+            LastMessagePreview = GetMessagePreview(conv.Messages.OrderByDescending(m => m.CreatedAt).FirstOrDefault()),
+            LastMessageCreatedAt = conv.Messages.OrderByDescending(m => m.CreatedAt).FirstOrDefault()?.CreatedAt ??
+                                   DateTime.UnixEpoch
+        });
+        return Ok(dtos);
     }
 
     [HttpPost("{conversationId:guid}/join/{userId:guid}")]

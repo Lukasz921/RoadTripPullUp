@@ -80,4 +80,18 @@ public class ConversationRepository : IConversationRepository
                 .ThenInclude(cm => cm.User)
             .FirstOrDefaultAsync(c => c.TripId == tripId && c.Type == ConversationType.Group);
     }
+
+    public async Task<List<Conversation>> GetDirectConversationsForTripAsync(Guid tripId, Guid userId)
+    {
+        var convIds = await _db.ConversationMembers
+            .Where(cm => cm.UserId == userId)
+            .Select(cm => cm.ConversationId)
+            .ToListAsync();
+
+        return await _db.Conversations
+            .Where(c => convIds.Contains(c.Id) && c.TripId == tripId && c.Type == ConversationType.Direct)
+            .Include(c => c.Members)
+                .ThenInclude(cm => cm.User)
+            .ToListAsync();
+    }
 }

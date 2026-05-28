@@ -9,4 +9,5 @@ public interface IConversationService
     Task<IEnumerable<ConversationDto>> GetForUserAsync(Guid userId, int skip, int take);
     Task<Conversation?> GetByIdAsync(Guid id);
     Task<Conversation?> GetGroupForTripAsync(Guid tripId);
+    Task<List<Conversation>> GetDirectForTripAsync(Guid tripId, Guid userId);
 }

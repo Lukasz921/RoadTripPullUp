@@ -85,6 +85,11 @@ public class ConversationService : IConversationService
         return await _conversations.GetGroupConversationForTripAsync(tripId);
     }
     
+    public async Task<List<Conversation>> GetDirectForTripAsync(Guid tripId, Guid userId)
+    {
+        return await _conversations.GetDirectConversationsForTripAsync(tripId, userId);
+    }
+    
     private static string GetMessagePreview(Message? msg) // TODO: move to a helper/extension method
     {
         if (msg == null) return string.Empty;
