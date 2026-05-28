@@ -77,7 +77,14 @@ Response (200 OK) — body: `ConversationDto`:
 Błędy: 404
 
 ---
+### POST /api/v1/message/conversations/{conversationId}/join/{userId}
+Opis: dołącza użytkownika do konwersacji (tylko dla typu Group). W domyśle tylko kierowca powinien wywoływać tę akcję.
 
+Response (204 No Content) — brak body.
+
+Błędy: 400/403/404
+
+---
 ### POST /api/v1/message/messages
 Opis: tworzy nową wiadomość w konwersacji.
 
@@ -124,6 +131,7 @@ Response (200 OK) — body: lista obiektów `MessageDto`:
 Błędy: 400/401/404
 
 ---
+
 
 ### GET /api/v1/message/messages/{messageId}
 Opis: pobiera jedną wiadomość po id.
