@@ -12,9 +12,10 @@ Request (body):
 ```json
 {
   "Type": "Direct | Group",
+  "TripId": "<guid>"
   "Title": "string?",
   "Date": "2026-05-24T12:00:00Z?",
-  "Participants": ["guid", ...]
+  "Participants": ["<guid>", ...]
 }
 ```
 
@@ -42,6 +43,7 @@ Response (200 OK) — body: lista obiektów `ConversationDto`:
   {
     "ConversationId": "<guid>",
     "Type": "Direct | Group",
+    "TripId": "<guid>",
     "Name": "string?",
     "Date": "2026-05-24T12:00:00Z?",
     "Participants": ["<guid>", ...],
