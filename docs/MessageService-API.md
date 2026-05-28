@@ -85,6 +85,21 @@ Response (204 No Content) — brak body.
 Błędy: 400/403/404
 
 ---
+### GET /api/v1/message/conversations/byTripId/group/{tripId:guid}
+Opis: pobiera konwersację grupową dla danego tripu.
+
+Response (200 OK) — body: `ConversationDto` (jak wyżej).
+
+Błędy: 403/404
+
+---
+### GET /api/v1/message/conversations/byTripId/direct/{tripId:guid}
+Opis: pobiera listę konwersacji bezpośrednich dla danego tripu, w których uczestniczy zalogowany użytkownik.
+
+Response (200 OK) — body: lista obiektów `ConversationDto` (jak wyżej).
+
+---
+
 ### POST /api/v1/message/messages
 Opis: tworzy nową wiadomość w konwersacji.
 
