@@ -29,7 +29,8 @@ public class ConversationService : IConversationService
             Type = dto.Type,
             Title = dto.Title,
             Date = dto.Date,
-            CreatedAt = _clock.Now
+            CreatedAt = _clock.Now,
+            TripId = dto.TripId
         };
 
         foreach (var p in dto.Participants.Distinct())
@@ -64,6 +65,7 @@ public class ConversationService : IConversationService
         {
             ConversationId = tuple.conversation.Id,
             Type = tuple.conversation.Type,
+            TripId = tuple.conversation.TripId,
             Name = tuple.conversation.Title,
             Date = tuple.conversation.Date,
             Participants = tuple.conversation.Members.Select(m => m.UserId).ToList(),

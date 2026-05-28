@@ -6,6 +6,7 @@ public class ConversationDto
 {
     public Guid ConversationId { get; set; }
     public ConversationType Type { get; set; }
+    public Guid TripId { get; set; }
     public string? Name { get; set; }
     public DateTime? Date { get; set; }
     public List<Guid> Participants { get; set; } = [];

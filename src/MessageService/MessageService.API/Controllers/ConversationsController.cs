@@ -95,6 +95,7 @@ public class ConversationsController : ControllerBase
             Type = conv.Type,
             Name = conv.Title,
             Date = conv.Date,
+            TripId = conv.TripId,
             Participants = conv.Members.Select(m => m.UserId).ToList(),
             LastMessageId = lastMsg?.Id ?? Guid.Empty,
             LastMessagePreview = GetMessagePreview(lastMsg),
