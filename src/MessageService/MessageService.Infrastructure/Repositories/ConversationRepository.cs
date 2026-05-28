@@ -72,4 +72,12 @@ public class ConversationRepository : IConversationRepository
         var result = convs.Select(c => (c, lastByConv.GetValueOrDefault(c.Id))).ToList();
         return result;
     }
+    
+    public async Task<Conversation?> GetGroupConversationForTripAsync(Guid tripId)
+    {
+        return await _db.Conversations
+            .Include(c => c.Members)
+                .ThenInclude(cm => cm.User)
+            .FirstOrDefaultAsync(c => c.TripId == tripId && c.Type == ConversationType.Group);
+    }
 }

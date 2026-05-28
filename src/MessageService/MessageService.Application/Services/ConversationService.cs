@@ -55,6 +55,7 @@ public class ConversationService : IConversationService
 
         var created = await _conversations.CreateAsync(conv);
         return created.Id;
+        // TODO: check the logic here because it looks wrong
     }
 
     public async Task<IEnumerable<ConversationDto>> GetForUserAsync(Guid userId, int skip, int take)
@@ -77,6 +78,11 @@ public class ConversationService : IConversationService
     public async Task<Conversation?> GetByIdAsync(Guid id)
     {
         return await _conversations.GetByIdAsync(id);
+    }
+    
+    public async Task<Conversation?> GetGroupForTripAsync(Guid tripId)
+    {
+        return await _conversations.GetGroupConversationForTripAsync(tripId);
     }
     
     private static string GetMessagePreview(Message? msg) // TODO: move to a helper/extension method
