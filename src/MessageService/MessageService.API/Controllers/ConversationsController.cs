@@ -112,6 +112,8 @@ public class ConversationsController : ControllerBase
     {
         var conv = await _conversations.GetGroupForTripAsync(tripId);
         var userId = GetUserId();
+        if (conv == null) return NotFound();
+        if (conv.Members.All(m => m.UserId != userId)) return Forbid();
         var dto = new ConversationDto
         {
             ConversationId = conv.Id,
