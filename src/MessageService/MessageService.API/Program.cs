@@ -113,6 +113,7 @@ namespace MessageService.API
             services.AddScoped<IMessageService, MessageService.Application.Services.MessageService>();
             services.AddScoped<IConversationService, ConversationService>();
             services.AddScoped<INotificationService, RedisNotificationService>();
+            services.AddScoped<IClockService, ClockService>();
 
             return builder;
         }

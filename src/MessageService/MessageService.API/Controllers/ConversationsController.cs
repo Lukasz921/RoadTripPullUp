@@ -1,5 +1,4 @@
 using System.Security.Claims;
-using MessageService.Application.Common;
 using MessageService.Application.DTOs;
 using MessageService.Application.Services;
 using MessageService.Core.Models;
@@ -12,12 +11,12 @@ namespace MessageService.API.Controllers;
 public class ConversationsController : ControllerBase
 {
     private readonly IConversationService _conversations;
-    private readonly IClock _clock;
+    private readonly IClockService _clockService;
 
-    public ConversationsController(IConversationService conversations, IClock clock)
+    public ConversationsController(IConversationService conversations, IClockService clockService)
     {
         _conversations = conversations;
-        _clock = clock;
+        _clockService = clockService;
     }
 
     [HttpPost]
@@ -121,7 +120,7 @@ public class ConversationsController : ControllerBase
         conv.Members.Add(new ConversationMember
         {
             UserId = userId,
-            JoinedAt = _clock.Now,
+            JoinedAt = _clockService.Now,
             Role = 0
         });
         // TODO: no validation that current user (driverId) is actually a driver or another member of conversation

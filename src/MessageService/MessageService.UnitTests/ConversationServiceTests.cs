@@ -1,10 +1,8 @@
 using FluentAssertions;
-using MessageService.Application.Common;
 using MessageService.Application.DTOs;
 using MessageService.Application.Services;
 using MessageService.Core.Models;
 using MessageService.Core.RepositoryInterfaces;
-using Microsoft.AspNetCore.Authentication;
 using Moq;
 
 namespace MessageService.UnitTests;
@@ -16,7 +14,7 @@ public class ConversationServiceTests
     {
         var convRepo = new Mock<IConversationRepository>();
         var userRepo = new Mock<IUserRepository>();
-        var clock = new Mock<IClock>();
+        var clock = new Mock<IClockService>();
         var svc = new ConversationService(convRepo.Object, userRepo.Object, clock.Object);
 
         await Assert.ThrowsAsync<ArgumentException>(async () =>
@@ -30,7 +28,7 @@ public class ConversationServiceTests
     {
         var convRepo = new Mock<IConversationRepository>();
         var userRepo = new Mock<IUserRepository>();
-        var clock = new Mock<IClock>();
+        var clock = new Mock<IClockService>();
 
         var userId = Guid.NewGuid();
         var conv = new Conversation
@@ -38,7 +36,7 @@ public class ConversationServiceTests
             Id = Guid.NewGuid(),
             Type = ConversationType.Direct,
             Title = "",
-            Members = [new ConversationMember() { UserId = userId }]
+            Members = [new ConversationMember { UserId = userId }]
         };
 
         convRepo.Setup(r => r.GetForUserAsync(userId, 0, 20)).ReturnsAsync([conv]);

@@ -1,4 +1,3 @@
-using MessageService.Application.Common;
 using MessageService.Application.DTOs;
 using MessageService.Core.Models;
 using MessageService.Core.RepositoryInterfaces;
@@ -9,13 +8,13 @@ public class ConversationService : IConversationService
 {
     private readonly IConversationRepository _conversations;
     private readonly IUserRepository _users;
-    private readonly IClock _clock;
+    private readonly IClockService _clockService;
 
-    public ConversationService(IConversationRepository conversations, IUserRepository users, IClock clock)
+    public ConversationService(IConversationRepository conversations, IUserRepository users, IClockService clockService)
     {
         _conversations = conversations;
         _users = users;
-        _clock = clock;
+        _clockService = clockService;
     }
 
     public async Task<Guid> CreateConversationAsync(CreateConversationDto dto, Guid creatorId)
@@ -29,7 +28,7 @@ public class ConversationService : IConversationService
             Type = dto.Type,
             Title = dto.Title,
             Date = dto.Date,
-            CreatedAt = _clock.Now,
+            CreatedAt = _clockService.Now,
             TripId = dto.TripId
         };
 
@@ -38,7 +37,7 @@ public class ConversationService : IConversationService
             conv.Members.Add(new ConversationMember
             {
                 UserId = p,
-                JoinedAt = _clock.Now,
+                JoinedAt = _clockService.Now,
                 Role = 0
             });
         }
@@ -49,7 +48,7 @@ public class ConversationService : IConversationService
             conv.Members.Add(new ConversationMember
             {
                 UserId = creatorId,
-                JoinedAt = _clock.Now,
+                JoinedAt = _clockService.Now,
                 Role = 1
             });
         }
