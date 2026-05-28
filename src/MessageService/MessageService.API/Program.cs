@@ -10,136 +10,137 @@ using MessageService.Application.Services;
 using MessageService.Core.RepositoryInterfaces;
 using MessageService.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-var builder = WebApplication.CreateBuilder(args);
-
-// Configuration
-var configuration = builder.Configuration;
-
-// Add services
-builder.Services.AddControllers().AddJsonOptions(opts =>
+namespace MessageService.API
 {
-    opts.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-});
-
-// FluentValidation
-builder.Services.AddFluentValidationAutoValidation();
-builder.Services.AddValidatorsFromAssemblyContaining<Program>();
-
-// Unified error handling middleware will be added to the pipeline later
-
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
-// DbContext
-var conn = configuration.GetConnectionString("DefaultConnection") ?? "Host=localhost;Database=messages;Username=postgres;Password=postgres";
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(conn)
-);
-
-// Redis
-var redisCfg = configuration.GetValue<string>("Redis:Configuration") ?? "localhost:6379";
-builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
-    ConnectionMultiplexer.Connect(redisCfg)
-);
-
-// SignalR
-builder.Services.AddSignalR();
-
-// CORS - allow frontend to connect to SignalR and API
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowFrontend", policy =>
+    public static class MessageServiceExtensions
     {
-        policy.WithOrigins("http://localhost:5173")
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
-    });
-});
+        private const string CorsPolicyName = "MessageServiceAllowFrontend";
 
-// Auth (placeholder - integrate with main project's auth)
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        // configure as needed by main project
-        options.Events = new JwtBearerEvents
+        // Registers MessageService pieces into the host's IServiceCollection
+        public static WebApplicationBuilder AddMessageService(this WebApplicationBuilder builder)
         {
-            // This extracts access_token from query string for SignalR websocket requests.
-            OnMessageReceived = context =>
+            var configuration = builder.Configuration;
+            var services = builder.Services;
+
+            // Controllers + JSON options
+            services.AddControllers().AddJsonOptions(opts =>
             {
-                var accessToken = context.Request.Query["access_token"].FirstOrDefault();
-                // If the request is for our hub endpoint, read the token out of the query string
-                var path = context.HttpContext.Request.Path;
-                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hub/chat"))
+                opts.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+            });
+
+            // FluentValidation
+            services.AddFluentValidationAutoValidation();
+            // use a type from this assembly to discover validators
+            services.AddValidatorsFromAssemblyContaining(typeof(ChatHub));
+
+            services.AddEndpointsApiExplorer();
+            services.AddSwaggerGen();
+
+            // DbContext
+            var conn = configuration.GetConnectionString("DefaultConnection") ?? "Host=localhost;Database=messages;Username=postgres;Password=postgres";
+            services.AddDbContext<AppDbContext>(options =>
+                options.UseNpgsql(conn)
+            );
+
+            // Redis
+            var redisCfg = configuration.GetValue<string>("Redis:Configuration") ?? "localhost:6379";
+            services.AddSingleton<IConnectionMultiplexer>(_ =>
+                ConnectionMultiplexer.Connect(redisCfg)
+            );
+
+            // SignalR
+            services.AddSignalR();
+
+            // CORS - for the SignalR hub we need AllowCredentials (separate policy so it doesn't interfere with app-wide policies)
+            services.AddCors(options =>
+            {
+                options.AddPolicy(CorsPolicyName, policy =>
                 {
-                    context.Token = accessToken;
-                }
-                return Task.CompletedTask;
+                    policy.WithOrigins("http://localhost:5173")
+                          .AllowAnyHeader()
+                          .AllowAnyMethod()
+                          .AllowCredentials();
+                });
+            });
+
+            // Ensure JWT bearer will extract access_token for SignalR websocket requests.
+            // Use Configure so we don't override other JWT configuration done by the host — we only attach the OnMessageReceived handler.
+            services.Configure<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme, options =>
+            {
+                // Preserve any existing Events by wrapping them.
+                var prev = options.Events;
+                var wrapped = new JwtBearerEvents();
+
+                wrapped.OnMessageReceived = async context =>
+                {
+                    var accessToken = context.Request.Query["access_token"].FirstOrDefault();
+                    var path = context.HttpContext.Request.Path;
+                    if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hub/chat"))
+                    {
+                        context.Token = accessToken;
+                    }
+
+                    if (prev?.OnMessageReceived != null)
+                    {
+                        await prev.OnMessageReceived(context);
+                    }
+                };
+
+                // wire-through other commonly used handlers to avoid losing previously configured behavior
+                wrapped.OnAuthenticationFailed = async context =>
+                {
+                    if (prev?.OnAuthenticationFailed != null)
+                        await prev.OnAuthenticationFailed(context);
+                };
+                wrapped.OnTokenValidated = async context =>
+                {
+                    if (prev?.OnTokenValidated != null)
+                        await prev.OnTokenValidated(context);
+                };
+
+                options.Events = wrapped;
+            });
+
+            // DI for repositories and services
+            services.AddScoped<IConversationRepository, ConversationRepository>();
+            services.AddScoped<IMessageRepository, MessageRepository>();
+            services.AddScoped<IUserRepository, UserRepository>();
+
+            services.AddScoped<IMessageService, MessageService.Application.Services.MessageService>();
+            services.AddScoped<IConversationService, ConversationService>();
+            services.AddScoped<INotificationService, RedisNotificationService>();
+
+            return builder;
+        }
+
+        // Applies migrations, optional swagger mapping and maps the SignalR hub on the app
+        public static WebApplication UseMessageService(this WebApplication app)
+        {
+            // Apply migrations at startup (optional, useful for dev)
+            using (var scope = app.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                db.Database.Migrate();
             }
-        };
-    });
 
-// DI for repositories and services
-builder.Services.AddScoped<IConversationRepository, ConversationRepository>();
-builder.Services.AddScoped<IMessageRepository, MessageRepository>();
-builder.Services.AddScoped<IUserRepository, UserRepository>();
+            if (app.Environment.IsDevelopment())
+            {
+                app.UseSwagger();
+                app.UseSwaggerUI();
+            }
 
-builder.Services.AddScoped<IMessageService, MessageService.Application.Services.MessageService>();
-builder.Services.AddScoped<IConversationService, ConversationService>();
-builder.Services.AddScoped<INotificationService, RedisNotificationService>();
+            // Ensure routing is available (host may have already called UseRouting)
+            app.UseRouting();
 
-var app = builder.Build();
+            // Map MessageService-specific endpoints. Controllers are mapped by the main app's MapControllers() call
+            // Map the SignalR hub and require the dedicated CORS policy that allows credentials
+            app.MapHub<ChatHub>("/hub/chat").RequireCors(CorsPolicyName);
 
-// Apply migrations at startup (optional, useful for dev)
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.Migrate();
+            return app;
+        }
+    }
 }
-
-// Global exception / validation handler
-app.Use(async (context, next) =>
-{
-    try
-    {
-        await next();
-    }
-    catch (ValidationException fvex)
-    {
-        context.Response.StatusCode = StatusCodes.Status400BadRequest;
-        context.Response.ContentType = "application/json";
-        var errors = fvex.Errors.Select(e => new { field = e.PropertyName, message = e.ErrorMessage });
-        var payload = new { error = "validation_failed", details = errors };
-        await context.Response.WriteAsJsonAsync(payload);
-    }
-    catch (Exception ex)
-    {
-        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-        context.Response.ContentType = "application/json";
-        var payload = new { error = "internal_server_error", message = ex.Message };
-        await context.Response.WriteAsJsonAsync(payload);
-    }
-});
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
-app.UseRouting();
-
-// enable CORS so browser clients can connect to SignalR hub
-app.UseCors("AllowFrontend");
-
-app.UseAuthentication();
-app.UseAuthorization();
-
-app.MapControllers();
-app.MapHub<ChatHub>("/hub/chat");
-
-app.Run();
