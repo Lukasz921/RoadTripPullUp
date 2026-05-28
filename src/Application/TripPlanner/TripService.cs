@@ -1,5 +1,6 @@
 using Application.Exceptions;
-using Application.Users;
+using Users.Application.Interfaces;
+using Users.Core;
 using Core.TripPlanner;
 
 namespace Application.TripPlanner;
@@ -62,7 +63,7 @@ public class TripService : ITripService
             Id = Guid.NewGuid(),
             DriverId = driverId,
             RouteId = route.Id,
-            Price = dto.Price,
+            Price = (decimal)dto.Price,
             Date = tripDateUtc,
             MaxPassengers = dto.MaxPassengers,
             OfferStatus = TripStatus.Active
@@ -74,7 +75,7 @@ public class TripService : ITripService
         {
             TripId = trip.Id,
             RouteId = route.Id,
-            Price = trip.Price,
+            Price = (decimal)trip.Price,
             Date = trip.Date,
             MaxPassengers = trip.MaxPassengers
         };
@@ -148,7 +149,7 @@ public class TripService : ITripService
                 From = route.From,
                 To = route.To
             },
-            PassengerIds = trip.Passengers?.Select(p => p.Id).ToList() ?? new List<Guid>()
+            PassengerIds = trip.PassengerIds
         };
 
         return dto;
@@ -278,10 +279,10 @@ public class TripService : ITripService
             throw new NotFoundException($"Passenger with id {request.PassengerId} not found.");
 
         // Call domain logic
-        var success = trip.TryAddPassenger(passenger);
+        var success = trip.TryAddPassenger(passenger.Id);
         if (!success)
         {
-            if (trip.OfferStatus == TripStatus.Full || trip.Passengers.Count >= trip.MaxPassengers)
+            if (trip.OfferStatus == TripStatus.Full || trip.PassengerIds.Count >= trip.MaxPassengers)
             {
                 throw new SeatUnavailableException();
             }

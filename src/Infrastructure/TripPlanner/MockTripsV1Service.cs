@@ -51,20 +51,29 @@ public class MockTripsV1Service : ITripsV1Service
         return Task.FromResult(ToTripDTO(trip));
     }
 
-    public Task<MyTripsV1ResultDTO> GetMyTripsAsync(string driverId, string status, int limit)
+    public Task<MyTripsV1ResultDTO> GetMyTripsAsync(string driverId, int page, int pageSize)
     {
-        var cap = Math.Clamp(limit, 1, 100);
-        var upper = status.ToUpperInvariant();
+        var safePage = Math.Max(1, page);
+        var safePageSize = Math.Clamp(pageSize, 1, 100);
 
-        var items = _trips.Values
-            .Where(t => t.DriverId == driverId)
-            .Where(t => upper == "ALL" || t.Status == upper)
+        var all = _trips.Values
+            .Where(t => t.DriverId == driverId && t.Status == "ACTIVE")
             .OrderBy(t => t.DepartureTime)
-            .Take(cap)
+            .ToList();
+
+        var items = all
+            .Skip((safePage - 1) * safePageSize)
+            .Take(safePageSize)
             .Select(ToTripDTO)
             .ToList();
 
-        return Task.FromResult(new MyTripsV1ResultDTO { Items = items, Count = items.Count });
+        return Task.FromResult(new MyTripsV1ResultDTO
+        {
+            Items = items,
+            Page = safePage,
+            PageSize = safePageSize,
+            TotalCount = all.Count
+        });
     }
 
     public Task DeleteTripAsync(string tripId, string driverId)
@@ -88,7 +97,8 @@ public class MockTripsV1Service : ITripsV1Service
             throw new ValidationException("dateTo must be >= dateFrom.");
 
         var minSeats = dto.MinSeats <= 0 ? 1 : dto.MinSeats;
-        var cap = Math.Clamp(dto.Limit <= 0 ? 50 : dto.Limit, 1, 100);
+        var safePage = Math.Max(1, dto.Page);
+        var safePageSize = Math.Clamp(dto.PageSize <= 0 ? 20 : dto.PageSize, 1, 100);
         var sortByPrice = dto.SortBy?.ToLowerInvariant() == "price";
 
         var fromUtc = dateFrom.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
@@ -100,21 +110,35 @@ public class MockTripsV1Service : ITripsV1Service
             .Where(t => t.AvailableSeats >= minSeats)
             .Where(t => dto.MaxPrice == null || t.PricePerSeat <= dto.MaxPrice);
 
-        var sorted = sortByPrice
+        var sorted = (sortByPrice
             ? candidates.OrderBy(t => t.PricePerSeat)
-            : candidates.OrderBy(t => t.DepartureTime);
+            : candidates.OrderBy(t => t.DepartureTime)).ToList();
 
-        var items = sorted.Take(cap).Select(t => ToTripSummaryDTO(t, dto.Source)).ToList();
+        var totalCount = sorted.Count;
+        var items = sorted
+            .Skip((safePage - 1) * safePageSize)
+            .Take(safePageSize)
+            .Select(t => ToTripSummaryDTO(t, dto.Source))
+            .ToList();
 
         var jobId = Guid.NewGuid().ToString("N");
-        _jobs[jobId] = new SearchJob { JobId = jobId, UserId = userId, CreatedAt = DateTime.UtcNow, Items = items };
+        _jobs[jobId] = new SearchJob
+        {
+            JobId = jobId,
+            UserId = userId,
+            CreatedAt = DateTime.UtcNow,
+            Items = items,
+            Page = safePage,
+            PageSize = safePageSize,
+            TotalCount = totalCount
+        };
 
         return Task.FromResult(new SearchJobCreatedDTO
         {
             JobId = jobId,
-            Status = "pending",
+            Status = "processing",
             StatusUrl = $"/api/v1/trips/search/{jobId}",
-            EstimatedDurationMs = 2000
+            EstimatedDurationMs = 3000
         });
     }
 
@@ -133,13 +157,7 @@ public class MockTripsV1Service : ITripsV1Service
                 Progress = new SearchJobProgressDTO
                 {
                     JobId = jobId,
-                    Status = elapsed.TotalSeconds < 0.5 ? "pending" : "processing",
-                    Progress = new SearchProgressDetailsDTO
-                    {
-                        Phase = elapsed.TotalSeconds < 0.5 ? "queued" : "validating_routes",
-                        CandidatesFound = job.Items.Count,
-                        CandidatesProcessed = (int)(job.Items.Count * Math.Min(elapsed.TotalSeconds / 2.0, 1.0))
-                    }
+                    Status = "processing"
                 }
             });
         }
@@ -153,7 +171,9 @@ public class MockTripsV1Service : ITripsV1Service
                 Status = "done",
                 CompletedAt = job.CreatedAt.AddSeconds(2),
                 Items = job.Items,
-                Count = job.Items.Count
+                Page = job.Page,
+                PageSize = job.PageSize,
+                TotalCount = job.TotalCount
             }
         });
     }
@@ -224,5 +244,8 @@ public class MockTripsV1Service : ITripsV1Service
         public string UserId { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
         public List<TripSummaryV1DTO> Items { get; set; } = new();
+        public int Page { get; set; }
+        public int PageSize { get; set; }
+        public int TotalCount { get; set; }
     }
 }

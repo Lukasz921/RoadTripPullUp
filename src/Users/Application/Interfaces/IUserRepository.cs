@@ -1,6 +1,6 @@
-using Core.Users;
+using Users.Core;
 
-namespace Application.Users;
+namespace Users.Application.Interfaces;
 
 public interface IUserRepository
 {

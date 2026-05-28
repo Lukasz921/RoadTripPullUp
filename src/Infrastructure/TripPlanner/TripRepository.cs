@@ -70,7 +70,6 @@ public class TripRepository : ITripRepository
     {
         return await _context.Trips
             .AsNoTracking()
-            .Include(t => t.Passengers)
             .FirstOrDefaultAsync(t => t.Id == id);
     }
 

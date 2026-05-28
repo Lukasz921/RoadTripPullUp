@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Core.Users;
 using Core.Messages;
 using Core.TripPlanner;
 
@@ -10,7 +9,6 @@ public class AppDbContext : DbContext
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
     }
-    public DbSet<User> Users { get; set; }
     public DbSet<Trip> Trips { get; set; }
     public DbSet<Route> Routes { get; set; }
     public DbSet<TripRequest> TripRequest { get; set; }
@@ -20,15 +18,6 @@ public class AppDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-
-        modelBuilder.Entity<User>(entity =>
-        {
-            entity.HasKey(u => u.Id);
-            entity.Property(u => u.Name).IsRequired();
-            entity.Property(u => u.Surname).IsRequired();
-            entity.Property(u => u.Email).IsRequired();
-            entity.Property(u => u.PasswordHash).IsRequired();
-        });
 
         modelBuilder.Entity<Route>(entity =>
         {
@@ -52,11 +41,8 @@ public class AppDbContext : DbContext
 
             entity.Property(t => t.RowVersion).IsRowVersion();
 
-            // Trip -> Driver (wiele tripów może mieć jednego drivera)
-            entity.HasOne<User>()
-                .WithMany()
-                .HasForeignKey(t => t.DriverId)
-                .OnDelete(DeleteBehavior.Restrict);
+            // Trip -> Driver
+            entity.Property(t => t.DriverId).IsRequired();
 
             // Trip -> Route
             entity.HasOne<Route>()
@@ -64,26 +50,10 @@ public class AppDbContext : DbContext
                 .HasForeignKey(t => t.RouteId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Trip <-> Passengers (many-to-many)
-            entity.HasMany(t => t.Passengers)
-                .WithMany()
-                .UsingEntity<Dictionary<string, object>>(
-                    "TripPassengers",
-                    j => j
-                        .HasOne<User>()
-                        .WithMany()
-                        .HasForeignKey("PassengerId")
-                        .OnDelete(DeleteBehavior.Cascade),
-                    j => j
-                        .HasOne<Trip>()
-                        .WithMany()
-                        .HasForeignKey("TripId")
-                        .OnDelete(DeleteBehavior.Cascade),
-                    j =>
-                    {
-                        j.HasKey("TripId", "PassengerId");
-                        j.ToTable("TripPassengers");
-                    });
+            // Trip -> Passengers (primitive collection)
+            // On PostgreSQL this will be mapped to uuid[] by default if we don't specify ToTable.
+            // But we can specify it to be a separate table if we want.
+            // For now, let's just let it be.
         });
 
         modelBuilder.Entity<TripRequest>(entity =>
@@ -96,11 +66,8 @@ public class AppDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(tr => tr.TripId)
                 .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasOne<User>()
-                .WithMany()
-                .HasForeignKey(tr => tr.PassengerId)
-                .OnDelete(DeleteBehavior.Restrict);
+                
+            entity.Property(tr => tr.PassengerId).IsRequired();
         });
 
         modelBuilder.Entity<Message>(entity =>
@@ -109,16 +76,9 @@ public class AppDbContext : DbContext
 
             entity.Property(m => m.Content).IsRequired().HasMaxLength(1000);
             entity.Property(m => m.Timestamp).IsRequired();
-
-            entity.HasOne<User>()
-                .WithMany()
-                .HasForeignKey(m => m.SenderId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            entity.HasOne<User>()
-                .WithMany()
-                .HasForeignKey(m => m.ReceiverId)
-                .OnDelete(DeleteBehavior.Restrict);
+            
+            entity.Property(m => m.SenderId).IsRequired();
+            entity.Property(m => m.ReceiverId).IsRequired();
         });
     }
 

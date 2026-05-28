@@ -66,13 +66,13 @@ public class TripRepository : ITripRepository
         return await query.ToListAsync();
     }
 
-    public async Task<TripEntity?> GetById(Guid id)
+    public async Task<Trip?> GetById(Guid id)
     {
         return await _context.Trips
             .AsNoTracking()
-            .Include(t => t.Passengers)
             .FirstOrDefaultAsync(t => t.Id == id);
     }
+
 
     public async Task<List<TripEntity>> GetByDriverIdAsync(Guid driverId)
     {

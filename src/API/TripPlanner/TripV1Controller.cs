@@ -32,14 +32,14 @@ public class TripV1Controller : ControllerBase
     [HttpGet("trips/me")]
     [ProducesResponseType(typeof(MyTripsV1ResultDTO), 200)]
     public async Task<IActionResult> GetMyTrips(
-        [FromQuery] string status = "ACTIVE",
-        [FromQuery] int limit = 50)
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
     {
         var driverId = GetUserId();
         if (driverId == null)
             return Unauthorized(new { error = new { code = "UNAUTHORIZED", message = "Missing or invalid token." } });
 
-        var result = await _service.GetMyTripsAsync(driverId, status, limit);
+        var result = await _service.GetMyTripsAsync(driverId, page, pageSize);
         return Ok(result);
     }
 

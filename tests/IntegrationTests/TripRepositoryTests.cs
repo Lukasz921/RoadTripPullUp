@@ -1,6 +1,7 @@
 using Application.TripPlanner;
 using Core.TripPlanner;
-using Core.Users;
+using Users.Core;
+using Users.Infrastructure;
 using FluentAssertions;
 using Infrastructure;
 using Infrastructure.TripPlanner;
@@ -24,12 +25,13 @@ public class TripRepositoryTests : IClassFixture<IntegrationTestFactory>
         // Arrange
         using var scope = _factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var userContext = scope.ServiceProvider.GetRequiredService<UsersDbContext>();
         var repository = new TripRepository(context);
         var routeRepository = new RouteRepository(context);
 
         var driver = new User { Id = Guid.NewGuid(), Email = "driver@example.com", Name = "Driver", Surname = "User" };
-        context.Users.Add(driver);
-        await context.SaveChangesAsync();
+        userContext.Users.Add(driver);
+        await userContext.SaveChangesAsync();
 
         var route = new Route { Id = Guid.NewGuid(), From = "Warsaw", To = "Berlin" };
         await routeRepository.Save(route);
@@ -61,12 +63,13 @@ public class TripRepositoryTests : IClassFixture<IntegrationTestFactory>
         // Arrange
         using var scope = _factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var userContext = scope.ServiceProvider.GetRequiredService<UsersDbContext>();
         var repository = new TripRepository(context);
         var routeRepository = new RouteRepository(context);
 
         var driver = new User { Id = Guid.NewGuid(), Email = "driver2@example.com", Name = "Driver", Surname = "User" };
-        context.Users.Add(driver);
-        await context.SaveChangesAsync();
+        userContext.Users.Add(driver);
+        await userContext.SaveChangesAsync();
 
         var route1 = new Route { Id = Guid.NewGuid(), From = "Warsaw", To = "Berlin" };
         var route2 = new Route { Id = Guid.NewGuid(), From = "Krakow", To = "Prague" };
