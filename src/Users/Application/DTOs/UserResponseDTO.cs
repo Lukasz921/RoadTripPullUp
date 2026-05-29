@@ -1,6 +1,6 @@
-namespace Users.Core;
+namespace Users.Application.DTOs;
 
-public class User
+public class UserResponseDTO
 {
     public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
@@ -8,7 +8,5 @@ public class User
     public string Email { get; set; } = string.Empty;
     public string? PhoneNumber { get; set; }
     public DateTime DateOfBirth { get; set; }
-    public string PasswordHash { get; set; } = string.Empty;
-    public UserRole Role { get; set; }
-    public Sex Sex { get; set; }
+    public string Sex { get; set; } = string.Empty;
 }

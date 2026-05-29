@@ -53,6 +53,8 @@ public class AuthService : IAuthService
             Name = dto.Name,
             Surname = dto.Surname,
             Email = dto.Email,
+            PhoneNumber = dto.PhoneNumber,
+            DateOfBirth = dto.DateOfBirth,
             PasswordHash = _passwordHasher.Hash(dto.Password),
             Role = UserRole.REGULAR_USER,
             PhoneNumber = dto.PhoneNumber,
@@ -88,7 +90,7 @@ public class AuthService : IAuthService
             User = new AuthUserDTO
             {
                 Id = user.Id,
-                FirstName = user.Name,
+                Name = user.Name,
                 Role = user.Role.ToString()
             }
         };
@@ -132,7 +134,7 @@ public class AuthService : IAuthService
             User = new AuthUserDTO
             {
                 Id = user.Id,
-                FirstName = user.Name,
+                Name = user.Name,
                 Role = user.Role.ToString()
             }
         };

@@ -6,8 +6,6 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: admin
       POSTGRES_DB: app_db
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -25,8 +23,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=app_db;Username=postgres;Password=admin
       - ConnectionStrings__UsersConnection=Host=db;Port=5432;Database=app_db;Username=postgres;Password=admin
-    ports:
-      - "8080:8080"
+   
     depends_on:
       db:
         condition: service_healthy
@@ -35,9 +32,6 @@ services:
     build:
       context: ./src/frontend
       dockerfile: Dockerfile
-    container_name: app_frontend
-    ports:
-      - "5173:5173"
     volumes:
       - ./src/frontend:/app
       - /app/node_modules
