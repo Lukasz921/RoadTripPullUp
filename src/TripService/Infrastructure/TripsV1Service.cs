@@ -8,12 +8,14 @@ namespace TripService.Infrastructure;
 public class TripsV1Service : ITripsV1Service
 {
     private readonly string _connectionString;
+    private readonly IRoutingEngine _routing;
     private readonly MockTripsV1Service _mock = new();
 
-    public TripsV1Service(IConfiguration config)
+    public TripsV1Service(IConfiguration config, IRoutingEngine routing)
     {
         _connectionString = config.GetConnectionString("TripConnection")
             ?? throw new InvalidOperationException("TripConnection is not configured.");
+        _routing = routing;
     }
 
     public async Task<TripV1DTO> CreateTripAsync(CreateTripV1DTO dto, string driverId)
@@ -27,8 +29,7 @@ public class TripsV1Service : ITripsV1Service
         if (dto.AvailableSeats <= 0)
             throw new ValidationException("availableSeats must be positive.");
 
-        var distanceM = (int)HaversineMeters(dto.Source.Lat, dto.Source.Lng, dto.Target.Lat, dto.Target.Lng);
-        var durationS = (int)(distanceM / 13.9); // ~50 km/h average
+        var route = await _routing.GetRouteAsync(dto.Source, dto.Target);
 
         const string sql = """
             INSERT INTO trip (
@@ -47,7 +48,7 @@ public class TripsV1Service : ITripsV1Service
                 @driverId,
                 ST_SetSRID(ST_MakePoint(@srcLng, @srcLat), 4326)::geography,
                 ST_SetSRID(ST_MakePoint(@tgtLng, @tgtLat), 4326)::geography,
-                ST_SetSRID(ST_MakeLine(ST_MakePoint(@srcLng, @srcLat), ST_MakePoint(@tgtLng, @tgtLat)), 4326)::geography,
+                ST_GeomFromText(@polylineWkt, 4326)::geography,
                 @distanceM,
                 @durationS,
                 @maxDetourM,
@@ -81,8 +82,9 @@ public class TripsV1Service : ITripsV1Service
         cmd.Parameters.AddWithValue("srcLng", dto.Source.Lng);
         cmd.Parameters.AddWithValue("tgtLat", dto.Target.Lat);
         cmd.Parameters.AddWithValue("tgtLng", dto.Target.Lng);
-        cmd.Parameters.AddWithValue("distanceM", distanceM);
-        cmd.Parameters.AddWithValue("durationS", durationS);
+        cmd.Parameters.AddWithValue("polylineWkt", route.PolylineWkt);
+        cmd.Parameters.AddWithValue("distanceM", route.DistanceM);
+        cmd.Parameters.AddWithValue("durationS", route.DurationS);
         cmd.Parameters.AddWithValue("maxDetourM", dto.MaxDetourMeters);
         cmd.Parameters.AddWithValue("departureTime", DateTime.SpecifyKind(dto.DepartureTime.ToUniversalTime(), DateTimeKind.Utc));
         cmd.Parameters.AddWithValue("pricePerSeat", dto.PricePerSeat);
@@ -377,14 +379,5 @@ public class TripsV1Service : ITripsV1Service
         PassengerIds = passengerIds
     };
 
-    private static double HaversineMeters(double lat1, double lng1, double lat2, double lng2)
-    {
-        const double R = 6_371_000;
-        var dLat = (lat2 - lat1) * Math.PI / 180;
-        var dLng = (lng2 - lng1) * Math.PI / 180;
-        var a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2)
-              + Math.Cos(lat1 * Math.PI / 180) * Math.Cos(lat2 * Math.PI / 180)
-              * Math.Sin(dLng / 2) * Math.Sin(dLng / 2);
-        return R * 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
-    }
+
 }

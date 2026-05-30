@@ -1,0 +1,85 @@
+using System.Net.Http.Json;
+using System.Text.Json;
+using Application.Exceptions;
+using TripService.Application;
+
+namespace TripService.Infrastructure;
+
+public class ValhallaRoutingEngine : IRoutingEngine
+{
+    private readonly HttpClient _http;
+
+    public ValhallaRoutingEngine(IHttpClientFactory factory)
+    {
+        _http = factory.CreateClient("valhalla");
+    }
+
+    public async Task<RouteResult> GetRouteAsync(LatLngDTO source, LatLngDTO target, CancellationToken ct = default)
+    {
+        var body = new
+        {
+            locations = new[]
+            {
+                new { lon = source.Lng, lat = source.Lat },
+                new { lon = target.Lng, lat = target.Lat }
+            },
+            costing = "auto"
+        };
+
+        try
+        {
+            using var response = await _http.PostAsJsonAsync("/route", body, ct);
+
+            if (!response.IsSuccessStatusCode)
+                throw new RoutingEngineUnavailableException(
+                    $"Valhalla returned HTTP {(int)response.StatusCode}.");
+
+            using var doc = await JsonDocument.ParseAsync(
+                await response.Content.ReadAsStreamAsync(ct), cancellationToken: ct);
+
+            var trip    = doc.RootElement.GetProperty("trip");
+            var summary = trip.GetProperty("summary");
+            var distanceM = (int)(summary.GetProperty("length").GetDouble() * 1000);
+            var durationS = (int)summary.GetProperty("time").GetDouble();
+            var encoded   = trip.GetProperty("legs")[0].GetProperty("shape").GetString()!;
+
+            var wkt = DecodePolylineToWkt(encoded);
+            return new RouteResult(distanceM, durationS, wkt);
+        }
+        catch (RoutingEngineUnavailableException)
+        {
+            throw;
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or OperationCanceledException)
+        {
+            throw new RoutingEngineUnavailableException("Valhalla routing engine is unavailable or timed out.");
+        }
+    }
+
+    private static string DecodePolylineToWkt(string encoded, int precision = 6)
+    {
+        var factor = Math.Pow(10, precision);
+        var points = new List<(double lat, double lng)>();
+        int index = 0, lat = 0, lng = 0;
+
+        while (index < encoded.Length)
+        {
+            int b, shift = 0, v = 0;
+            do { b = encoded[index++] - 63; v |= (b & 0x1f) << shift; shift += 5; } while (b >= 0x20);
+            lat += (v & 1) != 0 ? ~(v >> 1) : v >> 1;
+
+            shift = 0; v = 0;
+            do { b = encoded[index++] - 63; v |= (b & 0x1f) << shift; shift += 5; } while (b >= 0x20);
+            lng += (v & 1) != 0 ? ~(v >> 1) : v >> 1;
+
+            points.Add((lat / factor, lng / factor));
+        }
+
+        if (points.Count < 2)
+            throw new RoutingEngineUnavailableException("Valhalla returned an invalid route shape.");
+
+        // WKT uses (longitude latitude) order
+        var coords = string.Join(", ", points.Select(p => $"{p.lng} {p.lat}"));
+        return $"LINESTRING({coords})";
+    }
+}
