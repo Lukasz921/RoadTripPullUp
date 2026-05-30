@@ -30,16 +30,36 @@ public class TripV1Controller : ControllerBase
     }
 
     [HttpGet("trips/me")]
-    [ProducesResponseType(typeof(MyTripsV1ResultDTO), 200)]
+    [ProducesResponseType(typeof(PagedTripsDTO), 200)]
     public async Task<IActionResult> GetMyTrips(
-        [FromQuery] string status = "ACTIVE",
-        [FromQuery] int limit = 50)
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
     {
         var driverId = GetUserId();
         if (driverId == null)
             return Unauthorized(new { error = new { code = "UNAUTHORIZED", message = "Missing or invalid token." } });
 
-        var result = await _service.GetMyTripsAsync(driverId, status, limit);
+        pageSize = Math.Clamp(pageSize, 1, 100);
+        page = Math.Max(page, 1);
+
+        var result = await _service.GetMyTripsAsync(driverId, page, pageSize);
+        return Ok(result);
+    }
+
+    [HttpGet("trips/joined")]
+    [ProducesResponseType(typeof(PagedTripsDTO), 200)]
+    public async Task<IActionResult> GetJoinedTrips(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
+    {
+        var userId = GetUserId();
+        if (userId == null)
+            return Unauthorized(new { error = new { code = "UNAUTHORIZED", message = "Missing or invalid token." } });
+
+        pageSize = Math.Clamp(pageSize, 1, 100);
+        page = Math.Max(page, 1);
+
+        var result = await _service.GetMyPassengerTripsAsync(userId, page, pageSize);
         return Ok(result);
     }
 
@@ -50,6 +70,21 @@ public class TripV1Controller : ControllerBase
     {
         var trip = await _service.GetTripAsync(tripId);
         return Ok(trip);
+    }
+
+    [HttpPost("trips/{tripId}/join")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(403)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(409)]
+    public async Task<IActionResult> JoinTrip([FromRoute] string tripId)
+    {
+        var userId = GetUserId();
+        if (userId == null)
+            return Unauthorized(new { error = new { code = "UNAUTHORIZED", message = "Missing or invalid token." } });
+
+        await _service.JoinTripAsync(tripId, userId);
+        return NoContent();
     }
 
     [HttpDelete("trips/{tripId}")]

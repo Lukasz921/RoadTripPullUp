@@ -21,15 +21,12 @@ public class MockTripsV1Service : ITripsV1Service
             throw new ValidationException("availableSeats must be positive.");
 
         var distanceM = (int)HaversineMeters(dto.Source.Lat, dto.Source.Lng, dto.Target.Lat, dto.Target.Lng);
-
         var trip = new TripData
         {
             Id = Guid.NewGuid().ToString(),
             DriverId = driverId,
-            SourceLat = dto.Source.Lat,
-            SourceLng = dto.Source.Lng,
-            TargetLat = dto.Target.Lat,
-            TargetLng = dto.Target.Lng,
+            SourceLat = dto.Source.Lat, SourceLng = dto.Source.Lng,
+            TargetLat = dto.Target.Lat, TargetLng = dto.Target.Lng,
             DepartureTime = DateTime.SpecifyKind(dto.DepartureTime.ToUniversalTime(), DateTimeKind.Utc),
             RouteDistanceM = distanceM,
             RouteDurationS = (int)(distanceM / 25.0),
@@ -39,7 +36,6 @@ public class MockTripsV1Service : ITripsV1Service
             Status = "ACTIVE",
             CreatedAt = DateTime.UtcNow
         };
-
         _trips[trip.Id] = trip;
         return Task.FromResult(ToTripDTO(trip));
     }
@@ -51,20 +47,49 @@ public class MockTripsV1Service : ITripsV1Service
         return Task.FromResult(ToTripDTO(trip));
     }
 
-    public Task<MyTripsV1ResultDTO> GetMyTripsAsync(string driverId, string status, int limit)
+    public Task<PagedTripsDTO> GetMyTripsAsync(string driverId, int page, int pageSize)
     {
-        var cap = Math.Clamp(limit, 1, 100);
-        var upper = status.ToUpperInvariant();
-
-        var items = _trips.Values
-            .Where(t => t.DriverId == driverId)
-            .Where(t => upper == "ALL" || t.Status == upper)
+        var all = _trips.Values
+            .Where(t => t.DriverId == driverId && t.Status == "ACTIVE")
             .OrderBy(t => t.DepartureTime)
-            .Take(cap)
-            .Select(ToTripDTO)
             .ToList();
 
-        return Task.FromResult(new MyTripsV1ResultDTO { Items = items, Count = items.Count });
+        var items = all.Skip((page - 1) * pageSize).Take(pageSize).Select(ToTripDTO).ToList();
+        return Task.FromResult(new PagedTripsDTO
+        {
+            Items = items, Page = page, PageSize = pageSize, TotalCount = all.Count
+        });
+    }
+
+    public Task<PagedTripsDTO> GetMyPassengerTripsAsync(string userId, int page, int pageSize)
+    {
+        var all = _trips.Values
+            .Where(t => t.Status == "ACTIVE" && t.PassengerIds.Contains(userId))
+            .OrderBy(t => t.DepartureTime)
+            .ToList();
+
+        var items = all.Skip((page - 1) * pageSize).Take(pageSize).Select(ToTripDTO).ToList();
+        return Task.FromResult(new PagedTripsDTO
+        {
+            Items = items, Page = page, PageSize = pageSize, TotalCount = all.Count
+        });
+    }
+
+    public Task JoinTripAsync(string tripId, string userId)
+    {
+        if (!_trips.TryGetValue(tripId, out var trip))
+            throw new NotFoundException($"Trip {tripId} not found.");
+        if (trip.DriverId == userId)
+            throw new ForbiddenException("You cannot join your own trip.");
+        if (trip.Status != "ACTIVE")
+            throw new ValidationException("Trip is not active.");
+        if (trip.PassengerIds.Contains(userId))
+            throw new ValidationException("You have already joined this trip.");
+        if (trip.PassengerIds.Count >= trip.AvailableSeats)
+            throw new SeatUnavailableException("No seats available on this trip.");
+
+        trip.PassengerIds.Add(userId);
+        return Task.CompletedTask;
     }
 
     public Task DeleteTripAsync(string tripId, string driverId)
@@ -87,8 +112,9 @@ public class MockTripsV1Service : ITripsV1Service
         if (dateTo < dateFrom)
             throw new ValidationException("dateTo must be >= dateFrom.");
 
+        var page = Math.Max(dto.Page, 1);
+        var pageSize = Math.Clamp(dto.PageSize, 1, 100);
         var minSeats = dto.MinSeats <= 0 ? 1 : dto.MinSeats;
-        var cap = Math.Clamp(dto.Limit <= 0 ? 50 : dto.Limit, 1, 100);
         var sortByPrice = dto.SortBy?.ToLowerInvariant() == "price";
 
         var fromUtc = dateFrom.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
@@ -97,17 +123,24 @@ public class MockTripsV1Service : ITripsV1Service
         var candidates = _trips.Values
             .Where(t => t.Status == "ACTIVE")
             .Where(t => t.DepartureTime >= fromUtc && t.DepartureTime <= toUtc)
-            .Where(t => t.AvailableSeats >= minSeats)
+            .Where(t => (t.AvailableSeats - t.PassengerIds.Count) >= minSeats)
             .Where(t => dto.MaxPrice == null || t.PricePerSeat <= dto.MaxPrice);
 
         var sorted = sortByPrice
             ? candidates.OrderBy(t => t.PricePerSeat)
             : candidates.OrderBy(t => t.DepartureTime);
 
-        var items = sorted.Take(cap).Select(t => ToTripSummaryDTO(t, dto.Source)).ToList();
+        var all = sorted.ToList();
+        var items = all.Skip((page - 1) * pageSize).Take(pageSize)
+            .Select(t => ToTripSummaryDTO(t, dto.Source))
+            .ToList();
 
         var jobId = Guid.NewGuid().ToString("N");
-        _jobs[jobId] = new SearchJob { JobId = jobId, UserId = userId, CreatedAt = DateTime.UtcNow, Items = items };
+        _jobs[jobId] = new SearchJob
+        {
+            JobId = jobId, UserId = userId, CreatedAt = DateTime.UtcNow,
+            Items = items, Page = page, PageSize = pageSize, TotalCount = all.Count
+        };
 
         return Task.FromResult(new SearchJobCreatedDTO
         {
@@ -153,7 +186,9 @@ public class MockTripsV1Service : ITripsV1Service
                 Status = "done",
                 CompletedAt = job.CreatedAt.AddSeconds(2),
                 Items = job.Items,
-                Count = job.Items.Count
+                Page = job.Page,
+                PageSize = job.PageSize,
+                TotalCount = job.TotalCount
             }
         });
     }
@@ -170,6 +205,7 @@ public class MockTripsV1Service : ITripsV1Service
         MaxDetourMeters = t.MaxDetourMeters,
         PricePerSeat = t.PricePerSeat,
         AvailableSeats = t.AvailableSeats,
+        PassengerIds = new List<string>(t.PassengerIds),
         Status = t.Status,
         CreatedAt = t.CreatedAt
     };
@@ -182,7 +218,7 @@ public class MockTripsV1Service : ITripsV1Service
         Target = new LatLngDTO { Lat = t.TargetLat, Lng = t.TargetLng },
         DepartureTime = t.DepartureTime,
         PricePerSeat = t.PricePerSeat,
-        AvailableSeats = t.AvailableSeats,
+        AvailableSeats = t.AvailableSeats - t.PassengerIds.Count,
         MaxDetourMeters = t.MaxDetourMeters,
         ActualDetourMeters = Math.Min(
             (int)HaversineMeters(passengerSource.Lat, passengerSource.Lng, t.SourceLat, t.SourceLng),
@@ -214,6 +250,7 @@ public class MockTripsV1Service : ITripsV1Service
         public int MaxDetourMeters { get; set; }
         public decimal PricePerSeat { get; set; }
         public int AvailableSeats { get; set; }
+        public List<string> PassengerIds { get; set; } = new();
         public string Status { get; set; } = "ACTIVE";
         public DateTime CreatedAt { get; set; }
     }
@@ -224,5 +261,8 @@ public class MockTripsV1Service : ITripsV1Service
         public string UserId { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
         public List<TripSummaryV1DTO> Items { get; set; } = new();
+        public int Page { get; set; }
+        public int PageSize { get; set; }
+        public int TotalCount { get; set; }
     }
 }

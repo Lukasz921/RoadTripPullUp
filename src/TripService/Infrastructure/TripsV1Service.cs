@@ -57,6 +57,7 @@ public class TripsV1Service : ITripsV1Service
             )
             RETURNING
                 id,
+                driver_user_id,
                 ST_Y(source_geog::geometry) AS source_lat,
                 ST_X(source_geog::geometry) AS source_lng,
                 ST_Y(target_geog::geometry) AS target_lat,
@@ -90,45 +91,291 @@ public class TripsV1Service : ITripsV1Service
         await using var reader = await cmd.ExecuteReaderAsync();
         await reader.ReadAsync();
 
-        return new TripV1DTO
-        {
-            Id = reader.GetGuid(reader.GetOrdinal("id")).ToString(),
-            DriverId = driverId,
-            Source = new LatLngDTO
-            {
-                Lat = reader.GetDouble(reader.GetOrdinal("source_lat")),
-                Lng = reader.GetDouble(reader.GetOrdinal("source_lng"))
-            },
-            Target = new LatLngDTO
-            {
-                Lat = reader.GetDouble(reader.GetOrdinal("target_lat")),
-                Lng = reader.GetDouble(reader.GetOrdinal("target_lng"))
-            },
-            RouteDistanceM = reader.GetInt32(reader.GetOrdinal("route_distance_m")),
-            RouteDurationS = reader.GetInt32(reader.GetOrdinal("route_duration_s")),
-            MaxDetourMeters = reader.GetInt32(reader.GetOrdinal("max_detour_m")),
-            DepartureTime = reader.GetDateTime(reader.GetOrdinal("departure_time")),
-            PricePerSeat = reader.GetDecimal(reader.GetOrdinal("price_per_seat")),
-            AvailableSeats = reader.GetInt16(reader.GetOrdinal("available_seats")),
-            Status = reader.GetString(reader.GetOrdinal("status")),
-            CreatedAt = reader.GetDateTime(reader.GetOrdinal("created_at"))
-        };
+        return MapRow(reader, passengerIds: new());
     }
 
-    public Task<TripV1DTO> GetTripAsync(string tripId) =>
-        _mock.GetTripAsync(tripId);
+    public async Task<TripV1DTO> GetTripAsync(string tripId)
+    {
+        if (!Guid.TryParse(tripId, out var id))
+            throw new NotFoundException($"Trip '{tripId}' not found.");
 
-    public Task<MyTripsV1ResultDTO> GetMyTripsAsync(string driverId, string status, int limit) =>
-        _mock.GetMyTripsAsync(driverId, status, limit);
+        const string sql = """
+            SELECT
+                t.id,
+                t.driver_user_id,
+                ST_Y(t.source_geog::geometry) AS source_lat,
+                ST_X(t.source_geog::geometry) AS source_lng,
+                ST_Y(t.target_geog::geometry) AS target_lat,
+                ST_X(t.target_geog::geometry) AS target_lng,
+                t.route_distance_m,
+                t.route_duration_s,
+                t.max_detour_m,
+                t.departure_time,
+                t.price_per_seat,
+                t.available_seats,
+                t.status::text AS status,
+                t.created_at,
+                COALESCE(
+                    ARRAY_AGG(tp.passenger_user_id ORDER BY tp.joined_at) FILTER (WHERE tp.passenger_user_id IS NOT NULL),
+                    '{}'::uuid[]
+                ) AS passenger_ids
+            FROM trip t
+            LEFT JOIN trip_passenger tp ON tp.trip_id = t.id
+            WHERE t.id = @id
+            GROUP BY t.id, t.driver_user_id, t.source_geog, t.target_geog,
+                     t.route_distance_m, t.route_duration_s, t.max_detour_m,
+                     t.departure_time, t.price_per_seat, t.available_seats,
+                     t.status, t.created_at
+            """;
 
-    public Task DeleteTripAsync(string tripId, string driverId) =>
-        _mock.DeleteTripAsync(tripId, driverId);
+        await using var conn = new NpgsqlConnection(_connectionString);
+        await conn.OpenAsync();
+        await using var cmd = new NpgsqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("id", id);
+
+        await using var reader = await cmd.ExecuteReaderAsync();
+        if (!await reader.ReadAsync())
+            throw new NotFoundException($"Trip '{tripId}' not found.");
+
+        return MapRowWithPassengers(reader);
+    }
+
+    public async Task<PagedTripsDTO> GetMyTripsAsync(string driverId, int page, int pageSize)
+    {
+        if (!Guid.TryParse(driverId, out var driverGuid))
+            return new PagedTripsDTO { Page = page, PageSize = pageSize };
+
+        const string sql = """
+            SELECT
+                t.id,
+                t.driver_user_id,
+                ST_Y(t.source_geog::geometry) AS source_lat,
+                ST_X(t.source_geog::geometry) AS source_lng,
+                ST_Y(t.target_geog::geometry) AS target_lat,
+                ST_X(t.target_geog::geometry) AS target_lng,
+                t.route_distance_m,
+                t.route_duration_s,
+                t.max_detour_m,
+                t.departure_time,
+                t.price_per_seat,
+                t.available_seats,
+                t.status::text AS status,
+                t.created_at,
+                COALESCE(
+                    ARRAY_AGG(tp.passenger_user_id ORDER BY tp.joined_at) FILTER (WHERE tp.passenger_user_id IS NOT NULL),
+                    '{}'::uuid[]
+                ) AS passenger_ids,
+                COUNT(*) OVER() AS total_count
+            FROM trip t
+            LEFT JOIN trip_passenger tp ON tp.trip_id = t.id
+            WHERE t.driver_user_id = @driverId
+              AND t.status = 'ACTIVE'
+            GROUP BY t.id, t.driver_user_id, t.source_geog, t.target_geog,
+                     t.route_distance_m, t.route_duration_s, t.max_detour_m,
+                     t.departure_time, t.price_per_seat, t.available_seats,
+                     t.status, t.created_at
+            ORDER BY t.departure_time ASC
+            LIMIT @pageSize OFFSET @offset
+            """;
+
+        await using var conn = new NpgsqlConnection(_connectionString);
+        await conn.OpenAsync();
+        await using var cmd = new NpgsqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("driverId", driverGuid);
+        cmd.Parameters.AddWithValue("pageSize", pageSize);
+        cmd.Parameters.AddWithValue("offset", (page - 1) * pageSize);
+
+        return await ReadPagedTrips(cmd, page, pageSize);
+    }
+
+    public async Task<PagedTripsDTO> GetMyPassengerTripsAsync(string userId, int page, int pageSize)
+    {
+        if (!Guid.TryParse(userId, out var userGuid))
+            return new PagedTripsDTO { Page = page, PageSize = pageSize };
+
+        const string sql = """
+            SELECT
+                t.id,
+                t.driver_user_id,
+                ST_Y(t.source_geog::geometry) AS source_lat,
+                ST_X(t.source_geog::geometry) AS source_lng,
+                ST_Y(t.target_geog::geometry) AS target_lat,
+                ST_X(t.target_geog::geometry) AS target_lng,
+                t.route_distance_m,
+                t.route_duration_s,
+                t.max_detour_m,
+                t.departure_time,
+                t.price_per_seat,
+                t.available_seats,
+                t.status::text AS status,
+                t.created_at,
+                COALESCE(
+                    ARRAY_AGG(tp_all.passenger_user_id ORDER BY tp_all.joined_at) FILTER (WHERE tp_all.passenger_user_id IS NOT NULL),
+                    '{}'::uuid[]
+                ) AS passenger_ids,
+                COUNT(*) OVER() AS total_count
+            FROM trip t
+            INNER JOIN trip_passenger tp_me ON tp_me.trip_id = t.id AND tp_me.passenger_user_id = @userId
+            LEFT JOIN trip_passenger tp_all ON tp_all.trip_id = t.id
+            WHERE t.status = 'ACTIVE'
+            GROUP BY t.id, t.driver_user_id, t.source_geog, t.target_geog,
+                     t.route_distance_m, t.route_duration_s, t.max_detour_m,
+                     t.departure_time, t.price_per_seat, t.available_seats,
+                     t.status, t.created_at
+            ORDER BY t.departure_time ASC
+            LIMIT @pageSize OFFSET @offset
+            """;
+
+        await using var conn = new NpgsqlConnection(_connectionString);
+        await conn.OpenAsync();
+        await using var cmd = new NpgsqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("userId", userGuid);
+        cmd.Parameters.AddWithValue("pageSize", pageSize);
+        cmd.Parameters.AddWithValue("offset", (page - 1) * pageSize);
+
+        return await ReadPagedTrips(cmd, page, pageSize);
+    }
+
+    public async Task JoinTripAsync(string tripId, string userId)
+    {
+        if (!Guid.TryParse(tripId, out var id))
+            throw new NotFoundException($"Trip '{tripId}' not found.");
+        if (!Guid.TryParse(userId, out var userGuid))
+            throw new ForbiddenException("Invalid user identity.");
+
+        await using var conn = new NpgsqlConnection(_connectionString);
+        await conn.OpenAsync();
+        await using var tx = await conn.BeginTransactionAsync();
+
+        const string checkSql = """
+            SELECT
+                t.driver_user_id,
+                t.status::text,
+                t.available_seats,
+                (SELECT COUNT(*) FROM trip_passenger WHERE trip_id = t.id) AS passenger_count,
+                EXISTS(SELECT 1 FROM trip_passenger WHERE trip_id = t.id AND passenger_user_id = @userId) AS already_joined
+            FROM trip t
+            WHERE t.id = @id
+            FOR UPDATE
+            """;
+
+        await using var checkCmd = new NpgsqlCommand(checkSql, conn, tx);
+        checkCmd.Parameters.AddWithValue("id", id);
+        checkCmd.Parameters.AddWithValue("userId", userGuid);
+
+        await using var r = await checkCmd.ExecuteReaderAsync();
+        if (!await r.ReadAsync())
+        {
+            await tx.RollbackAsync();
+            throw new NotFoundException($"Trip '{tripId}' not found.");
+        }
+
+        var driverUserId = r.GetGuid(r.GetOrdinal("driver_user_id"));
+        var status = r.GetString(r.GetOrdinal("status"));
+        var availableSeats = r.GetInt16(r.GetOrdinal("available_seats"));
+        var passengerCount = r.GetInt64(r.GetOrdinal("passenger_count"));
+        var alreadyJoined = r.GetBoolean(r.GetOrdinal("already_joined"));
+        await r.CloseAsync();
+
+        if (driverUserId == userGuid)
+            throw new ForbiddenException("You cannot join your own trip.");
+        if (status != "ACTIVE")
+            throw new ValidationException("Trip is not active.");
+        if (alreadyJoined)
+            throw new ValidationException("You have already joined this trip.");
+        if (passengerCount >= availableSeats)
+            throw new SeatUnavailableException("No seats available on this trip.");
+
+        await using var insertCmd = new NpgsqlCommand(
+            "INSERT INTO trip_passenger (trip_id, passenger_user_id) VALUES (@id, @userId)",
+            conn, tx);
+        insertCmd.Parameters.AddWithValue("id", id);
+        insertCmd.Parameters.AddWithValue("userId", userGuid);
+        await insertCmd.ExecuteNonQueryAsync();
+
+        await tx.CommitAsync();
+    }
+
+    public async Task DeleteTripAsync(string tripId, string driverId)
+    {
+        if (!Guid.TryParse(tripId, out var id))
+            throw new NotFoundException($"Trip '{tripId}' not found.");
+
+        await using var conn = new NpgsqlConnection(_connectionString);
+        await conn.OpenAsync();
+
+        await using var selectCmd = new NpgsqlCommand(
+            "SELECT driver_user_id FROM trip WHERE id = @id", conn);
+        selectCmd.Parameters.AddWithValue("id", id);
+        var ownerObj = await selectCmd.ExecuteScalarAsync();
+
+        if (ownerObj is null)
+            throw new NotFoundException($"Trip '{tripId}' not found.");
+        if (ownerObj.ToString() != driverId)
+            throw new ForbiddenException("You are not the driver of this trip.");
+
+        await using var deleteCmd = new NpgsqlCommand("DELETE FROM trip WHERE id = @id", conn);
+        deleteCmd.Parameters.AddWithValue("id", id);
+        await deleteCmd.ExecuteNonQueryAsync();
+    }
 
     public Task<SearchJobCreatedDTO> SubmitSearchAsync(SearchTripsV1RequestDTO dto, string userId) =>
         _mock.SubmitSearchAsync(dto, userId);
 
     public Task<SearchJobPollResult> PollSearchJobAsync(string jobId, string userId) =>
         _mock.PollSearchJobAsync(jobId, userId);
+
+    private static async Task<PagedTripsDTO> ReadPagedTrips(NpgsqlCommand cmd, int page, int pageSize)
+    {
+        var items = new List<TripV1DTO>();
+        var totalCount = 0;
+
+        await using var reader = await cmd.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            if (items.Count == 0)
+                totalCount = reader.GetInt32(reader.GetOrdinal("total_count"));
+            items.Add(MapRowWithPassengers(reader));
+        }
+
+        return new PagedTripsDTO
+        {
+            Items = items,
+            Page = page,
+            PageSize = pageSize,
+            TotalCount = totalCount
+        };
+    }
+
+    private static TripV1DTO MapRowWithPassengers(NpgsqlDataReader r) =>
+        MapRow(r, r.GetFieldValue<Guid[]>(r.GetOrdinal("passenger_ids"))
+                  .Select(g => g.ToString())
+                  .ToList());
+
+    private static TripV1DTO MapRow(NpgsqlDataReader r, List<string> passengerIds) => new()
+    {
+        Id = r.GetGuid(r.GetOrdinal("id")).ToString(),
+        DriverId = r.GetGuid(r.GetOrdinal("driver_user_id")).ToString(),
+        Source = new LatLngDTO
+        {
+            Lat = r.GetDouble(r.GetOrdinal("source_lat")),
+            Lng = r.GetDouble(r.GetOrdinal("source_lng"))
+        },
+        Target = new LatLngDTO
+        {
+            Lat = r.GetDouble(r.GetOrdinal("target_lat")),
+            Lng = r.GetDouble(r.GetOrdinal("target_lng"))
+        },
+        RouteDistanceM = r.GetInt32(r.GetOrdinal("route_distance_m")),
+        RouteDurationS = r.GetInt32(r.GetOrdinal("route_duration_s")),
+        MaxDetourMeters = r.GetInt32(r.GetOrdinal("max_detour_m")),
+        DepartureTime = r.GetDateTime(r.GetOrdinal("departure_time")),
+        PricePerSeat = r.GetDecimal(r.GetOrdinal("price_per_seat")),
+        AvailableSeats = r.GetInt16(r.GetOrdinal("available_seats")),
+        Status = r.GetString(r.GetOrdinal("status")),
+        CreatedAt = r.GetDateTime(r.GetOrdinal("created_at")),
+        PassengerIds = passengerIds
+    };
 
     private static double HaversineMeters(double lat1, double lng1, double lat2, double lng2)
     {

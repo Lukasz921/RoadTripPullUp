@@ -28,7 +28,9 @@ public class SearchJobResultDTO
     public string Status { get; set; } = string.Empty;
     public DateTime? CompletedAt { get; set; }
     public List<TripSummaryV1DTO>? Items { get; set; }
-    public int? Count { get; set; }
+    public int Page { get; set; }
+    public int PageSize { get; set; }
+    public int TotalCount { get; set; }
     public SearchJobErrorDTO? Error { get; set; }
 }
 
