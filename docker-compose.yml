@@ -42,8 +42,8 @@ services:
     environment:
       - tile_urls=https://download.geofabrik.de/europe/poland-latest.osm.pbf
       - serve_tiles=True
-      - build_admins=True
-      - build_time_zones=True
+      - build_admins=False
+      - build_time_zones=False
     healthcheck:
       test: ["CMD-SHELL", "wget -q --spider http://localhost:8002/status || exit 1"]
       interval: 30s

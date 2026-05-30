@@ -20,8 +20,8 @@ public class ValhallaRoutingEngine : IRoutingEngine
         {
             locations = new[]
             {
-                new { lon = source.Lng, lat = source.Lat },
-                new { lon = target.Lng, lat = target.Lat }
+                new { lon = source.Lng, lat = source.Lat, type = "break", radius = 100 },
+                new { lon = target.Lng, lat = target.Lat, type = "break", radius = 100 }
             },
             costing = "auto"
         };
