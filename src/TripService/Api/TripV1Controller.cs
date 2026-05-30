@@ -1,9 +1,9 @@
 using System.Security.Claims;
-using Application.TripPlanner;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TripService.Application;
 
-namespace API.TripPlanner;
+namespace TripService.Api;
 
 [ApiController]
 [Route("api/v1")]
@@ -32,14 +32,14 @@ public class TripV1Controller : ControllerBase
     [HttpGet("trips/me")]
     [ProducesResponseType(typeof(MyTripsV1ResultDTO), 200)]
     public async Task<IActionResult> GetMyTrips(
-        [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 20)
+        [FromQuery] string status = "ACTIVE",
+        [FromQuery] int limit = 50)
     {
         var driverId = GetUserId();
         if (driverId == null)
             return Unauthorized(new { error = new { code = "UNAUTHORIZED", message = "Missing or invalid token." } });
 
-        var result = await _service.GetMyTripsAsync(driverId, page, pageSize);
+        var result = await _service.GetMyTripsAsync(driverId, status, limit);
         return Ok(result);
     }
 

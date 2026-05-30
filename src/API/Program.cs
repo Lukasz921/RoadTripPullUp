@@ -5,9 +5,10 @@ using Scalar.AspNetCore;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Application.Messages;
-using Application.TripPlanner;
 using Infrastructure.Messages;
-using Infrastructure.TripPlanner;
+using TripService.Api;
+using TripService.Application;
+using TripService.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -34,7 +35,8 @@ builder.Services.AddOpenApi(options =>
     });
 });
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddApplicationPart(typeof(TripV1Controller).Assembly);
 
 builder.Services.AddCors(options =>
 {
@@ -68,13 +70,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization();
 
 builder.Services.AddUsersModule();
-
-// definicje dla controlerow
-builder.Services.AddScoped<ITripRepository, TripRepository>();
-builder.Services.AddScoped<IRouteRepository, RouteRepository>();
-builder.Services.AddScoped<ITripRequestRepository, TripRequestRepository>();
-builder.Services.AddScoped<ITripService, TripService>();
-builder.Services.AddSingleton<ITripsV1Service, MockTripsV1Service>();
+builder.Services.AddScoped<ITripsV1Service, TripsV1Service>();
 builder.Services.AddScoped<IMessageRepository, MessageRepository>();
 builder.Services.AddScoped<IMessagingService, MessagingService>();
 

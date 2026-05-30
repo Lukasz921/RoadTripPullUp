@@ -1,4 +1,4 @@
-namespace Application.TripPlanner;
+namespace TripService.Application;
 
 public class SearchTripsV1RequestDTO
 {
@@ -9,6 +9,5 @@ public class SearchTripsV1RequestDTO
     public decimal? MaxPrice { get; set; }
     public int MinSeats { get; set; } = 1;
     public string SortBy { get; set; } = "departure";
-    public int Page { get; set; } = 1;
-    public int PageSize { get; set; } = 20;
+    public int Limit { get; set; } = 50;
 }

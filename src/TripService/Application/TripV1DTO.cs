@@ -1,4 +1,4 @@
-namespace Application.TripPlanner;
+namespace TripService.Application;
 
 public class TripV1DTO
 {
@@ -29,7 +29,5 @@ public class CreateTripV1DTO
 public class MyTripsV1ResultDTO
 {
     public List<TripV1DTO> Items { get; set; } = new();
-    public int Page { get; set; }
-    public int PageSize { get; set; }
-    public int TotalCount { get; set; }
+    public int Count { get; set; }
 }

@@ -32,7 +32,7 @@ public class ArchitectureTests
     {
         // Arrange
         // (Zakładam, że masz tam interfejs ITripRepository, jeśli nie, podmień na dowolną klasę z Application)
-        var assembly = typeof(Application.TripPlanner.ITripRepository).Assembly;
+        var assembly = typeof(Application.Messages.IMessagingService).Assembly;
 
         // Act
         var result = Types
