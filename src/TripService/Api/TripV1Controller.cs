@@ -11,10 +11,12 @@ namespace TripService.Api;
 public class TripV1Controller : ControllerBase
 {
     private readonly ITripsV1Service _service;
+    private readonly ITripsSearchService _search;
 
-    public TripV1Controller(ITripsV1Service service)
+    public TripV1Controller(ITripsV1Service service, ITripsSearchService search)
     {
         _service = service;
+        _search  = search;
     }
 
     [HttpPost("trips")]
@@ -99,6 +101,16 @@ public class TripV1Controller : ControllerBase
 
         await _service.DeleteTripAsync(tripId, driverId);
         return NoContent();
+    }
+
+    [HttpGet("trips/search")]
+    [ProducesResponseType(typeof(SyncSearchResultDTO), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(502)]
+    public async Task<IActionResult> SearchTrips([FromQuery] SearchTripsQueryDTO query, CancellationToken ct)
+    {
+        var result = await _search.SearchAsync(query, ct);
+        return Ok(result);
     }
 
     [HttpPost("trips/search")]

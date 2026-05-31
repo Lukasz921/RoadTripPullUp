@@ -78,6 +78,7 @@ builder.Services.AddHttpClient("valhalla", client =>
 });
 builder.Services.AddScoped<IRoutingEngine, ValhallaRoutingEngine>();
 builder.Services.AddScoped<ITripsV1Service, TripsV1Service>();
+builder.Services.AddScoped<ITripsSearchService, TripsSearchService>();
 builder.Services.AddScoped<IMessageRepository, MessageRepository>();
 builder.Services.AddScoped<IMessagingService, MessagingService>();
 

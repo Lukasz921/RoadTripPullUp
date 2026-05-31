@@ -56,6 +56,53 @@ public class ValhallaRoutingEngine : IRoutingEngine
         }
     }
 
+    public async Task<int?[][]> GetMatrixAsync(LatLngDTO[] sources, LatLngDTO[] targets, CancellationToken ct = default)
+    {
+        var body = new
+        {
+            sources = sources.Select(s => new { lon = s.Lng, lat = s.Lat, radius = 100 }).ToArray(),
+            targets = targets.Select(t => new { lon = t.Lng, lat = t.Lat, radius = 100 }).ToArray(),
+            costing = "auto"
+        };
+
+        try
+        {
+            using var response = await _http.PostAsJsonAsync("/sources_to_targets", body, ct);
+
+            if (!response.IsSuccessStatusCode)
+                throw new RoutingEngineUnavailableException(
+                    $"Valhalla matrix returned HTTP {(int)response.StatusCode}.");
+
+            using var doc = await JsonDocument.ParseAsync(
+                await response.Content.ReadAsStreamAsync(ct), cancellationToken: ct);
+
+            var rows = doc.RootElement.GetProperty("sources_to_targets");
+            var result = new int?[sources.Length][];
+
+            for (int i = 0; i < sources.Length; i++)
+            {
+                result[i] = new int?[targets.Length];
+                var row = rows[i];
+                for (int j = 0; j < targets.Length; j++)
+                {
+                    var cell = row[j];
+                    if (cell.TryGetProperty("distance", out var dist) && dist.ValueKind != JsonValueKind.Null)
+                        result[i][j] = (int)(dist.GetDouble() * 1000); // km → m
+                }
+            }
+
+            return result;
+        }
+        catch (RoutingEngineUnavailableException)
+        {
+            throw;
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or OperationCanceledException)
+        {
+            throw new RoutingEngineUnavailableException("Valhalla routing engine is unavailable or timed out.");
+        }
+    }
+
     private static string DecodePolylineToWkt(string encoded, int precision = 6)
     {
         var factor = Math.Pow(10, precision);

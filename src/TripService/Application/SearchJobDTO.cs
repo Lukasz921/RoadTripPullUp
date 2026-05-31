@@ -46,3 +46,26 @@ public class SearchJobPollResult
     public SearchJobProgressDTO? Progress { get; set; }
     public SearchJobResultDTO? Result { get; set; }
 }
+
+public class SearchTripsQueryDTO
+{
+    public double SourceLat { get; set; }
+    public double SourceLng { get; set; }
+    public double TargetLat { get; set; }
+    public double TargetLng { get; set; }
+    public string DateFrom { get; set; } = string.Empty;
+    public string DateTo { get; set; } = string.Empty;
+    public decimal? MaxPrice { get; set; }
+    public int MinSeats { get; set; } = 1;
+    public string SortBy { get; set; } = "departure";
+    public int Page { get; set; } = 1;
+    public int PageSize { get; set; } = 20;
+}
+
+public class SyncSearchResultDTO
+{
+    public List<TripSummaryV1DTO> Items { get; set; } = new();
+    public int Page { get; set; }
+    public int PageSize { get; set; }
+    public int TotalCount { get; set; }
+}
