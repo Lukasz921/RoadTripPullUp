@@ -9,13 +9,14 @@ public class TripsV1Service : ITripsV1Service
 {
     private readonly string _connectionString;
     private readonly IRoutingEngine _routing;
-    private readonly MockTripsV1Service _mock = new();
+    private readonly IJobStore _jobStore;
 
-    public TripsV1Service(IConfiguration config, IRoutingEngine routing)
+    public TripsV1Service(IConfiguration config, IRoutingEngine routing, IJobStore jobStore)
     {
         _connectionString = config.GetConnectionString("TripConnection")
             ?? throw new InvalidOperationException("TripConnection is not configured.");
-        _routing = routing;
+        _routing  = routing;
+        _jobStore = jobStore;
     }
 
     public async Task<TripV1DTO> CreateTripAsync(CreateTripV1DTO dto, string driverId)
@@ -321,11 +322,85 @@ public class TripsV1Service : ITripsV1Service
         await deleteCmd.ExecuteNonQueryAsync();
     }
 
-    public Task<SearchJobCreatedDTO> SubmitSearchAsync(SearchTripsV1RequestDTO dto, string userId) =>
-        _mock.SubmitSearchAsync(dto, userId);
+    public async Task<SearchJobCreatedDTO> SubmitSearchAsync(SearchTripsV1RequestDTO dto, string userId)
+    {
+        if (!DateOnly.TryParse(dto.DateFrom, out _))
+            throw new ValidationException("dateFrom must be in YYYY-MM-DD format.");
+        if (!DateOnly.TryParse(dto.DateTo, out _))
+            throw new ValidationException("dateTo must be in YYYY-MM-DD format.");
 
-    public Task<SearchJobPollResult> PollSearchJobAsync(string jobId, string userId) =>
-        _mock.PollSearchJobAsync(jobId, userId);
+        var query = new SearchTripsQueryDTO
+        {
+            SourceLat = dto.Source.Lat,
+            SourceLng = dto.Source.Lng,
+            TargetLat = dto.Target.Lat,
+            TargetLng = dto.Target.Lng,
+            DateFrom  = dto.DateFrom,
+            DateTo    = dto.DateTo,
+            MaxPrice  = dto.MaxPrice,
+            MinSeats  = dto.MinSeats,
+            SortBy    = dto.SortBy,
+            Page      = dto.Page,
+            PageSize  = dto.PageSize
+        };
+
+        var jobId = await _jobStore.EnqueueAsync(userId, query);
+
+        return new SearchJobCreatedDTO
+        {
+            JobId                = jobId,
+            Status               = "pending",
+            StatusUrl            = $"/api/v1/trips/search/{jobId}",
+            EstimatedDurationMs  = 3_000
+        };
+    }
+
+    public async Task<SearchJobPollResult> PollSearchJobAsync(string jobId, string userId)
+    {
+        var job = await _jobStore.GetJobAsync(jobId);
+
+        if (job == null || job.UserId != userId)
+            throw new NotFoundException($"Search job {jobId} not found.");
+
+        if (job.Status is "pending" or "processing")
+            return new SearchJobPollResult
+            {
+                IsProcessing = true,
+                Progress = new SearchJobProgressDTO { JobId = jobId, Status = job.Status }
+            };
+
+        if (job.Status == "done")
+            return new SearchJobPollResult
+            {
+                IsProcessing = false,
+                Result = new SearchJobResultDTO
+                {
+                    JobId        = jobId,
+                    Status       = "done",
+                    CompletedAt  = job.CompletedAt,
+                    Items        = job.Result?.Items,
+                    Page         = job.Result?.Page     ?? 1,
+                    PageSize     = job.Result?.PageSize  ?? 20,
+                    TotalCount   = job.Result?.TotalCount ?? 0
+                }
+            };
+
+        // error
+        return new SearchJobPollResult
+        {
+            IsProcessing = false,
+            Result = new SearchJobResultDTO
+            {
+                JobId  = jobId,
+                Status = "error",
+                Error  = new SearchJobErrorDTO
+                {
+                    Code    = "SEARCH_FAILED",
+                    Message = job.Error ?? "Search failed."
+                }
+            }
+        };
+    }
 
     private static async Task<PagedTripsDTO> ReadPagedTrips(NpgsqlCommand cmd, int page, int pageSize)
     {

@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using API.Middleware;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -76,9 +77,15 @@ builder.Services.AddHttpClient("valhalla", client =>
     client.BaseAddress = new Uri(builder.Configuration["Valhalla:BaseUrl"] ?? "http://valhalla:8002");
     client.Timeout = TimeSpan.FromSeconds(10);
 });
+builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
+    ConnectionMultiplexer.Connect(
+        builder.Configuration.GetConnectionString("Redis") ?? "localhost:6379"));
+builder.Services.AddSingleton<IJobStore, RedisJobStore>();
+
 builder.Services.AddScoped<IRoutingEngine, ValhallaRoutingEngine>();
 builder.Services.AddScoped<ITripsV1Service, TripsV1Service>();
 builder.Services.AddScoped<ITripsSearchService, TripsSearchService>();
+builder.Services.AddHostedService<SearchWorker>();
 builder.Services.AddScoped<IMessageRepository, MessageRepository>();
 builder.Services.AddScoped<IMessagingService, MessagingService>();
 

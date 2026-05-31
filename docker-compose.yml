@@ -51,6 +51,19 @@ services:
       retries: 3
       start_period: 1800s
 
+  redis:
+    image: redis:7-alpine
+    container_name: app_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
   api:
     build:
       context: .
@@ -63,11 +76,14 @@ services:
       - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=app_db;Username=postgres;Password=admin
       - ConnectionStrings__UsersConnection=Host=db;Port=5432;Database=app_db;Username=postgres;Password=admin
       - ConnectionStrings__TripConnection=Host=trip_db;Port=5432;Database=trip_db;Username=postgres;Password=admin
+      - ConnectionStrings__Redis=redis:6379
       - Valhalla__BaseUrl=http://valhalla:8002
     depends_on:
       db:
         condition: service_healthy
       trip_db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
 
   frontend:
@@ -84,3 +100,4 @@ volumes:
   postgres_data:
   trip_db_data:
   valhalla_data:
+  redis_data:
