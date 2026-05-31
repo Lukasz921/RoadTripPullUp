@@ -18,42 +18,21 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginDTO dto)
     {
-        try
-        {
-            var response = await _authService.Login(dto);
-            return Ok(response);
-        }
-        catch (Exception ex)
-        {
-            return Unauthorized(new { message = ex.Message });
-        }
+        var response = await _authService.Login(dto);
+        return Ok(response);
     }
 
     [HttpPost("register")]
-    public async Task<IActionResult> Register([FromBody] UserDTO dto)
+    public async Task<IActionResult> Register([FromBody] RegisterDTO dto)
     {
-        try
-        {
-            await _authService.Register(dto);
-            return Ok();
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        await _authService.Register(dto);
+        return Ok();
     }
 
     [HttpPost("google")]
     public async Task<IActionResult> Google([FromBody] GoogleLoginDTO dto)
     {
-        try
-        {
-            var response = await _authService.GoogleLogin(dto.IdToken);
-            return Ok(response);
-        }
-        catch (Exception ex)
-        {
-            return Unauthorized(new { message = "Invalid Google token.", details = ex.Message });
-        }
+        var response = await _authService.GoogleLogin(dto.IdToken);
+        return Ok(response);
     }
 }
