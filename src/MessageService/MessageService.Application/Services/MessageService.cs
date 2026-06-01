@@ -18,9 +18,9 @@ public class MessageService : IMessageService
         _notifier = notifier;
     }
 
-    public async Task<Guid> CreateMessageAsync(Guid conversationId, CreateMessageDto dto, Guid senderId)
+    public async Task<Guid> CreateMessageAsync(CreateMessageDto dto, Guid senderId)
     {
-        var conv = await _conversations.GetByIdAsync(conversationId);
+        var conv = await _conversations.GetByIdAsync(dto.ConversationId);
         if (conv == null) throw new KeyNotFoundException("conversation not found");
 
         // validate sender is member
@@ -39,7 +39,7 @@ public class MessageService : IMessageService
 
         var msg = new Message
         {
-            ConversationId = conversationId,
+            ConversationId = dto.ConversationId,
             SenderId = senderId,
             Type = dto.Type,
             Payload = dto.Payload,
@@ -52,6 +52,7 @@ public class MessageService : IMessageService
         await _notifier.PublishMessageCreatedAsync(created);
 
         return created.Id;
+        // TODO: convert into builder
     }
 
     public async Task<IEnumerable<MessageDto>> GetMessagesAsync(Guid conversationId, int skip, int take)

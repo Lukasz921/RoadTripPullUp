@@ -44,7 +44,7 @@ public class MessageServiceTests
         };
 
         // Act
-        var id = await svc.CreateMessageAsync(conversationId, dto, senderId);
+        var id = await svc.CreateMessageAsync(dto, senderId);
 
         // Assert
         id.Should().NotBe(Guid.Empty);
