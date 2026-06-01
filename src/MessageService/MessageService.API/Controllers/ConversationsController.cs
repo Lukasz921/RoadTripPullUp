@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using MessageService.Application.DTOs;
+using MessageService.Application.Helpers;
 using MessageService.Application.Services;
 using MessageService.Core.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -100,7 +101,7 @@ public class ConversationsController : ControllerBase
             TripId = conv.TripId,
             Participants = conv.Members.Select(m => m.UserId).ToList(),
             LastMessageId = lastMsg?.Id ?? Guid.Empty,
-            LastMessagePreview = GetMessagePreview(lastMsg),
+            LastMessagePreview = lastMsg?.GetMessagePreview() ?? string.Empty,
             LastMessageCreatedAt = lastMsg?.CreatedAt ?? DateTime.UnixEpoch
         };
 
@@ -123,7 +124,7 @@ public class ConversationsController : ControllerBase
             TripId = conv.TripId,
             Participants = conv.Members.Select(m => m.UserId).ToList(),
             LastMessageId = conv.Messages.OrderByDescending(m => m.CreatedAt).FirstOrDefault()?.Id ?? Guid.Empty,
-            LastMessagePreview = GetMessagePreview(conv.Messages.OrderByDescending(m => m.CreatedAt).FirstOrDefault()),
+            LastMessagePreview = conv.Messages.OrderByDescending(m => m.CreatedAt).FirstOrDefault()?.GetMessagePreview() ?? string.Empty,
             LastMessageCreatedAt = conv.Messages.OrderByDescending(m => m.CreatedAt).FirstOrDefault()?.CreatedAt ??
                                    DateTime.UnixEpoch
         };
@@ -144,7 +145,7 @@ public class ConversationsController : ControllerBase
             TripId = conv.TripId,
             Participants = conv.Members.Select(m => m.UserId).ToList(),
             LastMessageId = conv.Messages.OrderByDescending(m => m.CreatedAt).FirstOrDefault()?.Id ?? Guid.Empty,
-            LastMessagePreview = GetMessagePreview(conv.Messages.OrderByDescending(m => m.CreatedAt).FirstOrDefault()),
+            LastMessagePreview = conv.Messages.OrderByDescending(m => m.CreatedAt).FirstOrDefault()?.GetMessagePreview() ?? string.Empty,
             LastMessageCreatedAt = conv.Messages.OrderByDescending(m => m.CreatedAt).FirstOrDefault()?.CreatedAt ??
                                    DateTime.UnixEpoch
         });
@@ -175,20 +176,5 @@ public class ConversationsController : ControllerBase
     {
         var sub = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         return string.IsNullOrEmpty(sub) ? Guid.Empty : Guid.Parse(sub);
-    }
-    
-    private static string GetMessagePreview(Message? msg) // TODO: move to a helper/extension method
-    {
-        if (msg == null) return string.Empty;
-
-        return msg.Type switch
-        {
-            MessageType.Text => msg.Payload?["text"]?.ToString() ?? string.Empty,
-            MessageType.Location => "[Location]",
-            MessageType.PriceOffer => "[Price Offer]",
-            MessageType.PriceAccept => "[Price Accept]",
-            MessageType.OfferApproval => "[Offer Approval]",
-            _ => string.Empty
-        };
     }
 }
