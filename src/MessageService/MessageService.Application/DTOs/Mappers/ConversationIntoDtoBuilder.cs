@@ -20,8 +20,15 @@ public class ConversationIntoDtoBuilder
         };
     }
     
-    public ConversationIntoDtoBuilder WithLastMessage(Message message)
+    public ConversationIntoDtoBuilder WithLastMessage(Message? message)
     {
+        if (message == null)
+        {
+            _conversationDto.LastMessageId = Guid.Empty;
+            _conversationDto.LastMessagePreview = string.Empty;
+            _conversationDto.LastMessageCreatedAt = DateTime.UnixEpoch;
+            return this;
+        }
         _conversationDto.LastMessageId = message.Id;
         _conversationDto.LastMessagePreview = message.GetMessagePreview();
         _conversationDto.LastMessageCreatedAt = message.CreatedAt;
