@@ -10,12 +10,14 @@ public class MessageService : IMessageService
     private readonly IMessageRepository _messages;
     private readonly IConversationRepository _conversations;
     private readonly INotificationService _notifier;
+    private readonly IClockService _clockService;
 
-    public MessageService(IMessageRepository messages, IConversationRepository conversations, INotificationService notifier)
+    public MessageService(IMessageRepository messages, IConversationRepository conversations, INotificationService notifier, IClockService clockService)
     {
         _messages = messages;
         _conversations = conversations;
         _notifier = notifier;
+        _clockService = clockService;
     }
 
     public async Task<Guid> CreateMessageAsync(CreateMessageDto dto, Guid senderId)
@@ -26,25 +28,9 @@ public class MessageService : IMessageService
         // validate sender is member
         if (conv.Members.All(m => m.UserId != senderId)) throw new UnauthorizedAccessException("sender not in conversation");
 
-        // type restrictions per spec
-        if (conv.Type == ConversationType.Direct)
-        {
-            if (dto.Type == MessageType.Location) throw new InvalidOperationException("LOCATION not allowed in DIRECT");
-        }
-        else
-        {
-            if(dto.Type is MessageType.PriceOffer or MessageType.PriceAccept or MessageType.OfferApproval)
-                throw new InvalidOperationException("price negotiation not allowed in GROUP");
-        }
-
-        var msg = new Message
-        {
-            ConversationId = dto.ConversationId,
-            SenderId = senderId,
-            Type = dto.Type,
-            Payload = dto.Payload,
-            CreatedAt = DateTime.UtcNow
-        };
+        var messageBuilder = new MessageFromDtoBuilder(dto, _clockService).WithSender(senderId);
+        if (!messageBuilder.ValidateType(conv.Type)) throw new InvalidOperationException("message type not allowed in conversation type");
+        var msg = messageBuilder.Build();
 
         var created = await _messages.CreateAsync(msg);
 
@@ -52,7 +38,6 @@ public class MessageService : IMessageService
         await _notifier.PublishMessageCreatedAsync(created);
 
         return created.Id;
-        // TODO: convert into builder
     }
 
     public async Task<IEnumerable<MessageDto>> GetMessagesAsync(Guid conversationId, int skip, int take)
