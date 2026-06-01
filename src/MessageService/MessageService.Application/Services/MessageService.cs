@@ -1,4 +1,5 @@
 using MessageService.Application.DTOs;
+using MessageService.Application.DTOs.Mappers;
 using MessageService.Core.Models;
 using MessageService.Core.RepositoryInterfaces;
 
@@ -56,30 +57,13 @@ public class MessageService : IMessageService
     public async Task<IEnumerable<MessageDto>> GetMessagesAsync(Guid conversationId, int skip, int take)
     {
         var messages = await _messages.GetForConversationAsync(conversationId, skip, take);
-        return messages.Select(m => new MessageDto
-        {
-            MessageId = m.Id,
-            ConversationId = m.ConversationId,
-            SenderId = m.SenderId,
-            Type = m.Type,
-            Payload = m.Payload,
-            CreatedAt = m.CreatedAt
-        });
+        return messages.Select(m => new MessageIntoDtoBuilder(m).Build());
     }
 
     public async Task<MessageDto?> GetByIdAsync(Guid messageId)
     {
         var m = await _messages.GetByIdAsync(messageId);
-        if (m == null) return null;
-        return new MessageDto
-        {
-            MessageId = m.Id,
-            ConversationId = m.ConversationId,
-            SenderId = m.SenderId,
-            Type = m.Type,
-            Payload = m.Payload,
-            CreatedAt = m.CreatedAt
-        };
+        return m == null ? null : new MessageIntoDtoBuilder(m).Build();
     }
 
     public async Task MarkMessagesReadAsync(Guid conversationId, IEnumerable<Guid> messageIds, Guid readerId, DateTime readAt)
@@ -92,14 +76,6 @@ public class MessageService : IMessageService
     public async Task<IEnumerable<MessageDto>> SyncMessagesAsync(Guid userId, DateTime lastReceivedAt)
     {
         var messages = await _messages.GetForUserSinceAsync(userId, lastReceivedAt);
-        return messages.Select(m => new MessageDto
-        {
-            MessageId = m.Id,
-            ConversationId = m.ConversationId,
-            SenderId = m.SenderId,
-            Type = m.Type,
-            Payload = m.Payload,
-            CreatedAt = m.CreatedAt
-        });
+        return messages.Select(m => new MessageIntoDtoBuilder(m).Build());
     }
 }
