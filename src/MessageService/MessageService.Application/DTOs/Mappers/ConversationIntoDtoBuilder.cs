@@ -28,8 +28,5 @@ public class ConversationIntoDtoBuilder
         return this;
     }
     
-    public ConversationDto Build()
-    {
-        return _conversationDto;
-    }
+    public ConversationDto Build() => _conversationDto;
 }
