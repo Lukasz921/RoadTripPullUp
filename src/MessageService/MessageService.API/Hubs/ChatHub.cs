@@ -46,7 +46,7 @@ public class ChatHub : Hub
 
         try
         {
-            var messageId = await _messageService.CreateMessageAsync(dto.ConversationId, dto, senderId);
+            var messageId = await _messageService.CreateMessageAsync(dto, senderId);
 
             // Broadcast to the group that a message was created. The RedisNotificationService
             // already publishes to SignalR as well, but broadcasting here gives immediate feedback

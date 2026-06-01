@@ -24,7 +24,7 @@ public class MessagesController : ControllerBase
         if (dto.ConversationId == Guid.Empty)
             return BadRequest(new { error = "conversationId is required" });
 
-        var id = await _messages.CreateMessageAsync(dto.ConversationId, dto, userId);
+        var id = await _messages.CreateMessageAsync(dto, userId);
         return CreatedAtAction(nameof(Get), new { conversationId = dto.ConversationId, messageId = id }, new { messageId = id });
     }
 
