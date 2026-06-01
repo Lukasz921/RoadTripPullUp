@@ -1,4 +1,5 @@
 using MessageService.Application.DTOs;
+using MessageService.Application.DTOs.Mappers;
 using MessageService.Core.Models;
 using MessageService.Core.RepositoryInterfaces;
 
@@ -22,36 +23,11 @@ public class ConversationService : IConversationService
         // basic validation
         if (dto.Participants == null || dto.Participants.Count == 0)
             throw new ArgumentException("participants required");
-
-        var conv = new Conversation
-        {
-            Type = dto.Type,
-            Title = dto.Title,
-            Date = dto.Date,
-            CreatedAt = _clockService.Now,
-            TripId = dto.TripId
-        };
-
-        foreach (var p in dto.Participants.Distinct())
-        {
-            conv.Members.Add(new ConversationMember
-            {
-                UserId = p,
-                JoinedAt = _clockService.Now,
-                Role = 0
-            });
-        }
-
-        // ensure creator is member
-        if (conv.Members.All(m => m.UserId != creatorId))
-        {
-            conv.Members.Add(new ConversationMember
-            {
-                UserId = creatorId,
-                JoinedAt = _clockService.Now,
-                Role = 1
-            });
-        }
+        
+        var conv = new ConversationFromDtoBuilder(dto, _clockService)
+            .WithMembers(dto.Participants)
+            .CheckDefaultMember(creatorId)
+            .Build();
 
         var created = await _conversations.CreateAsync(conv);
         return created.Id;
