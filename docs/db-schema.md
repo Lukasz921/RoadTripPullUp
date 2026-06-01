@@ -72,7 +72,6 @@ EF Core stores the `Role`, `Sex`, `TripStatus`, and `TripRequestStatus` enums as
 | 0 | MALE |
 | 1 | FEMALE |
 | 2 | OTHER |
-| 3 | MARXIST |
 
 `TripStatus`
 
