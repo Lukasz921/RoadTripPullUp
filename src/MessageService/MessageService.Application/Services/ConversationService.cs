@@ -1,6 +1,5 @@
 using MessageService.Application.DTOs;
 using MessageService.Application.DTOs.Mappers;
-using MessageService.Application.Helpers;
 using MessageService.Core.Models;
 using MessageService.Core.RepositoryInterfaces;
 
@@ -55,20 +54,5 @@ public class ConversationService : IConversationService
     public async Task<List<Conversation>> GetDirectForTripAsync(Guid tripId, Guid userId)
     {
         return await _conversations.GetDirectConversationsForTripAsync(tripId, userId);
-    }
-    
-    private static string GetMessagePreview(Message? msg) // TODO: move to a helper/extension method
-    {
-        if (msg == null) return string.Empty;
-
-        return msg.Type switch
-        {
-            MessageType.Text => msg.Payload?["text"]?.ToString() ?? string.Empty,
-            MessageType.Location => "[Location]",
-            MessageType.PriceOffer => "[Price Offer]",
-            MessageType.PriceAccept => "[Price Accept]",
-            MessageType.OfferApproval => "[Offer Approval]",
-            _ => string.Empty
-        };
     }
 }
