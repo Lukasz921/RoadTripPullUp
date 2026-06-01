@@ -35,7 +35,7 @@ public class ChatHub : Hub
     /// We return the created message id to the caller and also broadcast a lightweight
     /// confirmation to the conversation group to enable optimistic UI updates.
     /// </summary>
-    public async Task<object> SendMessage(string conversationId, CreateMessageDto dto)
+    public async Task<object> SendMessage(CreateMessageDto dto)
     {
         // obtain sender id from authenticated user claims
         var sub = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -44,12 +44,9 @@ public class ChatHub : Hub
             throw new HubException("Unauthorized: missing or invalid user identifier.");
         }
 
-        if (!Guid.TryParse(conversationId, out var convId))
-            throw new HubException("Invalid conversation id.");
-
         try
         {
-            var messageId = await _messageService.CreateMessageAsync(convId, dto, senderId);
+            var messageId = await _messageService.CreateMessageAsync(dto.ConversationId, dto, senderId);
 
             // Broadcast to the group that a message was created. The RedisNotificationService
             // already publishes to SignalR as well, but broadcasting here gives immediate feedback
@@ -60,7 +57,7 @@ public class ChatHub : Hub
                 data = new
                 {
                     id = messageId,
-                    conversationId = convId,
+                    conversationId = dto.ConversationId,
                     senderId,
                     type = dto.Type,
                     payload = dto.Payload,
@@ -68,7 +65,7 @@ public class ChatHub : Hub
                 }
             };
 
-            await Clients.Group(conversationId).SendAsync("MessageCreated", payload);
+            await Clients.Group(dto.ConversationId.ToString()).SendAsync("MessageCreated", payload);
 
             return new { messageId };
         }
