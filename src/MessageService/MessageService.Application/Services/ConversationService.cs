@@ -1,5 +1,6 @@
 using MessageService.Application.DTOs;
 using MessageService.Application.DTOs.Mappers;
+using MessageService.Application.Helpers;
 using MessageService.Core.Models;
 using MessageService.Core.RepositoryInterfaces;
 
@@ -31,24 +32,14 @@ public class ConversationService : IConversationService
 
         var created = await _conversations.CreateAsync(conv);
         return created.Id;
-        // TODO: check the logic here because it looks wrong
     }
 
     public async Task<IEnumerable<ConversationDto>> GetForUserAsync(Guid userId, int skip, int take)
     {
         var items = await _conversations.GetForUserWithLastMessageAsync(userId, skip, take);
-        return items.Select(tuple => new ConversationDto
-        {
-            ConversationId = tuple.conversation.Id,
-            Type = tuple.conversation.Type,
-            TripId = tuple.conversation.TripId,
-            Name = tuple.conversation.Title,
-            Date = tuple.conversation.Date,
-            Participants = tuple.conversation.Members.Select(m => m.UserId).ToList(),
-            LastMessageId = tuple.lastMessage?.Id ?? Guid.Empty,
-            LastMessagePreview = GetMessagePreview(tuple.lastMessage),
-            LastMessageCreatedAt = tuple.lastMessage?.CreatedAt ?? DateTime.UnixEpoch
-        });
+        return items.Select(tuple => new ConversationIntoDtoBuilder(tuple.conversation)
+            .WithLastMessage(tuple.lastMessage)
+            .Build());
     }
 
     public async Task<Conversation?> GetByIdAsync(Guid id)
