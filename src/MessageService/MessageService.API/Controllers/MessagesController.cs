@@ -102,6 +102,7 @@ public class MessagesController : ControllerBase
     [HttpPost("messages/read")]
     public async Task<IActionResult> Read([FromBody] ReadReceiptRequest req)
     {
+        // TODO: work on this
         if (req.ConversationId == Guid.Empty) return UnprocessableEntity(new { error = "conversationId is required" });
 
         var userId = GetUserId();
