@@ -53,17 +53,16 @@ export default function SearchTripsPage() {
         tripApi
           .get(path)
           .then((res) => {
-            const { isProcessing, result } = res.data;
+            const data = res.data;
 
-            if (!isProcessing) {
+            if (data.status === 'done') {
               stopPolling();
               setPolling(false);
-
-              if (result?.error) {
-                setError(result.error.message || 'Search job failed.');
-              } else {
-                setResults(result?.items ?? []);
-              }
+              setResults(data.items ?? []);
+            } else if (data.status === 'failed') {
+              stopPolling();
+              setPolling(false);
+              setError('Search job failed.');
             }
           })
           .catch((err) => {

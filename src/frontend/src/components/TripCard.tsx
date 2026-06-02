@@ -42,6 +42,7 @@ export default function TripCard({ trip, action }: TripCardProps) {
         <Field label="Price per seat" value={`${trip.pricePerSeat} PLN`} />
         <Field label="Available seats" value={String(trip.availableSeats)} />
         <Field label="Max detour" value={metersToKm(trip.maxDetourMeters)} />
+        <Field label="Actual detour" value={metersToKm(trip.actualDetourMeters)} />
         <Field label="Trip ID" value={trip.id} mono />
       </div>
 

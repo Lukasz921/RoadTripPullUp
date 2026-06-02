@@ -13,4 +13,5 @@ export interface TripSummary {
   pricePerSeat: number;
   availableSeats: number;
   maxDetourMeters: number;
+  actualDetourMeters: number;
 }
