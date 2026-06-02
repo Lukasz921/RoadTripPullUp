@@ -2,11 +2,11 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import TripSummaryCard from '../components/TripSummaryCard';
-import { useJoinedTrips } from '../hooks/useJoinedTrips';
+import { useMyRides } from '../hooks/useMyRides';
 
-export default function JoinedRidesPage() {
+export default function MyRidesPage() {
   const navigate = useNavigate();
-  const { trips, loading, error } = useJoinedTrips();
+  const { trips, loading, error } = useMyRides();
 
   return (
     <main className="flex min-h-screen flex-col bg-[#f3faee] text-[#12351f]">
@@ -14,12 +14,12 @@ export default function JoinedRidesPage() {
 
       <div className="mx-auto w-full max-w-3xl flex-1 px-6 pb-16 pt-28">
         <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-3xl font-bold">Joined rides</h1>
+          <h1 className="text-3xl font-bold">My rides</h1>
           <button
-            onClick={() => navigate('/search')}
+            onClick={() => navigate('/add-trip')}
             className="rounded-xl bg-[#8cc63f] px-4 py-2 text-sm font-semibold text-[#12351f] hover:bg-[#a6dd55]"
           >
-            Search rides
+            Add trip
           </button>
         </div>
 
@@ -30,7 +30,7 @@ export default function JoinedRidesPage() {
         )}
 
         {!loading && !error && trips.length === 0 && (
-          <p className="text-sm text-[#5d7056]">You haven't joined any rides yet.</p>
+          <p className="text-sm text-[#5d7056]">You haven't published any rides yet.</p>
         )}
 
         {!loading && !error && trips.length > 0 && (

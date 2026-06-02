@@ -1,21 +1,21 @@
 import { useEffect, useState } from 'react';
-import { getJoinedTrips, type TripDTO } from '../api/trips';
+import { getMyTrips, type TripDTO } from '../api/trips';
 
-interface UseJoinedTripsResult {
+interface UseMyRidesResult {
   trips: TripDTO[];
   loading: boolean;
   error: string;
 }
 
-export function useJoinedTrips(): UseJoinedTripsResult {
+export function useMyRides(): UseMyRidesResult {
   const [trips, setTrips] = useState<TripDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    getJoinedTrips()
+    getMyTrips()
       .then((data) => setTrips(data.items ?? []))
-      .catch(() => setError('Failed to load joined rides.'))
+      .catch(() => setError('Failed to load your rides.'))
       .finally(() => setLoading(false));
   }, []);
 
