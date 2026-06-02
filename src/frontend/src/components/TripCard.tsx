@@ -1,4 +1,6 @@
+import { useEffect, useState } from 'react';
 import type { TripSummary } from '../types/trip';
+import { reverseGeocode } from '../api/reverseGeocode';
 
 interface TripCardProps {
   trip: TripSummary;
@@ -6,10 +8,6 @@ interface TripCardProps {
     label: string;
     onClick: (trip: TripSummary) => void;
   };
-}
-
-function formatCoords(lat: number, lng: number) {
-  return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
 }
 
 function formatDate(iso: string) {
@@ -23,6 +21,10 @@ function metersToKm(meters: number) {
   return (meters / 1000).toFixed(1) + ' km';
 }
 
+function formatCoords(lat: number, lng: number) {
+  return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+}
+
 function Field({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
   return (
     <div>
@@ -33,17 +35,24 @@ function Field({ label, value, mono = false }: { label: string; value: string; m
 }
 
 export default function TripCard({ trip, action }: TripCardProps) {
+  const [fromLabel, setFromLabel] = useState(formatCoords(trip.source.lat, trip.source.lng));
+  const [toLabel, setToLabel] = useState(formatCoords(trip.target.lat, trip.target.lng));
+
+  useEffect(() => {
+    reverseGeocode(trip.source.lat, trip.source.lng).then(setFromLabel);
+    reverseGeocode(trip.target.lat, trip.target.lng).then(setToLabel);
+  }, [trip.source.lat, trip.source.lng, trip.target.lat, trip.target.lng]);
+
   return (
     <div className="rounded-xl border border-[#d7e8c8] bg-white px-5 py-4">
       <div className="grid gap-x-6 gap-y-2 sm:grid-cols-2">
-        <Field label="From" value={formatCoords(trip.source.lat, trip.source.lng)} />
-        <Field label="To" value={formatCoords(trip.target.lat, trip.target.lng)} />
+        <Field label="From" value={fromLabel} />
+        <Field label="To" value={toLabel} />
         <Field label="Departure" value={formatDate(trip.departureTime)} />
         <Field label="Price per seat" value={`${trip.pricePerSeat} PLN`} />
         <Field label="Available seats" value={String(trip.availableSeats)} />
         <Field label="Max detour" value={metersToKm(trip.maxDetourMeters)} />
         <Field label="Actual detour" value={metersToKm(trip.actualDetourMeters)} />
-        <Field label="Trip ID" value={trip.id} mono />
       </div>
 
       {action && (
