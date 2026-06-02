@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
-import TripCard from '../components/TripCard';
+import TripSummaryCard from '../components/TripSummaryCard';
 import { useJoinedTrips } from '../hooks/useJoinedTrips';
 
 export default function JoinedRidesPage() {
@@ -36,7 +36,7 @@ export default function JoinedRidesPage() {
         {!loading && !error && trips.length > 0 && (
           <div className="flex flex-col gap-3">
             {trips.map((trip) => (
-              <TripCard key={trip.id} trip={trip} />
+              <TripSummaryCard key={trip.id} trip={trip} />
             ))}
           </div>
         )}

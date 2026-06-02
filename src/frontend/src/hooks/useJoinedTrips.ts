@@ -1,35 +1,20 @@
 import { useEffect, useState } from 'react';
-import { getJoinedTrips } from '../api/trips';
-import type { TripSummary } from '../types/trip';
+import { getJoinedTrips, type TripDTO } from '../api/trips';
 
 interface UseJoinedTripsResult {
-  trips: TripSummary[];
+  trips: TripDTO[];
   loading: boolean;
   error: string;
 }
 
 export function useJoinedTrips(): UseJoinedTripsResult {
-  const [trips, setTrips] = useState<TripSummary[]>([]);
+  const [trips, setTrips] = useState<TripDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
     getJoinedTrips()
-      .then((data) =>
-        setTrips(
-          (data.items ?? []).map((t) => ({
-            id: t.id,
-            driverId: t.driverId,
-            source: t.source,
-            target: t.target,
-            departureTime: t.departureTime,
-            pricePerSeat: t.pricePerSeat,
-            availableSeats: t.availableSeats,
-            maxDetourMeters: t.maxDetourMeters,
-            actualDetourMeters: 0,
-          })),
-        ),
-      )
+      .then((data) => setTrips(data.items ?? []))
       .catch(() => setError('Failed to load joined rides.'))
       .finally(() => setLoading(false));
   }, []);
