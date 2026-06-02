@@ -44,7 +44,6 @@ export default function ProfilePage() {
 
         <section className="mt-10">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-[#12351f]">Trips published</h2>
             <div className="flex gap-2">
               <button
                 onClick={() => navigate('/joined-rides')}
@@ -61,17 +60,6 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {loading && (
-            <p className="text-sm text-[#5d7056]">Loading trips...</p>
-          )}
-
-          {error && (
-            <p className="rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600">{error}</p>
-          )}
-
-          {!loading && !error && (
-            <TripList trips={publishedTrips} />
-          )}
         </section>
       </div>
 
