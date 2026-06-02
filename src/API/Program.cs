@@ -42,7 +42,7 @@ builder.Services.AddOpenApi(options =>
 });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddControllers()
-    .AddApplicationPart(typeof(TripV1Controller).Assembly);
+    .AddApplicationPart(typeof(TripV1Controller).Assembly)
     .AddApplicationPart(typeof(UsersModule).Assembly);
 
 builder.Services.AddCors(options =>
@@ -97,10 +97,6 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // definicje dla controlerow
-builder.Services.AddScoped<ITripRepository, TripRepository>();
-builder.Services.AddScoped<IRouteRepository, RouteRepository>();
-builder.Services.AddScoped<ITripRequestRepository, TripRequestRepository>();
-builder.Services.AddScoped<ITripService, TripService>();
 builder.Services.AddSingleton<ITripsV1Service, MockTripsV1Service>();
 builder.Services.AddScoped<IMessageRepository, MessageRepository>();
 builder.Services.AddScoped<IMessagingService, MessagingService>();
