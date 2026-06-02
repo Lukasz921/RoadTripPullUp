@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using StackExchange.Redis;
 using MessageService.Infrastructure;
@@ -38,7 +39,6 @@ namespace MessageService.API
             services.AddValidatorsFromAssemblyContaining(typeof(ChatHub));
 
             services.AddEndpointsApiExplorer();
-            services.AddSwaggerGen();
 
             // DbContext
             var conn = configuration.GetConnectionString("DefaultConnection") ?? "Host=localhost;Database=messages;Username=postgres;Password=postgres";
@@ -54,6 +54,9 @@ namespace MessageService.API
 
             // SignalR
             services.AddSignalR();
+
+            // Register the untyped IHubContext for RedisNotificationService
+            services.AddScoped<IHubContext>(sp => (IHubContext)sp.GetRequiredService<IHubContext<ChatHub>>());
 
             // CORS - for the SignalR hub we need AllowCredentials (separate policy so it doesn't interfere with app-wide policies)
             services.AddCors(options =>
@@ -130,8 +133,6 @@ namespace MessageService.API
 
             if (app.Environment.IsDevelopment())
             {
-                app.UseSwagger();
-                app.UseSwaggerUI();
             }
 
             // Ensure routing is available (host may have already called UseRouting)

@@ -13,6 +13,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using API.Middleware;
 using MessageService.API; // add extension methods from MessageService project
+using MessageService.API.Hubs; // add ChatHub for IHubContext
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,7 +39,8 @@ builder.Services.AddOpenApi(options =>
     });
 });
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddApplicationPart(typeof(UsersModule).Assembly);
 
 builder.Services.AddCors(options =>
 {
@@ -73,6 +75,10 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddUsersModule();
 
+// Register Infrastructure DbContext (different from MessageService.Infrastructure.AppDbContext registered by AddMessageService)
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 // definicje dla controlerow
 builder.Services.AddScoped<ITripRepository, TripRepository>();
 builder.Services.AddScoped<IRouteRepository, RouteRepository>();
@@ -100,9 +106,11 @@ if (app.Environment.IsDevelopment())
 app.UseMessageService();
 
 app.UseCors("AllowFrontend");
-app.UseHttpsRedirection();
+if (!app.Environment.IsDevelopment())
+    app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
+
 
 using (var scope = app.Services.CreateScope())
 {
