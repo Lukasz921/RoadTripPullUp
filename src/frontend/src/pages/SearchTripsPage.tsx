@@ -7,7 +7,7 @@ import TripRouteMap from '../components/TripRouteMap';
 import NumberInput from '../components/ui/NumberInput';
 import Spinner from '../components/ui/Spinner';
 import TripCard from '../components/TripCard';
-import { tripApi } from '../api/axiosConfig';
+import { submitSearch as submitSearchApi, pollSearch, type SearchJobResultDTO } from '../api/trips';
 import type { Place } from '../utils/geoapify';
 import type { TripSummary } from '../types/trip';
 
@@ -41,32 +41,29 @@ export default function SearchTripsPage() {
     }
   }
 
-  function startPolling(statusUrl: string, estimatedDurationMs: number) {
+  function startPolling(jobId: string, estimatedDurationMs: number) {
     setPolling(true);
     setResults(null);
 
-    const path = statusUrl.replace('/api/v1', '');
     const pollInterval = Math.max(250, estimatedDurationMs / 4);
 
     const poll = () => {
-      tripApi
-        .get(path)
-        .then((res) => {
-          const data = res.data;
-
-          if (data.status === 'done') {
+      pollSearch(jobId)
+        .then(({ status, data }) => {
+          if (status === 200) {
             stopPolling();
             setPolling(false);
-            setResults(data.items ?? []);
-          } else if (data.status === 'failed') {
-            stopPolling();
-            setPolling(false);
-            setError('Search job failed.');
+            const result = data as SearchJobResultDTO;
+            if (result.error) {
+              setError(result.error.message);
+            } else {
+              setResults(result.items ?? []);
+            }
           } else {
             pollRef.current = setTimeout(poll, pollInterval);
           }
         })
-        .catch((err) => {
+        .catch((err: { response?: { data?: { detail?: string } } }) => {
           stopPolling();
           setPolling(false);
           setError(err.response?.data?.detail ?? 'Failed to fetch results.');
@@ -90,18 +87,16 @@ export default function SearchTripsPage() {
       dateTo,
       maxPrice: maxPrice ? Number(maxPrice) : undefined,
       minSeats: Number(minSeats),
-      limit: PAGE_SIZE,
+      pageSize: PAGE_SIZE,
       page: targetPage,
     };
 
     setSubmitting(true);
-    tripApi
-      .post('/trips/search', payload)
-      .then((res) => {
-        const { statusUrl, estimatedDurationMs } = res.data;
-        startPolling(statusUrl, estimatedDurationMs ?? 0);
+    submitSearchApi(payload)
+      .then(({ jobId, estimatedDurationMs }) => {
+        startPolling(jobId, estimatedDurationMs ?? 0);
       })
-      .catch((err) => {
+      .catch((err: { response?: { data?: { detail?: string } } }) => {
         setError(err.response?.data?.detail ?? 'Search failed. Please try again.');
       })
       .finally(() => setSubmitting(false));
