@@ -1,4 +1,4 @@
-namespace Application.TripPlanner;
+namespace TripService.Application;
 
 public class TripV1DTO
 {
@@ -12,6 +12,7 @@ public class TripV1DTO
     public int MaxDetourMeters { get; set; }
     public decimal PricePerSeat { get; set; }
     public int AvailableSeats { get; set; }
+    public List<string> PassengerIds { get; set; } = new();
     public string Status { get; set; } = "ACTIVE";
     public DateTime CreatedAt { get; set; }
 }
@@ -26,7 +27,7 @@ public class CreateTripV1DTO
     public int AvailableSeats { get; set; }
 }
 
-public class MyTripsV1ResultDTO
+public class PagedTripsDTO
 {
     public List<TripV1DTO> Items { get; set; } = new();
     public int Page { get; set; }

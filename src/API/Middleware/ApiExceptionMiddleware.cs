@@ -80,6 +80,13 @@ public class ApiExceptionMiddleware
             title = "Forbidden";
             type = "https://tools.ietf.org/html/rfc7231#section-6.5.3";
         }
+        else if (exception is Application.Exceptions.RoutingEngineUnavailableException ruex)
+        {
+            code = System.Net.HttpStatusCode.BadGateway;
+            message = ruex.Message;
+            title = "Routing Engine Unavailable";
+            type = "https://tools.ietf.org/html/rfc7231#section-6.6.4";
+        }
         else if (exception is Application.Exceptions.SeatUnavailableException suex)
         {
             code = System.Net.HttpStatusCode.Conflict;

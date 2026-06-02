@@ -5,13 +5,15 @@ using Scalar.AspNetCore;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Application.Messages;
-using Application.TripPlanner;
 using Infrastructure.Messages;
-using Infrastructure.TripPlanner;
+using TripService.Api;
+using TripService.Application;
+using TripService.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using API.Middleware;
+using StackExchange.Redis;
 using MessageService.API; // add extension methods from MessageService project
 using MessageService.API.Hubs; // add ChatHub for IHubContext
 
@@ -40,6 +42,7 @@ builder.Services.AddOpenApi(options =>
 });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddControllers()
+    .AddApplicationPart(typeof(TripV1Controller).Assembly);
     .AddApplicationPart(typeof(UsersModule).Assembly);
 
 builder.Services.AddCors(options =>
@@ -75,6 +78,20 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddUsersModule();
 
+builder.Services.AddHttpClient("valhalla", client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["Valhalla:BaseUrl"] ?? "http://valhalla:8002");
+    client.Timeout = TimeSpan.FromSeconds(10);
+});
+builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
+    ConnectionMultiplexer.Connect(
+        builder.Configuration.GetConnectionString("Redis") ?? "localhost:6379"));
+builder.Services.AddSingleton<IJobStore, RedisJobStore>();
+
+builder.Services.AddScoped<IRoutingEngine, ValhallaRoutingEngine>();
+builder.Services.AddScoped<ITripsV1Service, TripsV1Service>();
+builder.Services.AddScoped<ITripsSearchService, TripsSearchService>();
+builder.Services.AddHostedService<SearchWorker>();
 // Register Infrastructure DbContext (different from MessageService.Infrastructure.AppDbContext registered by AddMessageService)
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));

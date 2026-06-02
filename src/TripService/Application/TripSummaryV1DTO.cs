@@ -1,4 +1,4 @@
-namespace Application.TripPlanner;
+namespace TripService.Application;
 
 public class TripSummaryV1DTO
 {

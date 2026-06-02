@@ -1,9 +1,9 @@
 using System.Security.Claims;
-using Application.TripPlanner;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TripService.Application;
 
-namespace API.TripPlanner;
+namespace TripService.Api;
 
 [ApiController]
 [Route("api/v1")]
@@ -11,10 +11,12 @@ namespace API.TripPlanner;
 public class TripV1Controller : ControllerBase
 {
     private readonly ITripsV1Service _service;
+    private readonly ITripsSearchService _search;
 
-    public TripV1Controller(ITripsV1Service service)
+    public TripV1Controller(ITripsV1Service service, ITripsSearchService search)
     {
         _service = service;
+        _search  = search;
     }
 
     [HttpPost("trips")]
@@ -30,7 +32,7 @@ public class TripV1Controller : ControllerBase
     }
 
     [HttpGet("trips/me")]
-    [ProducesResponseType(typeof(MyTripsV1ResultDTO), 200)]
+    [ProducesResponseType(typeof(PagedTripsDTO), 200)]
     public async Task<IActionResult> GetMyTrips(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20)
@@ -39,7 +41,27 @@ public class TripV1Controller : ControllerBase
         if (driverId == null)
             return Unauthorized(new { error = new { code = "UNAUTHORIZED", message = "Missing or invalid token." } });
 
+        pageSize = Math.Clamp(pageSize, 1, 100);
+        page = Math.Max(page, 1);
+
         var result = await _service.GetMyTripsAsync(driverId, page, pageSize);
+        return Ok(result);
+    }
+
+    [HttpGet("trips/joined")]
+    [ProducesResponseType(typeof(PagedTripsDTO), 200)]
+    public async Task<IActionResult> GetJoinedTrips(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
+    {
+        var userId = GetUserId();
+        if (userId == null)
+            return Unauthorized(new { error = new { code = "UNAUTHORIZED", message = "Missing or invalid token." } });
+
+        pageSize = Math.Clamp(pageSize, 1, 100);
+        page = Math.Max(page, 1);
+
+        var result = await _service.GetMyPassengerTripsAsync(userId, page, pageSize);
         return Ok(result);
     }
 
@@ -50,6 +72,21 @@ public class TripV1Controller : ControllerBase
     {
         var trip = await _service.GetTripAsync(tripId);
         return Ok(trip);
+    }
+
+    [HttpPost("trips/{tripId}/join")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(403)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(409)]
+    public async Task<IActionResult> JoinTrip([FromRoute] string tripId)
+    {
+        var userId = GetUserId();
+        if (userId == null)
+            return Unauthorized(new { error = new { code = "UNAUTHORIZED", message = "Missing or invalid token." } });
+
+        await _service.JoinTripAsync(tripId, userId);
+        return NoContent();
     }
 
     [HttpDelete("trips/{tripId}")]
@@ -64,6 +101,16 @@ public class TripV1Controller : ControllerBase
 
         await _service.DeleteTripAsync(tripId, driverId);
         return NoContent();
+    }
+
+    [HttpGet("trips/search")]
+    [ProducesResponseType(typeof(SyncSearchResultDTO), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(502)]
+    public async Task<IActionResult> SearchTrips([FromQuery] SearchTripsQueryDTO query, CancellationToken ct)
+    {
+        var result = await _search.SearchAsync(query, ct);
+        return Ok(result);
     }
 
     [HttpPost("trips/search")]

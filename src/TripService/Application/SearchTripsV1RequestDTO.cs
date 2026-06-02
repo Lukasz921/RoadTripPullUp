@@ -1,4 +1,4 @@
-namespace Application.TripPlanner;
+namespace TripService.Application;
 
 public class SearchTripsV1RequestDTO
 {
