@@ -6,7 +6,7 @@ import MapPoint from '../components/ui/MapPoint';
 import TripRouteMap from '../components/TripRouteMap';
 import NumberInput from '../components/ui/NumberInput';
 import Spinner from '../components/ui/Spinner';
-import TripCard from '../components/TripCard';
+import TripSummaryCard from '../components/TripSummaryCard';
 import { submitSearch as submitSearchApi, pollSearch, type SearchJobResultDTO } from '../api/trips';
 import type { Place } from '../utils/geoapify';
 import type { TripSummary } from '../types/trip';
@@ -248,9 +248,10 @@ export default function SearchTripsPage() {
               )}
 
               {results.map((trip) => (
-                <TripCard
+                <TripSummaryCard
                   key={trip.id}
                   trip={trip}
+                  actualDetourMeters={trip.actualDetourMeters}
                   action={{ label: 'Join ride', onClick: (t) => console.log('Join ride:', t.id) }}
                 />
               ))}

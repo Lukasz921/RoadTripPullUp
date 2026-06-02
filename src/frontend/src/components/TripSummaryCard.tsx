@@ -1,12 +1,23 @@
 import { useEffect, useState } from 'react';
-import type { TripDTO } from '../api/trips';
+import type { LatLng } from '../types/trip';
 import { reverseGeocode } from '../api/reverseGeocode';
 
+interface Trip {
+  id: string;
+  source: LatLng;
+  target: LatLng;
+  departureTime: string;
+  pricePerSeat: number;
+  availableSeats: number;
+  maxDetourMeters: number;
+}
+
 interface TripSummaryCardProps {
-  trip: TripDTO;
+  trip: Trip;
+  actualDetourMeters?: number;
   action?: {
     label: string;
-    onClick: (trip: TripDTO) => void;
+    onClick: (trip: Trip) => void;
   };
 }
 
@@ -34,7 +45,7 @@ function Field({ label, value }: { label: string; value: string }) {
   );
 }
 
-export default function TripSummaryCard({ trip, action }: TripSummaryCardProps) {
+export default function TripSummaryCard({ trip, actualDetourMeters, action }: TripSummaryCardProps) {
   const [fromLabel, setFromLabel] = useState(formatCoords(trip.source.lat, trip.source.lng));
   const [toLabel, setToLabel] = useState(formatCoords(trip.target.lat, trip.target.lng));
 
@@ -52,6 +63,9 @@ export default function TripSummaryCard({ trip, action }: TripSummaryCardProps) 
         <Field label="Price per seat" value={`${trip.pricePerSeat} PLN`} />
         <Field label="Available seats" value={String(trip.availableSeats)} />
         <Field label="Max detour" value={metersToKm(trip.maxDetourMeters)} />
+        {actualDetourMeters !== undefined && (
+          <Field label="Actual detour" value={metersToKm(actualDetourMeters)} />
+        )}
       </div>
 
       {action && (
