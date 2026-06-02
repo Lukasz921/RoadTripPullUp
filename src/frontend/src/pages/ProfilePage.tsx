@@ -45,12 +45,20 @@ export default function ProfilePage() {
         <section className="mt-10">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-2xl font-bold text-[#12351f]">Trips published</h2>
-            <button
-              onClick={() => navigate('/add-trip')}
-              className="rounded-xl bg-[#8cc63f] px-4 py-2 text-sm font-semibold text-[#12351f] hover:bg-[#a6dd55]"
-            >
-              Add trip
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => navigate('/joined-rides')}
+                className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-[#12351f] shadow-sm ring-1 ring-[#d7e8c8] hover:bg-[#f3faee]"
+              >
+                Joined rides
+              </button>
+              <button
+                onClick={() => navigate('/add-trip')}
+                className="rounded-xl bg-[#8cc63f] px-4 py-2 text-sm font-semibold text-[#12351f] hover:bg-[#a6dd55]"
+              >
+                Add trip
+              </button>
+            </div>
           </div>
 
           {loading && (

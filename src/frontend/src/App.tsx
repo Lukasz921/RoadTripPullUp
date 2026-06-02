@@ -4,6 +4,7 @@ import MainPage from './pages/MainPage';
 import ProfilePage from './pages/ProfilePage';
 import AddTripPage from './pages/AddTripPage';
 import SearchTripsPage from './pages/SearchTripsPage';
+import JoinedRidesPage from './pages/JoinedRidesPage';
 
 export default function App() {
   return (
@@ -15,6 +16,7 @@ export default function App() {
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/add-trip" element={<AddTripPage />} />
         <Route path="/search" element={<SearchTripsPage />} />
+        <Route path="/joined-rides" element={<JoinedRidesPage />} />
       </Routes>
     </BrowserRouter>
   );
