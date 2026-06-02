@@ -14,8 +14,13 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using API.Middleware;
 using StackExchange.Redis;
+using MessageService.API; // add extension methods from MessageService project
+using MessageService.API.Hubs; // add ChatHub for IHubContext
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Register MessageService services (DbContext, SignalR, Redis, DI, validators, etc.)
+builder.AddMessageService();
 
 builder.Services.AddOpenApi(options =>
 {
@@ -38,6 +43,7 @@ builder.Services.AddOpenApi(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddControllers()
     .AddApplicationPart(typeof(TripV1Controller).Assembly);
+    .AddApplicationPart(typeof(UsersModule).Assembly);
 
 builder.Services.AddCors(options =>
 {
@@ -86,13 +92,20 @@ builder.Services.AddScoped<IRoutingEngine, ValhallaRoutingEngine>();
 builder.Services.AddScoped<ITripsV1Service, TripsV1Service>();
 builder.Services.AddScoped<ITripsSearchService, TripsSearchService>();
 builder.Services.AddHostedService<SearchWorker>();
+// Register Infrastructure DbContext (different from MessageService.Infrastructure.AppDbContext registered by AddMessageService)
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// definicje dla controlerow
+builder.Services.AddScoped<ITripRepository, TripRepository>();
+builder.Services.AddScoped<IRouteRepository, RouteRepository>();
+builder.Services.AddScoped<ITripRequestRepository, TripRequestRepository>();
+builder.Services.AddScoped<ITripService, TripService>();
+builder.Services.AddSingleton<ITripsV1Service, MockTripsV1Service>();
 builder.Services.AddScoped<IMessageRepository, MessageRepository>();
 builder.Services.AddScoped<IMessagingService, MessagingService>();
 
 builder.Services.AddDbContext<UsersDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 var app = builder.Build();
@@ -106,10 +119,15 @@ if (app.Environment.IsDevelopment())
     app.MapScalarApiReference();
 }
 
+// wire message service (maps hub, applies migrations for message DB, enables message swagger in dev)
+app.UseMessageService();
+
 app.UseCors("AllowFrontend");
-app.UseHttpsRedirection();
+if (!app.Environment.IsDevelopment())
+    app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
+
 
 using (var scope = app.Services.CreateScope())
 {

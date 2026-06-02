@@ -2,6 +2,7 @@ using Users.Core;
 using Google.Apis.Auth;
 using Users.Application.DTOs;
 using Users.Application.Interfaces;
+using Users.Application.Exceptions;
 
 namespace Users.Application.Services;
 
@@ -21,12 +22,29 @@ public class AuthService : IAuthService
         _jwtProvider = jwtProvider;
     }
 
-    public async Task Register(UserDTO dto)
+    public async Task Register(RegisterDTO dto)
     {
+        if (string.IsNullOrWhiteSpace(dto.Email))
+            throw new UserValidationException("Email is required.");
+
+        if (string.IsNullOrWhiteSpace(dto.Password))
+            throw new UserValidationException("Password is required.");
+
+        if (string.IsNullOrWhiteSpace(dto.Name))
+            throw new UserValidationException("Name is required.");
+
+        if (string.IsNullOrWhiteSpace(dto.Surname))
+            throw new UserValidationException("Surname is required.");
+
         var existingUser = await _userRepository.FindByEmail(dto.Email);
         if (existingUser != null)
         {
-            throw new Exception("User with this email already exists.");
+            throw new UserAlreadyExistsException(dto.Email);
+        }
+
+        if (!Enum.TryParse<Sex>(dto.Sex, true, out var sex))
+        {
+            sex = Sex.OTHER;
         }
 
         var user = new User
@@ -36,21 +54,20 @@ public class AuthService : IAuthService
             Surname = dto.Surname,
             Email = dto.Email,
             PhoneNumber = dto.PhoneNumber,
-            DateOfBirth = dto.DateOfBirth,
+            DateOfBirth = DateTime.SpecifyKind(dto.DateOfBirth, DateTimeKind.Utc),
             PasswordHash = _passwordHasher.Hash(dto.Password),
             Role = UserRole.REGULAR_USER,
+            Sex = sex
         };
 
-        if (Enum.TryParse<Sex>(dto.Sex, true, out var sex))
+        try
         {
-            user.Sex = sex;
+            await _userRepository.Save(user);
         }
-        else
+        catch (Exception ex)
         {
-            throw new Exception("Invalid value for Sex.");
+            throw new Exception("An error occurred while creating the user account. Please try again later.", ex);
         }
-
-        await _userRepository.Save(user);
     }
 
     public async Task<AuthResponseDTO> Login(LoginDTO dto)
@@ -59,7 +76,7 @@ public class AuthService : IAuthService
 
         if (user == null || !_passwordHasher.Verify(dto.Password, user.PasswordHash))
         {
-            throw new Exception("Invalid email or password.");
+            throw new InvalidCredentialsException();
         }
 
         var token = _jwtProvider.Generate(user);
@@ -92,10 +109,18 @@ public class AuthService : IAuthService
                 Email = payload.Email,
                 PasswordHash = string.Empty,
                 Role = UserRole.REGULAR_USER,
-                DateOfBirth = DateTime.UtcNow,
+                PhoneNumber = string.Empty,
+                DateOfBirth = new DateTime(1900, 1, 1, 0, 0, 0, DateTimeKind.Utc),
                 Sex = Sex.OTHER
             };
-            await _userRepository.Save(user);
+            try
+            {
+                await _userRepository.Save(user);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("An error occurred while creating the user account via Google.", ex);
+            }
         }
 
         var token = _jwtProvider.Generate(user);

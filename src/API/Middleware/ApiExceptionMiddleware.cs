@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Microsoft.Extensions.Hosting;
+using Users.Application.Exceptions;
 
 namespace API.Middleware;
 
@@ -42,6 +43,27 @@ public class ApiExceptionMiddleware
             code = System.Net.HttpStatusCode.BadRequest;
             message = vex.Message;
             title = "Validation Error";
+            type = "https://tools.ietf.org/html/rfc7231#section-6.5.1";
+        }
+        else if (exception is UserValidationException uvex)
+        {
+            code = System.Net.HttpStatusCode.BadRequest;
+            message = uvex.Message;
+            title = "Validation Error";
+            type = "https://tools.ietf.org/html/rfc7231#section-6.5.1";
+        }
+        else if (exception is UserAlreadyExistsException uaex)
+        {
+            code = System.Net.HttpStatusCode.Conflict;
+            message = uaex.Message;
+            title = "Conflict";
+            type = "https://tools.ietf.org/html/rfc7231#section-6.5.8";
+        }
+        else if (exception is InvalidCredentialsException icex)
+        {
+            code = System.Net.HttpStatusCode.Unauthorized;
+            message = icex.Message;
+            title = "Unauthorized";
             type = "https://tools.ietf.org/html/rfc7231#section-6.5.1";
         }
         else if (exception is Application.Exceptions.NotFoundException nf)
