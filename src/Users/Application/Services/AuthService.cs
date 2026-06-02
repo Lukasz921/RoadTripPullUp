@@ -26,7 +26,7 @@ public class AuthService : IAuthService
     {
         if (string.IsNullOrWhiteSpace(dto.Email))
             throw new UserValidationException("Email is required.");
-        
+
         if (string.IsNullOrWhiteSpace(dto.Password))
             throw new UserValidationException("Password is required.");
 
@@ -54,11 +54,9 @@ public class AuthService : IAuthService
             Surname = dto.Surname,
             Email = dto.Email,
             PhoneNumber = dto.PhoneNumber,
-            DateOfBirth = dto.DateOfBirth,
+            DateOfBirth = DateTime.SpecifyKind(dto.DateOfBirth, DateTimeKind.Utc),
             PasswordHash = _passwordHasher.Hash(dto.Password),
             Role = UserRole.REGULAR_USER,
-            PhoneNumber = dto.PhoneNumber,
-            DateOfBirth = dto.DateOfBirth,
             Sex = sex
         };
 
