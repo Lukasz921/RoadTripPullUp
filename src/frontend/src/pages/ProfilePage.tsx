@@ -52,12 +52,6 @@ export default function ProfilePage() {
           >
             My rides
           </button>
-          <button
-            onClick={() => navigate('/add-trip')}
-            className="rounded-xl bg-[#8cc63f] px-4 py-2 text-sm font-semibold text-[#12351f] hover:bg-[#a6dd55]"
-          >
-            Add trip
-          </button>
         </div>
       </div>
 
