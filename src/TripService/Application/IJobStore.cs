@@ -17,7 +17,7 @@ public interface IJobStore
 {
     Task EnsureConsumerGroupAsync(CancellationToken ct = default);
     Task<string> EnqueueAsync(string userId, SearchTripsQueryDTO query, CancellationToken ct = default);
-    Task<SearchJob?> GetJobAsync(string jobId, CancellationToken ct = default);
+    Task<SearchJob?> GetJobAsync(string jobId, string requestingUserId, CancellationToken ct = default);
     Task<IReadOnlyList<PendingJob>> DequeueAsync(int count, CancellationToken ct = default);
     Task SetProcessingAsync(string jobId, CancellationToken ct = default);
     Task SetDoneAsync(string jobId, SyncSearchResultDTO result, CancellationToken ct = default);

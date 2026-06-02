@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using StackExchange.Redis;
 using TripService.Application;
@@ -22,7 +24,6 @@ public class RedisJobStore : IJobStore
     {
         try
         {
-            // createStream: true creates the stream key if it doesn't exist yet
             await _db.StreamCreateConsumerGroupAsync(StreamKey, GroupName, StreamPosition.NewMessages, createStream: true);
         }
         catch (RedisServerException ex) when (ex.Message.StartsWith("BUSYGROUP"))
@@ -39,10 +40,10 @@ public class RedisJobStore : IJobStore
 
         await _db.HashSetAsync(key, new HashEntry[]
         {
-            new("status",    "pending"),
-            new("userId",    userId),
-            new("query",     queryJson),
-            new("createdAt", DateTime.UtcNow.ToString("O"))
+            new("status",     "pending"),
+            new("userIdHash", HashUserId(userId)),  // store hash, not plaintext
+            new("query",      queryJson),
+            new("createdAt",  DateTime.UtcNow.ToString("O"))
         });
         await _db.KeyExpireAsync(key, TimeSpan.FromSeconds(JobTtlSec));
         await _db.StreamAddAsync(StreamKey, new[] { new NameValueEntry("jobId", jobId) });
@@ -50,17 +51,22 @@ public class RedisJobStore : IJobStore
         return jobId;
     }
 
-    public async Task<SearchJob?> GetJobAsync(string jobId, CancellationToken ct = default)
+    public async Task<SearchJob?> GetJobAsync(string jobId, string requestingUserId, CancellationToken ct = default)
     {
         var fields = await _db.HashGetAllAsync(JobKey(jobId));
         if (fields.Length == 0) return null;
 
         var d = fields.ToDictionary(f => f.Name.ToString(), f => f.Value.ToString());
 
+        // Verify ownership via hash comparison — never expose raw userId
+        if (!d.TryGetValue("userIdHash", out var storedHash) ||
+            storedHash != HashUserId(requestingUserId))
+            return null; // treat as not found — don't leak existence
+
         var job = new SearchJob
         {
             JobId  = jobId,
-            UserId = d.GetValueOrDefault("userId", ""),
+            UserId = requestingUserId, // return the caller's own id back to them
             Status = d.GetValueOrDefault("status", "pending"),
             Error  = d.GetValueOrDefault("error")
         };
@@ -79,7 +85,6 @@ public class RedisJobStore : IJobStore
 
     public async Task<IReadOnlyList<PendingJob>> DequeueAsync(int count, CancellationToken ct = default)
     {
-        // ">" means: messages not yet delivered to any consumer in this group
         var messages = await _db.StreamReadGroupAsync(
             StreamKey, GroupName, ConsumerName, ">", count);
 
@@ -95,13 +100,13 @@ public class RedisJobStore : IJobStore
             if (fields.Length == 0) continue;
 
             var d = fields.ToDictionary(f => f.Name.ToString(), f => f.Value.ToString());
-            if (!d.TryGetValue("query",  out var queryJson)) continue;
-            if (!d.TryGetValue("userId", out var userId))   continue;
+            if (!d.TryGetValue("query", out var queryJson)) continue;
 
             var query = JsonSerializer.Deserialize<SearchTripsQueryDTO>(queryJson);
             if (query == null) continue;
 
-            result.Add(new PendingJob(msg.Id.ToString(), jobId, userId, query));
+            // Worker doesn't need userId — passes empty string; ownership is enforced at poll time
+            result.Add(new PendingJob(msg.Id.ToString(), jobId, string.Empty, query));
         }
 
         return result;
@@ -136,6 +141,9 @@ public class RedisJobStore : IJobStore
 
     public Task AcknowledgeAsync(string messageId, CancellationToken ct = default) =>
         _db.StreamAcknowledgeAsync(StreamKey, GroupName, messageId);
+
+    private static string HashUserId(string userId) =>
+        Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(userId)));
 
     private static string JobKey(string jobId) => $"trips:search:job:{jobId}";
 }

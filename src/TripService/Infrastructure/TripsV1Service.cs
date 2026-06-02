@@ -10,13 +10,15 @@ public class TripsV1Service : ITripsV1Service
     private readonly string _connectionString;
     private readonly IRoutingEngine _routing;
     private readonly IJobStore _jobStore;
+    private readonly IUserChecker _userChecker;
 
-    public TripsV1Service(IConfiguration config, IRoutingEngine routing, IJobStore jobStore)
+    public TripsV1Service(IConfiguration config, IRoutingEngine routing, IJobStore jobStore, IUserChecker userChecker)
     {
         _connectionString = config.GetConnectionString("TripConnection")
             ?? throw new InvalidOperationException("TripConnection is not configured.");
-        _routing  = routing;
-        _jobStore = jobStore;
+        _routing      = routing;
+        _jobStore     = jobStore;
+        _userChecker  = userChecker;
     }
 
     public async Task<TripV1DTO> CreateTripAsync(CreateTripV1DTO dto, string driverId)
@@ -250,6 +252,9 @@ public class TripsV1Service : ITripsV1Service
         if (driverGuid == passengerGuid)
             throw new ValidationException("Driver cannot be added as a passenger on their own trip.");
 
+        if (!await _userChecker.UserExistsAsync(passengerId))
+            throw new ValidationException($"User '{passengerId}' does not exist.");
+
         await using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync();
         await using var tx = await conn.BeginTransactionAsync();
@@ -361,9 +366,10 @@ public class TripsV1Service : ITripsV1Service
 
     public async Task<SearchJobPollResult> PollSearchJobAsync(string jobId, string userId)
     {
-        var job = await _jobStore.GetJobAsync(jobId);
+        // GetJobAsync enforces ownership via hash comparison — returns null for wrong user
+        var job = await _jobStore.GetJobAsync(jobId, userId);
 
-        if (job == null || job.UserId != userId)
+        if (job == null)
             throw new NotFoundException($"Search job {jobId} not found.");
 
         if (job.Status is "pending" or "processing")
