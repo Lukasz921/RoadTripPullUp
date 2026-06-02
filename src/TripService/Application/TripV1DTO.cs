@@ -27,6 +27,11 @@ public class CreateTripV1DTO
     public int AvailableSeats { get; set; }
 }
 
+public class AddPassengerDTO
+{
+    public string PassengerId { get; set; } = string.Empty;
+}
+
 public class PagedTripsDTO
 {
     public List<TripV1DTO> Items { get; set; } = new();

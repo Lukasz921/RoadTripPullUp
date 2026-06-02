@@ -75,20 +75,22 @@ public class MockTripsV1Service : ITripsV1Service
         });
     }
 
-    public Task JoinTripAsync(string tripId, string userId)
+    public Task AddPassengerAsync(string tripId, string driverId, string passengerId)
     {
         if (!_trips.TryGetValue(tripId, out var trip))
             throw new NotFoundException($"Trip {tripId} not found.");
-        if (trip.DriverId == userId)
-            throw new ForbiddenException("You cannot join your own trip.");
+        if (trip.DriverId != driverId)
+            throw new ForbiddenException("Only the trip driver can add passengers.");
+        if (driverId == passengerId)
+            throw new ValidationException("Driver cannot be added as a passenger on their own trip.");
         if (trip.Status != "ACTIVE")
             throw new ValidationException("Trip is not active.");
-        if (trip.PassengerIds.Contains(userId))
-            throw new ValidationException("You have already joined this trip.");
+        if (trip.PassengerIds.Contains(passengerId))
+            throw new ValidationException("This user is already a passenger on this trip.");
         if (trip.PassengerIds.Count >= trip.AvailableSeats)
             throw new SeatUnavailableException("No seats available on this trip.");
 
-        trip.PassengerIds.Add(userId);
+        trip.PassengerIds.Add(passengerId);
         return Task.CompletedTask;
     }
 

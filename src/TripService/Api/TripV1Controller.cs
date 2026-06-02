@@ -74,18 +74,21 @@ public class TripV1Controller : ControllerBase
         return Ok(trip);
     }
 
-    [HttpPost("trips/{tripId}/join")]
+    [HttpPost("trips/{tripId}/passengers")]
     [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
     [ProducesResponseType(403)]
     [ProducesResponseType(404)]
     [ProducesResponseType(409)]
-    public async Task<IActionResult> JoinTrip([FromRoute] string tripId)
+    public async Task<IActionResult> AddPassenger(
+        [FromRoute] string tripId,
+        [FromBody] AddPassengerDTO dto)
     {
-        var userId = GetUserId();
-        if (userId == null)
+        var driverId = GetUserId();
+        if (driverId == null)
             return Unauthorized(new { error = new { code = "UNAUTHORIZED", message = "Missing or invalid token." } });
 
-        await _service.JoinTripAsync(tripId, userId);
+        await _service.AddPassengerAsync(tripId, driverId, dto.PassengerId);
         return NoContent();
     }
 
