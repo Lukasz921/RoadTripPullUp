@@ -47,6 +47,12 @@ export default function ProfilePage() {
             Joined rides
           </button>
           <button
+            onClick={() => navigate('/my-rides')}
+            className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-[#12351f] shadow-sm ring-1 ring-[#d7e8c8] hover:bg-[#f3faee]"
+          >
+            My rides
+          </button>
+          <button
             onClick={() => navigate('/add-trip')}
             className="rounded-xl bg-[#8cc63f] px-4 py-2 text-sm font-semibold text-[#12351f] hover:bg-[#a6dd55]"
           >
