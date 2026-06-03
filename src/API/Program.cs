@@ -81,7 +81,7 @@ builder.Services.AddUsersModule();
 builder.Services.AddHttpClient("valhalla", client =>
 {
     client.BaseAddress = new Uri(builder.Configuration["Valhalla:BaseUrl"] ?? "http://valhalla:8002");
-    client.Timeout = TimeSpan.FromSeconds(10);
+    client.Timeout = TimeSpan.FromSeconds(30);
 });
 builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
     ConnectionMultiplexer.Connect(

@@ -55,7 +55,7 @@ export default function SearchTripsPage() {
             setPolling(false);
             const result = data as SearchJobResultDTO;
             if (result.error) {
-              setError(result.error.message);
+              setError(result.error.message ?? 'Search job failed.');
             } else {
               setResults(result.items ?? []);
             }

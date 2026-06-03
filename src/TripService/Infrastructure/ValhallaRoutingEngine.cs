@@ -73,8 +73,8 @@ public class ValhallaRoutingEngine : IRoutingEngine
     {
         var body = new
         {
-            sources = sources.Select(s => new { lon = s.Lng, lat = s.Lat, radius = 100 }).ToArray(),
-            targets = targets.Select(t => new { lon = t.Lng, lat = t.Lat, radius = 100 }).ToArray(),
+            sources = sources.Select(s => new { lon = s.Lng, lat = s.Lat, radius = 1000 }).ToArray(),
+            targets = targets.Select(t => new { lon = t.Lng, lat = t.Lat, radius = 1000 }).ToArray(),
             costing = "auto"
         };
 
@@ -84,7 +84,18 @@ public class ValhallaRoutingEngine : IRoutingEngine
 
             if (!response.IsSuccessStatusCode)
             {
-                await ThrowForValhalla400Async(response, ct);
+                // For tile-not-ready errors on the route endpoint we fail hard.
+                // For matrix calls during search, 400 most likely means the passenger's
+                // coordinates can't be snapped to a road — return all nulls so Phase 2
+                // filters those candidates out rather than crashing the whole search job.
+                if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
+                {
+                    var allNull = new int?[sources.Length][];
+                    for (int i = 0; i < sources.Length; i++)
+                        allNull[i] = new int?[targets.Length];
+                    return allNull;
+                }
+
                 throw new RoutingEngineUnavailableException(
                     $"Valhalla matrix returned HTTP {(int)response.StatusCode}.");
             }
