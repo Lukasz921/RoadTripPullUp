@@ -9,6 +9,16 @@ public class ValhallaRoutingEngine : IRoutingEngine
 {
     private readonly HttpClient _http;
 
+    // Valhalla error_code 171 = "No suitable edges near location"
+    // This means the routing tiles for the area haven't been built yet.
+    private const int NoSuitableEdgesCode = 171;
+
+    private const string TilesNotReadyMessage =
+        "Valhalla routing tiles are not ready for the requested area. " +
+        "If the container just started, wait for tile building to finish — " +
+        "watch 'docker logs -f valhalla' and wait for 'Starting valhalla service!'. " +
+        "Building Poland tiles takes ~40 minutes on first run.";
+
     public ValhallaRoutingEngine(IHttpClientFactory factory)
     {
         _http = factory.CreateClient("valhalla");
@@ -31,14 +41,17 @@ public class ValhallaRoutingEngine : IRoutingEngine
             using var response = await _http.PostAsJsonAsync("/route", body, ct);
 
             if (!response.IsSuccessStatusCode)
+            {
+                await ThrowForValhalla400Async(response, ct);
                 throw new RoutingEngineUnavailableException(
                     $"Valhalla returned HTTP {(int)response.StatusCode}.");
+            }
 
             using var doc = await JsonDocument.ParseAsync(
                 await response.Content.ReadAsStreamAsync(ct), cancellationToken: ct);
 
-            var trip    = doc.RootElement.GetProperty("trip");
-            var summary = trip.GetProperty("summary");
+            var trip      = doc.RootElement.GetProperty("trip");
+            var summary   = trip.GetProperty("summary");
             var distanceM = (int)(summary.GetProperty("length").GetDouble() * 1000);
             var durationS = (int)summary.GetProperty("time").GetDouble();
             var encoded   = trip.GetProperty("legs")[0].GetProperty("shape").GetString()!;
@@ -70,13 +83,16 @@ public class ValhallaRoutingEngine : IRoutingEngine
             using var response = await _http.PostAsJsonAsync("/sources_to_targets", body, ct);
 
             if (!response.IsSuccessStatusCode)
+            {
+                await ThrowForValhalla400Async(response, ct);
                 throw new RoutingEngineUnavailableException(
                     $"Valhalla matrix returned HTTP {(int)response.StatusCode}.");
+            }
 
             using var doc = await JsonDocument.ParseAsync(
                 await response.Content.ReadAsStreamAsync(ct), cancellationToken: ct);
 
-            var rows = doc.RootElement.GetProperty("sources_to_targets");
+            var rows   = doc.RootElement.GetProperty("sources_to_targets");
             var result = new int?[sources.Length][];
 
             for (int i = 0; i < sources.Length; i++)
@@ -103,6 +119,32 @@ public class ValhallaRoutingEngine : IRoutingEngine
         }
     }
 
+    // Reads the Valhalla error body and throws a human-readable exception.
+    private static async Task ThrowForValhalla400Async(HttpResponseMessage response, CancellationToken ct)
+    {
+        if (response.StatusCode != System.Net.HttpStatusCode.BadRequest) return;
+
+        try
+        {
+            using var doc = await JsonDocument.ParseAsync(
+                await response.Content.ReadAsStreamAsync(ct), cancellationToken: ct);
+
+            if (doc.RootElement.TryGetProperty("error_code", out var code) &&
+                code.GetInt32() == NoSuitableEdgesCode)
+            {
+                throw new RoutingEngineUnavailableException(TilesNotReadyMessage);
+            }
+        }
+        catch (RoutingEngineUnavailableException)
+        {
+            throw;
+        }
+        catch
+        {
+            // Body couldn't be parsed — fall through to generic error
+        }
+    }
+
     private static string DecodePolylineToWkt(string encoded, int precision = 6)
     {
         var factor = Math.Pow(10, precision);
@@ -125,7 +167,6 @@ public class ValhallaRoutingEngine : IRoutingEngine
         if (points.Count < 2)
             throw new RoutingEngineUnavailableException("Valhalla returned an invalid route shape.");
 
-        // WKT uses (longitude latitude) order
         var coords = string.Join(", ", points.Select(p => $"{p.lng} {p.lat}"));
         return $"LINESTRING({coords})";
     }
