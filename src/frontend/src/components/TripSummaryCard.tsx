@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { LatLng } from '../types/trip';
 import { reverseGeocode } from '../api/reverseGeocode';
+import { formatDate, metersToKm, formatCoords } from '../utils/format';
 
 interface Trip {
   id: string;
@@ -15,26 +17,13 @@ interface Trip {
 interface TripSummaryCardProps {
   trip: Trip;
   actualDetourMeters?: number;
+  detailsState?: Record<string, unknown>;
   action?: {
     label: string;
     onClick: (trip: Trip) => void;
   };
 }
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleString('en-GB', {
-    day: '2-digit', month: 'short', year: 'numeric',
-    hour: '2-digit', minute: '2-digit',
-  });
-}
-
-function metersToKm(meters: number) {
-  return (meters / 1000).toFixed(1) + ' km';
-}
-
-function formatCoords(lat: number, lng: number) {
-  return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-}
 
 function Field({ label, value }: { label: string; value: string }) {
   return (
@@ -45,7 +34,8 @@ function Field({ label, value }: { label: string; value: string }) {
   );
 }
 
-export default function TripSummaryCard({ trip, actualDetourMeters, action }: TripSummaryCardProps) {
+export default function TripSummaryCard({ trip, actualDetourMeters, detailsState }: TripSummaryCardProps) {
+  const navigate = useNavigate();
   const [fromLabel, setFromLabel] = useState(formatCoords(trip.source.lat, trip.source.lng));
   const [toLabel, setToLabel] = useState(formatCoords(trip.target.lat, trip.target.lng));
 
@@ -68,15 +58,15 @@ export default function TripSummaryCard({ trip, actualDetourMeters, action }: Tr
         )}
       </div>
 
-      {action && (
+      <div className="mt-4 flex gap-2">
         <button
           type="button"
-          onClick={() => action.onClick(trip)}
-          className="mt-4 w-full rounded-xl bg-[#12351f] px-4 py-2 text-sm font-semibold text-white hover:bg-[#1d4a2d]"
+          onClick={() => navigate(`/trip/${trip.id}`, { state: detailsState })}
+          className="flex-1 rounded-xl border border-[#12351f] px-4 py-2 text-sm font-semibold text-[#12351f] hover:bg-[#e8f5e0]"
         >
-          {action.label}
+          View details
         </button>
-      )}
+      </div>
     </div>
   );
 }
