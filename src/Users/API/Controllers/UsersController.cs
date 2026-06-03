@@ -39,4 +39,15 @@ public class UsersController : ControllerBase
         await _userService.Update(userId, dto);
         return NoContent();
     }
+
+    [HttpGet("me/integration-data")]
+    public async Task<IActionResult> GetIntegrationData()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null) return Unauthorized();
+
+        var userId = Guid.Parse(userIdClaim.Value);
+        var data = await _userService.GetUserIntegrationData(userId);
+        return Ok(data);
+    }
 }

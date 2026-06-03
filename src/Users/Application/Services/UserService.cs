@@ -59,4 +59,31 @@ public class UserService : IUserService
 
         await _userRepository.Save(user);
     }
+
+    public async Task<UserIntegrationDTO> GetUserIntegrationData(Guid id)
+    {
+        var user = await _userRepository.FindById(id);
+        if (user == null)
+        {
+            throw new Exception("User not found.");
+        }
+
+        var today = DateTime.UtcNow.Date;
+        var age = today.Year - user.DateOfBirth.Year;
+        if (user.DateOfBirth.Date > today.AddYears(-age)) age--;
+
+        var isAdult = age >= 18;
+
+        return new UserIntegrationDTO
+        {
+            Id = user.Id,
+            FullName = $"{user.Name} {user.Surname}",
+            Email = user.Email,
+            Trip = new TripIntegrationData
+            {
+                IsAdult = isAdult,
+                CanCreateTrip = isAdult
+            }
+        };
+    }
 }
