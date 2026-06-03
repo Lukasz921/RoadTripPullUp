@@ -16,6 +16,7 @@ public class TripV1DTO
     public string Status { get; set; } = "ACTIVE";
     public DateTime CreatedAt { get; set; }
     public Guid? ConversationId { get; set; }
+    public List<LatLngDTO>? RoutePolylinePoints { get; set; }
 }
 
 public class CreateTripV1DTO

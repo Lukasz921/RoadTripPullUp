@@ -120,6 +120,7 @@ public class TripsV1Service : ITripsV1Service
                 t.available_seats,
                 t.status::text AS status,
                 t.created_at,
+                ST_AsGeoJSON(t.route_polyline)::text AS route_geojson,
                 COALESCE(
                     ARRAY_AGG(tp.passenger_user_id ORDER BY tp.joined_at) FILTER (WHERE tp.passenger_user_id IS NOT NULL),
                     '{}'::uuid[]
@@ -130,7 +131,7 @@ public class TripsV1Service : ITripsV1Service
             GROUP BY t.id, t.driver_user_id, t.source_geog, t.target_geog,
                      t.route_distance_m, t.route_duration_s, t.max_detour_m,
                      t.departure_time, t.price_per_seat, t.available_seats,
-                     t.status, t.created_at
+                     t.status, t.created_at, t.route_polyline
             """;
 
         await using var conn = new NpgsqlConnection(_connectionString);
@@ -142,7 +143,7 @@ public class TripsV1Service : ITripsV1Service
         if (!await reader.ReadAsync())
             throw new NotFoundException($"Trip '{tripId}' not found.");
 
-        return MapRowWithPassengers(reader);
+        return MapRowDetail(reader);
     }
 
     public async Task<PagedTripsDTO> GetMyTripsAsync(string driverId, int page, int pageSize)
@@ -438,6 +439,28 @@ public class TripsV1Service : ITripsV1Service
         MapRow(r, r.GetFieldValue<Guid[]>(r.GetOrdinal("passenger_ids"))
                   .Select(g => g.ToString())
                   .ToList());
+
+    private static TripV1DTO MapRowDetail(NpgsqlDataReader r)
+    {
+        var dto = MapRowWithPassengers(r);
+
+        var geoJsonOrd = r.GetOrdinal("route_geojson");
+        if (!r.IsDBNull(geoJsonOrd))
+        {
+            var geoJson = r.GetString(geoJsonOrd);
+            using var doc = System.Text.Json.JsonDocument.Parse(geoJson);
+            var coords = doc.RootElement.GetProperty("coordinates");
+            dto.RoutePolylinePoints = coords.EnumerateArray()
+                .Select(c =>
+                {
+                    var arr = c.EnumerateArray().ToArray();
+                    return new LatLngDTO { Lng = arr[0].GetDouble(), Lat = arr[1].GetDouble() };
+                })
+                .ToList();
+        }
+
+        return dto;
+    }
 
     private static TripV1DTO MapRow(NpgsqlDataReader r, List<string> passengerIds) => new()
     {
