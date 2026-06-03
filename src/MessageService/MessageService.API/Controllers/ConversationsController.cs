@@ -157,17 +157,11 @@ public class ConversationsController : ControllerBase
         var conv = await _conversations.GetByIdAsync(conversationId);
         if (conv == null) return NotFound();
         
-        var driverId = GetUserId();
-        if (conv.Members.All(m => m.UserId != driverId)) return Forbid();
+        var callerId = GetUserId();
+        if (conv.Members.All(m => m.UserId != callerId)) return Forbid();
         if (conv.Members.Any(m => m.UserId == userId)) return BadRequest(new { error = "already a member" });
-        
-        conv.Members.Add(new ConversationMember
-        {
-            UserId = userId,
-            JoinedAt = _clockService.Now,
-            Role = 0
-        });
-        // TODO: no validation that current user (driverId) is actually a driver or another member of conversation
+
+        await _conversations.AddMemberAsync(conversationId, userId);
         return NoContent();
     }
 

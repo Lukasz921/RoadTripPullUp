@@ -10,4 +10,6 @@ public interface IConversationService
     Task<Conversation?> GetByIdAsync(Guid id);
     Task<Conversation?> GetGroupForTripAsync(Guid tripId);
     Task<List<Conversation>> GetDirectForTripAsync(Guid tripId, Guid userId);
+    Task AddMemberAsync(Guid conversationId, Guid userId);
+    Task AddMemberToTripGroupAsync(Guid tripId, Guid userId);
 }

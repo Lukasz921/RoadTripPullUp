@@ -122,6 +122,16 @@ public class TripV1Controller : ControllerBase
             return Unauthorized(new { error = new { code = "UNAUTHORIZED", message = "Missing or invalid token." } });
 
         await _service.AddPassengerAsync(tripId, driverId, dto.PassengerId);
+
+        try
+        {
+            await _conversations.AddMemberToTripGroupAsync(Guid.Parse(tripId), Guid.Parse(dto.PassengerId));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to add passenger {PassengerId} to group chat for trip {TripId}", dto.PassengerId, tripId);
+        }
+
         return NoContent();
     }
 
