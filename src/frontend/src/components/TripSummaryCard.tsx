@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { LatLng } from '../types/trip';
 import { reverseGeocode } from '../api/reverseGeocode';
 
@@ -46,6 +47,7 @@ function Field({ label, value }: { label: string; value: string }) {
 }
 
 export default function TripSummaryCard({ trip, actualDetourMeters, action }: TripSummaryCardProps) {
+  const navigate = useNavigate();
   const [fromLabel, setFromLabel] = useState(formatCoords(trip.source.lat, trip.source.lng));
   const [toLabel, setToLabel] = useState(formatCoords(trip.target.lat, trip.target.lng));
 
@@ -68,15 +70,25 @@ export default function TripSummaryCard({ trip, actualDetourMeters, action }: Tr
         )}
       </div>
 
-      {action && (
+      <div className="mt-4 flex gap-2">
         <button
           type="button"
-          onClick={() => action.onClick(trip)}
-          className="mt-4 w-full rounded-xl bg-[#12351f] px-4 py-2 text-sm font-semibold text-white hover:bg-[#1d4a2d]"
+          onClick={() => navigate(`/trip/${trip.id}`)}
+          className="flex-1 rounded-xl border border-[#12351f] px-4 py-2 text-sm font-semibold text-[#12351f] hover:bg-[#e8f5e0]"
         >
-          {action.label}
+          View details
         </button>
-      )}
+
+        {action && (
+          <button
+            type="button"
+            onClick={() => action.onClick(trip)}
+            className="flex-1 rounded-xl bg-[#12351f] px-4 py-2 text-sm font-semibold text-white hover:bg-[#1d4a2d]"
+          >
+            {action.label}
+          </button>
+        )}
+      </div>
     </div>
   );
 }
