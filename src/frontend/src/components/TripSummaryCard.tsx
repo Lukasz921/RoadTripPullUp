@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { LatLng } from '../types/trip';
 import { reverseGeocode } from '../api/reverseGeocode';
+import { formatDate, metersToKm, formatCoords } from '../utils/format';
 
 interface Trip {
   id: string;
@@ -22,20 +23,6 @@ interface TripSummaryCardProps {
   };
 }
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleString('en-GB', {
-    day: '2-digit', month: 'short', year: 'numeric',
-    hour: '2-digit', minute: '2-digit',
-  });
-}
-
-function metersToKm(meters: number) {
-  return (meters / 1000).toFixed(1) + ' km';
-}
-
-function formatCoords(lat: number, lng: number) {
-  return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-}
 
 function Field({ label, value }: { label: string; value: string }) {
   return (

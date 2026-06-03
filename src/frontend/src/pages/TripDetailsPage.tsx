@@ -6,23 +6,7 @@ import TripRouteMap from '../components/TripRouteMap';
 import { getTripById, type TripDTO } from '../api/trips';
 import { reverseGeocode } from '../api/reverseGeocode';
 import type { Place } from '../utils/geoapify';
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleString('en-GB', {
-    day: '2-digit', month: 'short', year: 'numeric',
-    hour: '2-digit', minute: '2-digit',
-  });
-}
-
-function metersToKm(meters: number) {
-  return (meters / 1000).toFixed(1) + ' km';
-}
-
-function secondsToTime(seconds: number) {
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  return h > 0 ? `${h}h ${m}m` : `${m}m`;
-}
+import { formatDate, metersToKm, secondsToTime } from '../utils/format';
 
 function Field({ label, value }: { label: string; value: string }) {
   return (
