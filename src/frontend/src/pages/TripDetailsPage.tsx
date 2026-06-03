@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import TripRouteMap from '../components/TripRouteMap';
@@ -19,6 +19,9 @@ function Field({ label, value }: { label: string; value: string }) {
 
 export default function TripDetailsPage() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { state } = useLocation();
+  const showTripAsks: boolean = state?.showTripAsks ?? false;
   const [trip, setTrip] = useState<TripDTO | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -76,6 +79,25 @@ export default function TripDetailsPage() {
                 <Field label="Created" value={formatDate(trip.createdAt)} />
               </div>
             </section>
+
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => navigate(`/trip/${id}/conversations`)}
+                className="flex-1 rounded-xl bg-[#12351f] px-4 py-3 text-sm font-semibold text-white hover:bg-[#1d4a2d]"
+              >
+                Trip conversations
+              </button>
+              {showTripAsks && (
+                <button
+                  type="button"
+                  onClick={() => navigate(`/trip/${id}/asks`)}
+                  className="flex-1 rounded-xl border border-[#12351f] px-4 py-3 text-sm font-semibold text-[#12351f] hover:bg-[#e8f5e0]"
+                >
+                  Trip asks
+                </button>
+              )}
+            </div>
 
             <section className="rounded-2xl bg-white p-4 shadow-sm" style={{ height: '420px' }}>
               <h2 className="mb-3 text-lg font-semibold text-[#12351f]">Route</h2>
