@@ -42,7 +42,7 @@ export default function MyRidesPage() {
         {!loading && !error && trips.length > 0 && (
           <div className="flex flex-col gap-3">
             {trips.map((trip) => (
-              <TripSummaryCard key={trip.id} trip={trip} />
+              <TripSummaryCard key={trip.id} trip={trip} detailsState={{ showTripAsks: true }} />
             ))}
           </div>
         )}

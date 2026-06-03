@@ -17,6 +17,7 @@ interface Trip {
 interface TripSummaryCardProps {
   trip: Trip;
   actualDetourMeters?: number;
+  detailsState?: Record<string, unknown>;
   action?: {
     label: string;
     onClick: (trip: Trip) => void;
@@ -33,7 +34,7 @@ function Field({ label, value }: { label: string; value: string }) {
   );
 }
 
-export default function TripSummaryCard({ trip, actualDetourMeters }: TripSummaryCardProps) {
+export default function TripSummaryCard({ trip, actualDetourMeters, detailsState }: TripSummaryCardProps) {
   const navigate = useNavigate();
   const [fromLabel, setFromLabel] = useState(formatCoords(trip.source.lat, trip.source.lng));
   const [toLabel, setToLabel] = useState(formatCoords(trip.target.lat, trip.target.lng));
@@ -60,7 +61,7 @@ export default function TripSummaryCard({ trip, actualDetourMeters }: TripSummar
       <div className="mt-4 flex gap-2">
         <button
           type="button"
-          onClick={() => navigate(`/trip/${trip.id}`)}
+          onClick={() => navigate(`/trip/${trip.id}`, { state: detailsState })}
           className="flex-1 rounded-xl border border-[#12351f] px-4 py-2 text-sm font-semibold text-[#12351f] hover:bg-[#e8f5e0]"
         >
           View details
