@@ -46,7 +46,7 @@ function Field({ label, value }: { label: string; value: string }) {
   );
 }
 
-export default function TripSummaryCard({ trip, actualDetourMeters, action }: TripSummaryCardProps) {
+export default function TripSummaryCard({ trip, actualDetourMeters }: TripSummaryCardProps) {
   const navigate = useNavigate();
   const [fromLabel, setFromLabel] = useState(formatCoords(trip.source.lat, trip.source.lng));
   const [toLabel, setToLabel] = useState(formatCoords(trip.target.lat, trip.target.lng));
