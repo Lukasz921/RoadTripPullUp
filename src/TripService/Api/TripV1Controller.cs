@@ -1,6 +1,10 @@
 using System.Security.Claims;
+using MessageService.Application.DTOs;
+using MessageService.Application.Services;
+using MessageService.Core.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using TripService.Application;
 
 namespace TripService.Api;
@@ -12,11 +16,19 @@ public class TripV1Controller : ControllerBase
 {
     private readonly ITripsV1Service _service;
     private readonly ITripsSearchService _search;
+    private readonly IConversationService _conversations;
+    private readonly ILogger<TripV1Controller> _logger;
 
-    public TripV1Controller(ITripsV1Service service, ITripsSearchService search)
+    public TripV1Controller(
+        ITripsV1Service service,
+        ITripsSearchService search,
+        IConversationService conversations,
+        ILogger<TripV1Controller> logger)
     {
-        _service = service;
-        _search  = search;
+        _service       = service;
+        _search        = search;
+        _conversations = conversations;
+        _logger        = logger;
     }
 
     [HttpPost("trips")]
@@ -28,6 +40,27 @@ public class TripV1Controller : ControllerBase
             return Unauthorized(new { error = new { code = "UNAUTHORIZED", message = "Missing or invalid token." } });
 
         var trip = await _service.CreateTripAsync(dto, driverId);
+
+        try
+        {
+            var conversationId = await _conversations.CreateConversationAsync(
+                new CreateConversationDto
+                {
+                    Type         = ConversationType.Group,
+                    TripId       = Guid.Parse(trip.Id),
+                    Title        = "Group Chat",
+                    Date         = trip.DepartureTime,
+                    Participants = [Guid.Parse(driverId)]
+                },
+                Guid.Parse(driverId));
+
+            trip.ConversationId = conversationId;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to create group chat for trip {TripId} — trip still created", trip.Id);
+        }
+
         return Created($"/api/v1/trips/{trip.Id}", trip);
     }
 
