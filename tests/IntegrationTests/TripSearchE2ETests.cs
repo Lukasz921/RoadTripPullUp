@@ -60,6 +60,60 @@ public class TripSearchE2ETests : IAsyncDisposable
     }
 
     [Fact]
+    public async Task E2E_Phase1PassesPhase2Rejects_BackwardsPassenger()
+    {
+        // Driver: Warsaw → Kraków (south), max_detour_m = 50 km
+        // Passenger: Radom (on the route) → Warsaw (going BACKWARDS north)
+        //
+        // Phase 1 (ST_DWithin): passes — Radom is within 50 km of the polyline,
+        //   and Warsaw (pax target) is the driver's own start point, so distance = 0.
+        //
+        // Phase 2 (Valhalla matrix detour):
+        //   detour = leg1(Warsaw→Radom) + leg3(Radom→Warsaw) + leg2(Warsaw→Kraków) − route(Warsaw→Kraków)
+        //          ≈       103 km       +        103 km       +        295 km        −        295 km
+        //          = 206 km >> 50 km  →  REJECTED by Phase 2
+
+        var routing    = BuildRealRoutingEngine();
+        var tripSvc    = BuildTripService(routing);
+        var searchSvc  = BuildSearchService(routing);
+
+        var trip = await tripSvc.CreateTripAsync(new CreateTripV1DTO
+        {
+            Source          = new LatLngDTO { Lat = 52.2297, Lng = 21.0122 }, // Warsaw
+            Target          = new LatLngDTO { Lat = 50.0647, Lng = 19.9450 }, // Kraków
+            DepartureTime   = DateTime.UtcNow.AddDays(30),
+            MaxDetourMeters = 50_000,
+            PricePerSeat    = 25m,
+            AvailableSeats  = 3
+        }, Guid.NewGuid().ToString());
+
+        _insertedTripIds.Add(Guid.Parse(trip.Id));
+
+        // Verify Phase 1 actually passes — the trip IS a candidate
+        var phase1Candidates = await CountPhase1CandidatesAsync(
+            srcLat: 51.4027, srcLng: 21.1471, // Radom
+            tgtLat: 52.2297, tgtLng: 21.0122, // Warsaw (backwards)
+            dateFrom: FutureDate(1), dateTo: FutureDate(60));
+
+        phase1Candidates.Should().BeGreaterThan(0,
+            "Radom and Warsaw are both within 50 km of the Warsaw→Kraków polyline, so Phase 1 must accept the candidate");
+
+        // Full search — Phase 2 must reject it
+        var result = await searchSvc.SearchAsync(new SearchTripsQueryDTO
+        {
+            SourceLat = 51.4027, SourceLng = 21.1471, // Radom
+            TargetLat = 52.2297, TargetLng = 21.0122, // Warsaw — backwards!
+            DateFrom  = FutureDate(1),
+            DateTo    = FutureDate(60),
+            MinSeats  = 1,
+            Page = 1, PageSize = 20
+        });
+
+        result.Items.Should().NotContain(i => i.Id == trip.Id,
+            "Phase 2 must reject: backwards detour ≈ 206 km, far above 50 km max");
+    }
+
+    [Fact]
     public async Task E2E_PassengerOffRoute_FindsNoTrip()
     {
         var routing = BuildRealRoutingEngine();
@@ -90,6 +144,41 @@ public class TripSearchE2ETests : IAsyncDisposable
         });
 
         result.Items.Should().NotContain(i => i.Id == trip.Id);
+    }
+
+    // Runs Phase 1 SQL directly against trip_db and returns candidate count.
+    // Use this to prove a candidate exists before Phase 2 filters it.
+    private async Task<int> CountPhase1CandidatesAsync(
+        double srcLat, double srcLng,
+        double tgtLat, double tgtLng,
+        string dateFrom, string dateTo)
+    {
+        const string sql = """
+            SELECT COUNT(*) FROM trip t
+            WHERE t.status = 'ACTIVE'
+              AND t.departure_time >= @dateFrom
+              AND t.departure_time <= @dateTo
+              AND ST_DWithin(
+                    t.route_polyline,
+                    ST_SetSRID(ST_MakePoint(@srcLng, @srcLat), 4326)::geography,
+                    t.max_detour_m)
+              AND ST_DWithin(
+                    t.route_polyline,
+                    ST_SetSRID(ST_MakePoint(@tgtLng, @tgtLat), 4326)::geography,
+                    t.max_detour_m)
+            """;
+
+        await using var conn = new NpgsqlConnection(TripConnection);
+        await conn.OpenAsync();
+        await using var cmd = new NpgsqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("srcLat",   srcLat);
+        cmd.Parameters.AddWithValue("srcLng",   srcLng);
+        cmd.Parameters.AddWithValue("tgtLat",   tgtLat);
+        cmd.Parameters.AddWithValue("tgtLng",   tgtLng);
+        cmd.Parameters.AddWithValue("dateFrom", DateTime.SpecifyKind(DateTime.UtcNow.AddDays(1), DateTimeKind.Utc));
+        cmd.Parameters.AddWithValue("dateTo",   DateTime.SpecifyKind(DateTime.UtcNow.AddDays(60), DateTimeKind.Utc));
+
+        return Convert.ToInt32(await cmd.ExecuteScalarAsync());
     }
 
     // ── Cleanup ───────────────────────────────────────────────────────────────
