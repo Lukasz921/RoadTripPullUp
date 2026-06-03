@@ -78,16 +78,6 @@ export default function TripSummaryCard({ trip, actualDetourMeters, action }: Tr
         >
           View details
         </button>
-
-        {action && (
-          <button
-            type="button"
-            onClick={() => action.onClick(trip)}
-            className="flex-1 rounded-xl bg-[#12351f] px-4 py-2 text-sm font-semibold text-white hover:bg-[#1d4a2d]"
-          >
-            {action.label}
-          </button>
-        )}
       </div>
     </div>
   );

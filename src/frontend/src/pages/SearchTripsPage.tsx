@@ -252,7 +252,6 @@ export default function SearchTripsPage() {
                   key={trip.id}
                   trip={trip}
                   actualDetourMeters={trip.actualDetourMeters}
-                  action={{ label: 'Join ride', onClick: (t) => console.log('Join ride:', t.id) }}
                 />
               ))}
             </section>
