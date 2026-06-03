@@ -72,7 +72,7 @@ export default function TripDetailsPage() {
                 <Field label="Max detour" value={metersToKm(trip.maxDetourMeters)} />
                 <Field label="Route distance" value={metersToKm(trip.routeDistanceM)} />
                 <Field label="Estimated duration" value={secondsToTime(trip.routeDurationS)} />
-                <Field label="Status" value={trip.status} />
+                <Field label="Passengers" value={String(trip.passengerIds.length)} />
                 <Field label="Created" value={formatDate(trip.createdAt)} />
               </div>
             </section>
