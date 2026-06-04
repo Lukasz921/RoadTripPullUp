@@ -14,7 +14,7 @@ public class ArchitectureTests
     public void Core_Should_Not_HaveDependencyOnOtherProjects()
     {
         // Arrange
-        var assembly = typeof(Core.TripPlanner.Trip).Assembly; // Wskazujemy dowolną klasę z projektu Core
+        var assembly = typeof(Core.Messages.Message).Assembly; // Wskazujemy dowolną klasę z projektu Core
 
         // Act
         var result = Types
