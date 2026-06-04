@@ -81,20 +81,6 @@ public class ConversationsController : ControllerBase
         return Ok(dtos);
     }
 
-    [HttpPost("{conversationId:guid}/join/{userId:guid}")]
-    public async Task<IActionResult> Join(Guid conversationId, Guid userId)
-    {
-        var conv = await _conversations.GetByIdAsync(conversationId);
-        if (conv == null) throw new NotFoundException("Conversation with given id not found");
-        
-        var callerId = GetUserId();
-        if (conv.Members.All(m => m.UserId != callerId)) throw new ForbiddenException("User is not member of the conversation");
-        if (conv.Members.Any(m => m.UserId == userId)) throw new InvalidParametersException("User is already a member of the conversation");
-
-        await _conversations.AddMemberAsync(conversationId, userId);
-        return NoContent();
-    }
-
     private Guid GetUserId()
     {
         var sub = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
