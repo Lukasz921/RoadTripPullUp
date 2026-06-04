@@ -22,6 +22,8 @@ public class MessagesController : ControllerBase
     [HttpPost("messages")]
     public async Task<IActionResult> Create([FromBody] CreateMessageDto dto)
     {
+        // TODO: add validation that the message type is text
+        // Currently only text messages are supported
         var userId = GetUserId();
         if (dto.ConversationId == Guid.Empty)
             return BadRequest(new { error = "conversationId is required" });

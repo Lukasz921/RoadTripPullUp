@@ -73,33 +73,22 @@ namespace MessageService.API
             {
                 // Preserve any existing Events by wrapping them.
                 var prev = options.Events;
-                var wrapped = new JwtBearerEvents();
-
-                wrapped.OnMessageReceived = async context =>
+                var wrapped = new JwtBearerEvents
                 {
-                    var accessToken = context.Request.Query["access_token"].FirstOrDefault();
-                    var path = context.HttpContext.Request.Path;
-                    if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hub/chat"))
+                    OnMessageReceived = async context =>
                     {
-                        context.Token = accessToken;
-                    }
+                        var accessToken = context.Request.Query["access_token"].FirstOrDefault();
+                        var path = context.HttpContext.Request.Path;
+                        if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hub/chat"))
+                        {
+                            context.Token = accessToken;
+                        }
 
-                    if (prev?.OnMessageReceived != null)
-                    {
                         await prev.OnMessageReceived(context);
-                    }
-                };
-
-                // wire-through other commonly used handlers to avoid losing previously configured behavior
-                wrapped.OnAuthenticationFailed = async context =>
-                {
-                    if (prev?.OnAuthenticationFailed != null)
-                        await prev.OnAuthenticationFailed(context);
-                };
-                wrapped.OnTokenValidated = async context =>
-                {
-                    if (prev?.OnTokenValidated != null)
-                        await prev.OnTokenValidated(context);
+                    },
+                    // wire-through other commonly used handlers to avoid losing previously configured behavior
+                    OnAuthenticationFailed = async context => { await prev.OnAuthenticationFailed(context); },
+                    OnTokenValidated = async context => { await prev.OnTokenValidated(context); }
                 };
 
                 options.Events = wrapped;

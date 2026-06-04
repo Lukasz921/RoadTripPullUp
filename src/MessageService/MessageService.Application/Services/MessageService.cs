@@ -1,6 +1,5 @@
 using MessageService.Application.DTOs;
 using MessageService.Application.DTOs.Mappers;
-using MessageService.Core.Models;
 using MessageService.Core.RepositoryInterfaces;
 
 namespace MessageService.Application.Services;
@@ -54,9 +53,10 @@ public class MessageService : IMessageService
 
     public async Task MarkMessagesReadAsync(Guid conversationId, IEnumerable<Guid> messageIds, Guid readerId, DateTime readAt)
     {
-        await _messages.MarkMessagesReadAsync(conversationId, messageIds, readerId, readAt);
+        var guids = messageIds as Guid[] ?? messageIds.ToArray();
+        await _messages.MarkMessagesReadAsync(conversationId, guids, readerId, readAt);
         // publish read events
-        await _notifier.PublishMessagesReadAsync(conversationId, messageIds, readerId, readAt);
+        await _notifier.PublishMessagesReadAsync(conversationId, guids, readerId, readAt);
     }
 
     public async Task<IEnumerable<MessageDto>> SyncMessagesAsync(Guid userId, DateTime lastReceivedAt)

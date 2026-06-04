@@ -13,12 +13,10 @@ namespace MessageService.API.Controllers;
 public class ConversationsController : ControllerBase
 {
     private readonly IConversationService _conversations;
-    private readonly IClockService _clockService;
 
-    public ConversationsController(IConversationService conversations, IClockService clockService)
+    public ConversationsController(IConversationService conversations)
     {
         _conversations = conversations;
-        _clockService = clockService;
     }
 
     [HttpPost]
