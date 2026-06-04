@@ -34,7 +34,7 @@ function Field({ label, value }: { label: string; value: string }) {
   );
 }
 
-export default function TripSummaryCard({ trip, actualDetourMeters, detailsState }: TripSummaryCardProps) {
+export default function TripSummaryCard({ trip, actualDetourMeters, detailsState, action }: TripSummaryCardProps) {
   const navigate = useNavigate();
   const [fromLabel, setFromLabel] = useState(formatCoords(trip.source.lat, trip.source.lng));
   const [toLabel, setToLabel] = useState(formatCoords(trip.target.lat, trip.target.lng));
@@ -66,6 +66,15 @@ export default function TripSummaryCard({ trip, actualDetourMeters, detailsState
         >
           View details
         </button>
+        {action && (
+          <button
+            type="button"
+            onClick={() => action.onClick(trip)}
+            className="flex-1 rounded-xl border border-[#12351f] px-4 py-2 text-sm font-semibold text-[#12351f] hover:bg-[#e8f5e0]"
+          >
+            {action.label}
+          </button>
+        )}
       </div>
     </div>
   );

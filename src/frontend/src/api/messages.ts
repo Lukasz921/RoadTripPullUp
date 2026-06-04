@@ -46,13 +46,47 @@ export const getConversation = async (conversationId: string): Promise<Conversat
 
 
 export const getGroupConversationByTrip = async (tripId: string): Promise<ConversationDTO> => {
-  const response = await messageApi.get(`/conversations/byTripId/group/${tripId}`);
-  return response.data;
+  // const response = await messageApi.get(`/conversations/byTripId/group/${tripId}`);
+  // return response.data;
+  void tripId; // TODO: remove mock
+  return {
+    ConversationId: 'mock-group-1',
+    Type: 'Group',
+    TripId: tripId,
+    Name: 'Warsaw → Kraków crew',
+    Participants: ['user-1', 'user-2', 'user-3', 'user-4'],
+    LastMessageId: 'msg-1',
+    LastMessagePreview: 'Anyone need a stop in Łódź?',
+    LastMessageCreatedAt: '2026-06-03T14:22:00Z',
+  };
 };
 
 export const getDirectConversationsByTrip = async (tripId: string): Promise<ConversationDTO[]> => {
-  const response = await messageApi.get(`/conversations/byTripId/direct/${tripId}`);
-  return response.data;
+  // const response = await messageApi.get(`/conversations/byTripId/direct/${tripId}`);
+  // return response.data;
+  void tripId; // TODO: remove mock
+  return [
+    {
+      ConversationId: 'mock-direct-1',
+      Type: 'Direct',
+      TripId: tripId,
+      Name: 'Marek Kowalski',
+      Participants: ['user-1', 'user-2'],
+      LastMessageId: 'msg-2',
+      LastMessagePreview: 'Hi, is there still a seat available?',
+      LastMessageCreatedAt: '2026-06-03T10:05:00Z',
+    },
+    {
+      ConversationId: 'mock-direct-2',
+      Type: 'Direct',
+      TripId: tripId,
+      Name: 'Anna Nowak',
+      Participants: ['user-1', 'user-3'],
+      LastMessageId: 'msg-3',
+      LastMessagePreview: 'Great, see you at 8am!',
+      LastMessageCreatedAt: '2026-06-02T18:45:00Z',
+    },
+  ];
 };
 
 
