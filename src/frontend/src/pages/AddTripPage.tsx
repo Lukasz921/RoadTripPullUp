@@ -7,7 +7,7 @@ import MapPoint from '../components/ui/MapPoint';
 import TripRouteMap from '../components/TripRouteMap';
 import NumberInput from '../components/ui/NumberInput';
 import type { Place } from '../utils/geoapify';
-import { tripApi } from '../api/axiosConfig';
+import { createTrip } from '../api/trips';
 
 export default function AddTripPage() {
   const navigate = useNavigate();
@@ -46,10 +46,9 @@ export default function AddTripPage() {
     };
 
     setSubmitting(true);
-    tripApi
-      .post('/trips', payload)
+    createTrip(payload)
       .then(() => navigate('/profile'))
-      .catch((err) => {
+      .catch((err: { response?: { data?: { detail?: string } } }) => {
         console.error('Failed to create trip:', err);
         setSubmitError(err.response?.data?.detail ?? 'Failed to publish trip. Please try again.');
       })

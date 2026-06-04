@@ -94,7 +94,7 @@ export interface SearchJobResultDTO {
 }
 
 export const createTrip = async (dto: CreateTripDTO) => {
-  const response = await tripApi.post<TripDTO>('/', dto);
+  const response = await tripApi.post<TripDTO>('', dto);
   return response.data;
 };
 
