@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import type { ConversationDTO } from '../api/messages';
 import { formatDate } from '../utils/format';
 
@@ -7,11 +8,13 @@ interface ConversationSummaryCardProps {
 }
 
 export default function ConversationSummaryCard({ conversation, isGroup }: ConversationSummaryCardProps) {
+  const navigate = useNavigate();
   const title = conversation.Name ?? (isGroup ? 'Group chat' : 'Direct chat');
 
   return (
     <div
-      className={`rounded-xl border bg-white px-5 py-4 ${
+      onClick={() => navigate(`/conversation/${conversation.ConversationId}`)}
+      className={`cursor-pointer rounded-xl border bg-white px-5 py-4 transition hover:bg-[#f0f9e8] ${
         isGroup ? 'border-[#8cc63f] border-l-4' : 'border-[#d7e8c8]'
       }`}
     >
