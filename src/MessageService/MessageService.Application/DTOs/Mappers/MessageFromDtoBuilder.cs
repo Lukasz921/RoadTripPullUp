@@ -14,7 +14,8 @@ public class MessageFromDtoBuilder
             ConversationId = createMessageDto.ConversationId,
             Type = createMessageDto.Type,
             Payload = createMessageDto.Payload,
-            CreatedAt = clockService.Now
+            CreatedAt = clockService.Now,
+            Id = Guid.NewGuid()
         };
     }
     
