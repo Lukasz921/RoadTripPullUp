@@ -45,12 +45,14 @@ export const getConversation = async (conversationId: string): Promise<Conversat
 };
 
 
-export const getGroupConversationByTrip = async (_tripId: string): Promise<ConversationDTO> => {
-  // TODO: remove mock
+export const getGroupConversationByTrip = async (tripId: string): Promise<ConversationDTO> => {
+  // const response = await messageApi.get(`/conversations/byTripId/group/${tripId}`);
+  // return response.data;
+  void tripId; // TODO: remove mock
   return {
     ConversationId: 'mock-group-1',
     Type: 'Group',
-    TripId: _tripId,
+    TripId: tripId,
     Name: 'Warsaw → Kraków crew',
     Participants: ['user-1', 'user-2', 'user-3', 'user-4'],
     LastMessageId: 'msg-1',
@@ -59,13 +61,15 @@ export const getGroupConversationByTrip = async (_tripId: string): Promise<Conve
   };
 };
 
-export const getDirectConversationsByTrip = async (_tripId: string): Promise<ConversationDTO[]> => {
-  // TODO: remove mock
+export const getDirectConversationsByTrip = async (tripId: string): Promise<ConversationDTO[]> => {
+  // const response = await messageApi.get(`/conversations/byTripId/direct/${tripId}`);
+  // return response.data;
+  void tripId; // TODO: remove mock
   return [
     {
       ConversationId: 'mock-direct-1',
       Type: 'Direct',
-      TripId: _tripId,
+      TripId: tripId,
       Name: 'Marek Kowalski',
       Participants: ['user-1', 'user-2'],
       LastMessageId: 'msg-2',
@@ -75,7 +79,7 @@ export const getDirectConversationsByTrip = async (_tripId: string): Promise<Con
     {
       ConversationId: 'mock-direct-2',
       Type: 'Direct',
-      TripId: _tripId,
+      TripId: tripId,
       Name: 'Anna Nowak',
       Participants: ['user-1', 'user-3'],
       LastMessageId: 'msg-3',
