@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.SignalR;
 using MessageService.Application.Services;
 using MessageService.Application.DTOs;
 using System.Security.Claims;
+using MessageService.Application.DTOs.Mappers;
 
 namespace MessageService.API.Hubs;
 
@@ -47,6 +48,10 @@ public class ChatHub : Hub
         try
         {
             var messageId = await _messageService.CreateMessageAsync(dto, senderId);
+            var message = new MessageFromDtoBuilder(dto, _clockService)
+                .WithSender(senderId)
+                .Build();
+            message.Id = messageId;
 
             // Broadcast to the group that a message was created. The RedisNotificationService
             // already publishes to SignalR as well, but broadcasting here gives immediate feedback
@@ -54,17 +59,9 @@ public class ChatHub : Hub
             var payload = new
             {
                 eventType = "message.created",
-                data = new
-                {
-                    id = messageId,
-                    conversationId = dto.ConversationId,
-                    senderId,
-                    type = dto.Type,
-                    payload = dto.Payload,
-                    createdAt = _clockService.Now
-                }
+                data = message
             };
-
+            
             await Clients.Group(dto.ConversationId.ToString()).SendAsync("MessageCreated", payload);
 
             return new { messageId };
