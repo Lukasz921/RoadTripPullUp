@@ -1,3 +1,4 @@
+using Application.Exceptions;
 using MessageService.Core.RepositoryInterfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,8 +15,8 @@ public class UsersController : ControllerBase
     public async Task<IActionResult> Get(Guid userId)
     {
         var u = await _users.GetByIdAsync(userId);
-        if (u == null) return NotFound();
-        return Ok(new { id = u.Id, username = u.Username, displayName = u.DisplayName });
+        return u == null ? throw new NotFoundException("User not found") : Ok(new { id = u.Id, username = u.Username, displayName = u.DisplayName });
+        // TODO: refactor the return value
     }
 }
 

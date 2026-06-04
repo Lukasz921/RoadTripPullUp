@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Application.Exceptions;
 using MessageService.Application.DTOs;
 using MessageService.Application.DTOs.Mappers;
 using MessageService.Application.Helpers;
@@ -43,11 +44,12 @@ public class ConversationsController : ControllerBase
     public async Task<IActionResult> Get(Guid conversationId)
     {
         var conv = await _conversations.GetByIdAsync(conversationId);
-        if (conv == null) return NotFound();
+        if (conv == null) throw new NotFoundException("Conversation with given id not found");
 
         // authorization: ensure current user is member
         var userId = GetUserId();
-        if (conv.Members.All(m => m.UserId != userId)) return Forbid();
+        if (conv.Members.All(m => m.UserId != userId))
+            throw new ForbiddenException("User is not member of the conversation");
         
         var dto = new ConversationIntoDtoBuilder(conv)
             .WithLastMessage(conv.Messages.OrderByDescending(m => m.CreatedAt).FirstOrDefault())
@@ -60,8 +62,8 @@ public class ConversationsController : ControllerBase
     {
         var conv = await _conversations.GetGroupForTripAsync(tripId);
         var userId = GetUserId();
-        if (conv == null) return NotFound();
-        if (conv.Members.All(m => m.UserId != userId)) return Forbid();
+        if (conv == null) throw new NotFoundException("Conversation with given id not found");
+        if (conv.Members.All(m => m.UserId != userId)) throw new ForbiddenException("User is not member of the conversation");
         var dto = new ConversationIntoDtoBuilder(conv)
             .WithLastMessage(conv.Messages.OrderByDescending(m => m.CreatedAt).FirstOrDefault())
             .Build();
@@ -85,5 +87,3 @@ public class ConversationsController : ControllerBase
         return string.IsNullOrEmpty(sub) ? Guid.Empty : Guid.Parse(sub);
     }
 }
-
-// TODO: convert exceptions to use middleware exception handler

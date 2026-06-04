@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Application.Exceptions;
 using MessageService.Application.DTOs;
 using MessageService.Application.Helpers;
 using MessageService.Application.Services;
@@ -25,8 +26,7 @@ public class MessagesController : ControllerBase
         // TODO: add validation that the message type is text
         // Currently only text messages are supported
         var userId = GetUserId();
-        if (dto.ConversationId == Guid.Empty)
-            return BadRequest(new { error = "conversationId is required" });
+        if (dto.ConversationId == Guid.Empty) throw new InvalidParametersException("conversationId is required");
 
         var id = await _messages.CreateMessageAsync(dto, userId);
         return CreatedAtAction(nameof(Get), new { conversationId = dto.ConversationId, messageId = id }, new { messageId = id });
@@ -38,16 +38,7 @@ public class MessagesController : ControllerBase
         [FromQuery] int? fromConversation = null,
         [FromQuery] int? toConversation = null)
     {
-        int skip, take;
-
-        try
-        {
-            FromToIntoSkipTake.Convert(fromConversation, toConversation, out skip, out take);
-        }
-        catch (BadHttpRequestException e)
-        {
-            return BadRequest(e.Message);
-        }
+        FromToIntoSkipTake.Convert(fromConversation, toConversation, out var skip, out var take);
         
         var list = await _messages.GetMessagesAsync(conversationId, skip, take);
         return Ok(list);
@@ -58,8 +49,7 @@ public class MessagesController : ControllerBase
     public async Task<IActionResult> Get(Guid messageId)
     {
         var m = await _messages.GetByIdAsync(messageId);
-        if (m == null) return NotFound();
-        return Ok(m);
+        return m == null ? throw new NotFoundException("Message not found") : Ok(m);
     }
 
     // GET /api/v1/message/messages/sync?lastReceivedAt=timestamp
@@ -86,7 +76,7 @@ public class MessagesController : ControllerBase
             // fetch the message to ensure it belongs to conversation
             var m = await _messages.GetByIdAsync(req.LastReadMessageId.Value);
             if (m == null) return NotFound();
-            if (m.ConversationId != req.ConversationId) return BadRequest(new { error = "message does not belong to conversation" });
+            if (m.ConversationId != req.ConversationId) throw new InvalidParametersException("Message with given id does not belong to conversation with given id");
 
             // mark all messages up to this id as read: service expects list of ids, but we can pass a singleton for now
             // assume service implementation will interpret this correctly; otherwise it can be adapted later
@@ -101,7 +91,8 @@ public class MessagesController : ControllerBase
             return NoContent();
         }
 
-        return UnprocessableEntity(new { error = "Provide either LastReadMessageId or LastReadTimestamp" });
+        throw new InvalidParametersException("Provide either LastReadMessageId or LastReadTimestamp");
+        
     }
 
     private Guid GetUserId()
