@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Http;
+using Application.Exceptions;
 
 namespace MessageService.Application.Helpers;
 
@@ -9,8 +9,8 @@ public static class FromToIntoSkipTake
         if (from != null && to != null)
         {
             if (from < 0 || to < 0)
-                throw new BadHttpRequestException("fromConversation and toConversation must be non-negative");
-            if (to < from) throw new BadHttpRequestException("toConversation must be >= fromConversation");
+                throw new InvalidParametersException("fromConversation and toConversation must be non-negative");
+            if (to < from) throw new InvalidParametersException("toConversation must be >= fromConversation");
 
             skip = from.Value;
             // inclusive range: from..to => count = to - from + 1
@@ -23,18 +23,18 @@ public static class FromToIntoSkipTake
             }
             catch (OverflowException)
             {
-                throw new BadHttpRequestException("range too large");
+                throw new InvalidParametersException("range too large");
             }
         }
         else if (from != null)
         {
-            if (from < 0) throw new BadHttpRequestException("fromConversation must be non-negative");
+            if (from < 0) throw new InvalidParametersException("fromConversation must be non-negative");
             skip = from.Value;
             take = 20; // default window size
         }
         else if (to != null)
         {
-            if (to < 0) throw new BadHttpRequestException("toConversation must be non-negative");
+            if (to < 0) throw new InvalidParametersException("toConversation must be non-negative");
             skip = 0;
             take = to.Value + 1; // take first (to+1) items
         }
