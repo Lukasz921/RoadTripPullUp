@@ -1,6 +1,8 @@
 using System.Security.Claims;
 using MessageService.Application.DTOs;
+using MessageService.Application.Helpers;
 using MessageService.Application.Services;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MessageService.API.Controllers;
@@ -34,45 +36,15 @@ public class MessagesController : ControllerBase
         [FromQuery] int? fromConversation = null,
         [FromQuery] int? toConversation = null)
     {
-        int skip;
-        int take;
+        int skip, take;
 
-        if (fromConversation != null && toConversation != null)
+        try
         {
-            if (fromConversation < 0 || toConversation < 0) return BadRequest(new { error = "fromConversation and toConversation must be non-negative" });
-            if (toConversation < fromConversation) return BadRequest(new { error = "toConversation must be >= fromConversation" });
-
-            skip = fromConversation.Value;
-            // inclusive range: from..to => count = to - from + 1
-            try
-            {
-                checked
-                {
-                    take = toConversation.Value - fromConversation.Value + 1;
-                }
-            }
-            catch (OverflowException)
-            {
-                return BadRequest(new { error = "range too large" });
-            }
+            FromToIntoSkipTake.Convert(fromConversation, toConversation, out skip, out take);
         }
-        else if (fromConversation != null)
+        catch (BadHttpRequestException e)
         {
-            if (fromConversation < 0) return BadRequest(new { error = "fromConversation must be non-negative" });
-            skip = fromConversation.Value;
-            take = 20; // default window size
-        }
-        else if (toConversation != null)
-        {
-            if (toConversation < 0) return BadRequest(new { error = "toConversation must be non-negative" });
-            skip = 0;
-            take = toConversation.Value + 1; // take first (to+1) items
-        }
-        else
-        {
-            // no range provided: default to first page/window
-            skip = 0;
-            take = 20;
+            return BadRequest(e.Message);
         }
         
         var list = await _messages.GetMessagesAsync(conversationId, skip, take);
