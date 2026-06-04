@@ -94,4 +94,11 @@ public class ConversationRepository : IConversationRepository
                 .ThenInclude(cm => cm.User)
             .ToListAsync();
     }
+
+    public async Task<ConversationMember> AddUserToConversationAsync(ConversationMember cm)
+    {
+        _db.ConversationMembers.Add(cm);
+        await _db.SaveChangesAsync();
+        return cm;
+    }
 }
