@@ -33,6 +33,20 @@ public class ConversationService : IConversationService
         return created.Id;
     }
 
+    public async Task JoinConversationAsync(Guid conversationId, Guid userId)
+    {
+        var conv = await _conversations.GetByIdAsync(conversationId);
+        if (conv == null) return;
+        var cm = new ConversationMember
+        {
+            UserId = userId,
+            JoinedAt = _clockService.Now,
+            Role = 0
+        };
+        conv.Members.Add(cm);
+        await _conversations.AddUserToConversationAsync(cm);
+    }
+
     public async Task<IEnumerable<ConversationDto>> GetForUserAsync(Guid userId, int skip, int take)
     {
         var items = await _conversations.GetForUserWithLastMessageAsync(userId, skip, take);
