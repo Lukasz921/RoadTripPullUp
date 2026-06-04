@@ -3,7 +3,6 @@ using MessageService.Application.DTOs;
 using MessageService.Application.DTOs.Mappers;
 using MessageService.Application.Helpers;
 using MessageService.Application.Services;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MessageService.API.Controllers;
@@ -33,16 +32,7 @@ public class ConversationsController : ControllerBase
     {
         var userId = GetUserId();
 
-        int skip, take;
-
-        try
-        {
-            FromToIntoSkipTake.Convert(fromConversation, toConversation, out skip, out take);
-        }
-        catch (BadHttpRequestException e)
-        {
-            return BadRequest(e.Message);
-        }
+        FromToIntoSkipTake.Convert(fromConversation, toConversation, out var skip, out var take);
 
         // updatedAfter is currently not used by the repository's GetForUserAsync signature; keep it for future use
         var convs = await _conversations.GetForUserAsync(userId, skip, take);
@@ -95,3 +85,5 @@ public class ConversationsController : ControllerBase
         return string.IsNullOrEmpty(sub) ? Guid.Empty : Guid.Parse(sub);
     }
 }
+
+// TODO: convert exceptions to use middleware exception handler
