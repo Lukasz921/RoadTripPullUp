@@ -94,40 +94,40 @@ export interface SearchJobResultDTO {
 }
 
 export const createTrip = async (dto: CreateTripDTO) => {
-  const response = await tripApi.post<TripDTO>('/trips', dto);
+  const response = await tripApi.post<TripDTO>('', dto);
   return response.data;
 };
 
 export const getMyTrips = async (page = 1, pageSize = 20) => {
-  const response = await tripApi.get<PagedTripsDTO>('/trips/me', { params: { page, pageSize } });
+  const response = await tripApi.get<PagedTripsDTO>('/me', { params: { page, pageSize } });
   return response.data;
 };
 
 export const getJoinedTrips = async (page = 1, pageSize = 20) => {
-  const response = await tripApi.get<PagedTripsDTO>('/trips/joined', { params: { page, pageSize } });
+  const response = await tripApi.get<PagedTripsDTO>('/joined', { params: { page, pageSize } });
   return response.data;
 };
 
 export const getTripById = async (tripId: string) => {
-  const response = await tripApi.get<TripDTO>(`/trips/${tripId}`);
+  const response = await tripApi.get<TripDTO>(`/${tripId}`);
   return response.data;
 };
 
 export const joinTrip = async (tripId: string) => {
-  await tripApi.post(`/trips/${tripId}/join`);
+  await tripApi.post(`/${tripId}/join`);
 };
 
 export const deleteTrip = async (tripId: string) => {
-  await tripApi.delete(`/trips/${tripId}`);
+  await tripApi.delete(`/${tripId}`);
 };
 
 
 export const submitSearch = async (dto: SearchTripsRequestDTO) => {
-  const response = await tripApi.post<SearchJobCreatedDTO>('/trips/search', dto);
+  const response = await tripApi.post<SearchJobCreatedDTO>('/search', dto);
   return response.data;
 };
 
 export const pollSearch = async (jobId: string) => {
-  const response = await tripApi.get<SearchJobProgressDTO | SearchJobResultDTO>(`/trips/search/${jobId}`);
+  const response = await tripApi.get<SearchJobProgressDTO | SearchJobResultDTO>(`/search/${jobId}`);
   return { status: response.status, data: response.data };
 };
