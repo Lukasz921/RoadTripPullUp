@@ -15,6 +15,8 @@ public class TripV1DTO
     public List<string> PassengerIds { get; set; } = new();
     public string Status { get; set; } = "ACTIVE";
     public DateTime CreatedAt { get; set; }
+    public Guid? ConversationId { get; set; }
+    public List<LatLngDTO>? RoutePolylinePoints { get; set; }
 }
 
 public class CreateTripV1DTO
@@ -25,6 +27,11 @@ public class CreateTripV1DTO
     public int MaxDetourMeters { get; set; }
     public decimal PricePerSeat { get; set; }
     public int AvailableSeats { get; set; }
+}
+
+public class AddPassengerDTO
+{
+    public string PassengerId { get; set; } = string.Empty;
 }
 
 public class PagedTripsDTO
