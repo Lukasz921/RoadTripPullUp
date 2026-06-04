@@ -46,7 +46,7 @@ export default function MyRidesPage() {
                 key={trip.id}
                 trip={trip}
                 detailsState={{ showTripAsks: true }}
-                action={{ label: 'Chats', onClick: () => {} }}
+                action={{ label: 'Chats', onClick: (trip) => navigate(`/trip/${trip.id}/chats`) }}
               />
             ))}
           </div>
