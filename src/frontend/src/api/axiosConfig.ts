@@ -29,6 +29,7 @@ function createApiInstance(baseURL: string): AxiosInstance {
 
 export const authApi = createApiInstance(import.meta.env.VITE_AUTH_SERVICE_URL);
 export const tripApi = createApiInstance(import.meta.env.VITE_TRIP_SERVICE_URL);
+export const messageApi = createApiInstance(import.meta.env.VITE_MESSAGE_SERVICE_URL);
 
 // default export kept for backwards compatibility
 export default authApi;
