@@ -79,19 +79,4 @@ public class ConversationService : IConversationService
         if (conv == null) return;
         await _conversations.AddMemberAsync(conv.Id, userId, _clockService.Now);
     }
-    
-    private static string GetMessagePreview(Message? msg) // TODO: move to a helper/extension method
-    {
-        if (msg == null) return string.Empty;
-
-        return msg.Type switch
-        {
-            MessageType.Text => msg.Payload?["text"]?.ToString() ?? string.Empty,
-            MessageType.Location => "[Location]",
-            MessageType.PriceOffer => "[Price Offer]",
-            MessageType.PriceAccept => "[Price Accept]",
-            MessageType.OfferApproval => "[Offer Approval]",
-            _ => string.Empty
-        };
-    }
 }

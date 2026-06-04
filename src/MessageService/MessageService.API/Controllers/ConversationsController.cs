@@ -4,7 +4,6 @@ using MessageService.Application.DTOs;
 using MessageService.Application.DTOs.Mappers;
 using MessageService.Application.Helpers;
 using MessageService.Application.Services;
-using MessageService.Core.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MessageService.API.Controllers;
@@ -86,11 +85,11 @@ public class ConversationsController : ControllerBase
     public async Task<IActionResult> Join(Guid conversationId, Guid userId)
     {
         var conv = await _conversations.GetByIdAsync(conversationId);
-        if (conv == null) return NotFound();
+        if (conv == null) throw new NotFoundException("Conversation with given id not found");
         
         var callerId = GetUserId();
-        if (conv.Members.All(m => m.UserId != callerId)) return Forbid();
-        if (conv.Members.Any(m => m.UserId == userId)) return BadRequest(new { error = "already a member" });
+        if (conv.Members.All(m => m.UserId != callerId)) throw new ForbiddenException("User is not member of the conversation");
+        if (conv.Members.Any(m => m.UserId == userId)) throw new InvalidParametersException("User is already a member of the conversation");
 
         await _conversations.AddMemberAsync(conversationId, userId);
         return NoContent();
@@ -100,20 +99,5 @@ public class ConversationsController : ControllerBase
     {
         var sub = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         return string.IsNullOrEmpty(sub) ? Guid.Empty : Guid.Parse(sub);
-    }
-    
-    private static string GetMessagePreview(Message? msg) // TODO: move to a helper/extension method
-    {
-        if (msg == null) return string.Empty;
-
-        return msg.Type switch
-        {
-            MessageType.Text => msg.Payload?["text"]?.ToString() ?? string.Empty,
-            MessageType.Location => "[Location]",
-            MessageType.PriceOffer => "[Price Offer]",
-            MessageType.PriceAccept => "[Price Accept]",
-            MessageType.OfferApproval => "[Offer Approval]",
-            _ => string.Empty
-        };
     }
 }
