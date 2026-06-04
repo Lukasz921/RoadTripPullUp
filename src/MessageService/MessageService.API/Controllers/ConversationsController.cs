@@ -121,26 +121,6 @@ public class ConversationsController : ControllerBase
         return Ok(dtos);
     }
 
-    [HttpPost("{conversationId:guid}/join/{userId:guid}")]
-    public async Task<IActionResult> Join(Guid conversationId, Guid userId) // TODO: Shouldn't be global
-    {
-        var conv = await _conversations.GetByIdAsync(conversationId);
-        if (conv == null) return NotFound();
-        
-        var driverId = GetUserId();
-        if (conv.Members.All(m => m.UserId != driverId)) return Forbid();
-        if (conv.Members.Any(m => m.UserId == userId)) return BadRequest(new { error = "already a member" });
-        
-        conv.Members.Add(new ConversationMember
-        {
-            UserId = userId,
-            JoinedAt = _clockService.Now,
-            Role = 0
-        });
-        // TODO: no validation that current user (driverId) is actually a driver or another member of conversation
-        return NoContent();
-    }
-
     private Guid GetUserId()
     {
         var sub = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
