@@ -6,8 +6,6 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: admin
       POSTGRES_DB: app_db
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -16,28 +14,82 @@ services:
       timeout: 5s
       retries: 5
 
+  trip_db:
+    image: postgis/postgis:16-3.4
+    container_name: trip_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: trip_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - trip_db_data:/var/lib/postgresql/data
+      - ./docker/trip-db/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d trip_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  valhalla:
+    image: ghcr.io/gis-ops/docker-valhalla/valhalla:latest
+    container_name: valhalla
+    ports:
+      - "8002:8002"
+    volumes:
+      - valhalla_data:/custom_files
+    environment:
+      - tile_urls=https://download.geofabrik.de/europe/poland-latest.osm.pbf
+      - serve_tiles=True
+      - build_admins=False
+      - build_time_zones=False
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8002/status || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 1800s
+
+  redis:
+    image: redis:7-alpine
+    container_name: app_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
   api:
     build:
       context: .
       dockerfile: src/API/Dockerfile
     container_name: app_api
+    ports:
+      - "8080:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=app_db;Username=postgres;Password=admin
       - ConnectionStrings__UsersConnection=Host=db;Port=5432;Database=app_db;Username=postgres;Password=admin
-    ports:
-      - "8080:8080"
+      - ConnectionStrings__TripConnection=Host=trip_db;Port=5432;Database=trip_db;Username=postgres;Password=admin
+      - ConnectionStrings__Redis=redis:6379
+      - Valhalla__BaseUrl=http://valhalla:8002
     depends_on:
       db:
+        condition: service_healthy
+      trip_db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
 
   frontend:
     build:
       context: ./src/frontend
       dockerfile: Dockerfile
-    container_name: app_frontend
-    ports:
-      - "5173:5173"
     volumes:
       - ./src/frontend:/app
       - /app/node_modules
@@ -46,3 +98,6 @@ services:
 
 volumes:
   postgres_data:
+  trip_db_data:
+  valhalla_data:
+  redis_data:

@@ -35,8 +35,9 @@ jobs:
       run: dotnet build --no-restore --configuration Release
 
     # 5. Uruchomienie testów (jednostkowych i integracyjnych)
+    # E2E tests require a live Valhalla + trip_db — excluded from CI
     - name: Run tests
-      run: dotnet test --no-build --configuration Release --verbosity normal
+      run: dotnet test --no-build --configuration Release --verbosity normal --filter "Category!=E2E"
 
   # ------------------------------------
   # ZADANIE 2: Sprawdzenie Frontendu (Vite/React)

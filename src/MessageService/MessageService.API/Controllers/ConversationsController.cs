@@ -4,6 +4,7 @@ using MessageService.Application.DTOs;
 using MessageService.Application.DTOs.Mappers;
 using MessageService.Application.Helpers;
 using MessageService.Application.Services;
+using MessageService.Core.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MessageService.API.Controllers;
@@ -81,9 +82,38 @@ public class ConversationsController : ControllerBase
         return Ok(dtos);
     }
 
+    [HttpPost("{conversationId:guid}/join/{userId:guid}")]
+    public async Task<IActionResult> Join(Guid conversationId, Guid userId)
+    {
+        var conv = await _conversations.GetByIdAsync(conversationId);
+        if (conv == null) return NotFound();
+        
+        var callerId = GetUserId();
+        if (conv.Members.All(m => m.UserId != callerId)) return Forbid();
+        if (conv.Members.Any(m => m.UserId == userId)) return BadRequest(new { error = "already a member" });
+
+        await _conversations.AddMemberAsync(conversationId, userId);
+        return NoContent();
+    }
+
     private Guid GetUserId()
     {
         var sub = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         return string.IsNullOrEmpty(sub) ? Guid.Empty : Guid.Parse(sub);
+    }
+    
+    private static string GetMessagePreview(Message? msg) // TODO: move to a helper/extension method
+    {
+        if (msg == null) return string.Empty;
+
+        return msg.Type switch
+        {
+            MessageType.Text => msg.Payload?["text"]?.ToString() ?? string.Empty,
+            MessageType.Location => "[Location]",
+            MessageType.PriceOffer => "[Price Offer]",
+            MessageType.PriceAccept => "[Price Accept]",
+            MessageType.OfferApproval => "[Offer Approval]",
+            _ => string.Empty
+        };
     }
 }

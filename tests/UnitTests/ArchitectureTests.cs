@@ -14,7 +14,7 @@ public class ArchitectureTests
     public void Core_Should_Not_HaveDependencyOnOtherProjects()
     {
         // Arrange
-        var assembly = typeof(Core.TripPlanner.Trip).Assembly; // Wskazujemy dowolną klasę z projektu Core
+        var assembly = typeof(Core.Messages.Message).Assembly; // Wskazujemy dowolną klasę z projektu Core
 
         // Act
         var result = Types
@@ -32,7 +32,7 @@ public class ArchitectureTests
     {
         // Arrange
         // (Zakładam, że masz tam interfejs ITripRepository, jeśli nie, podmień na dowolną klasę z Application)
-        var assembly = typeof(Application.TripPlanner.ITripRepository).Assembly;
+        var assembly = typeof(Application.Messages.IMessagingService).Assembly;
 
         // Act
         var result = Types

@@ -11,4 +11,5 @@ public interface IConversationRepository
     Task<Conversation?> GetGroupConversationForTripAsync(Guid tripId);
     Task<List<Conversation>> GetDirectConversationsForTripAsync(Guid tripId, Guid userId);
     Task<ConversationMember> AddUserToConversationAsync(ConversationMember cm);
+    Task AddMemberAsync(Guid conversationId, Guid userId, DateTime joinedAt);
 }

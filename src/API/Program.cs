@@ -5,14 +5,17 @@ using Scalar.AspNetCore;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Application.Messages;
-using Application.TripPlanner;
 using Infrastructure.Messages;
-using Infrastructure.TripPlanner;
+using TripService.Api;
+using TripService.Application;
+using TripService.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using API.Middleware;
+using StackExchange.Redis;
 using MessageService.API; // add extension methods from MessageService project
+using MessageService.API.Hubs; // add ChatHub for IHubContext
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,14 +41,16 @@ builder.Services.AddOpenApi(options =>
     });
 });
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddApplicationPart(typeof(TripV1Controller).Assembly)
+    .AddApplicationPart(typeof(UsersModule).Assembly);
 
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend",
         policy =>
         {
-            policy.WithOrigins("http://localhost:5173")
+            policy.WithOrigins(builder.Configuration.GetSection("AllowedOrigins").Get<string[]>() ?? ["http://localhost:5173"])
                   .AllowAnyHeader()
                   .AllowAnyMethod();
         });
@@ -73,12 +78,25 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddUsersModule();
 
-// definicje dla controlerow
-builder.Services.AddScoped<ITripRepository, TripRepository>();
-builder.Services.AddScoped<IRouteRepository, RouteRepository>();
-builder.Services.AddScoped<ITripRequestRepository, TripRequestRepository>();
-builder.Services.AddScoped<ITripService, TripService>();
-builder.Services.AddSingleton<ITripsV1Service, MockTripsV1Service>();
+builder.Services.AddHttpClient("valhalla", client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["Valhalla:BaseUrl"] ?? "http://valhalla:8002");
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
+builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
+    ConnectionMultiplexer.Connect(
+        builder.Configuration.GetConnectionString("Redis") ?? "localhost:6379"));
+builder.Services.AddSingleton<IJobStore, RedisJobStore>();
+
+builder.Services.AddScoped<IRoutingEngine, ValhallaRoutingEngine>();
+builder.Services.AddScoped<IUserChecker, UserChecker>();
+builder.Services.AddScoped<ITripsV1Service, TripsV1Service>();
+builder.Services.AddScoped<ITripsSearchService, TripsSearchService>();
+builder.Services.AddHostedService<SearchWorker>();
+// Register Infrastructure DbContext (different from MessageService.Infrastructure.AppDbContext registered by AddMessageService)
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 builder.Services.AddScoped<IMessageRepository, MessageRepository>();
 builder.Services.AddScoped<IMessagingService, MessagingService>();
 
@@ -100,9 +118,11 @@ if (app.Environment.IsDevelopment())
 app.UseMessageService();
 
 app.UseCors("AllowFrontend");
-app.UseHttpsRedirection();
+if (!app.Environment.IsDevelopment())
+    app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
+
 
 using (var scope = app.Services.CreateScope())
 {

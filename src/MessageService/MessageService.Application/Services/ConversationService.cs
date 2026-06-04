@@ -69,4 +69,29 @@ public class ConversationService : IConversationService
     {
         return await _conversations.GetDirectConversationsForTripAsync(tripId, userId);
     }
+
+    public Task AddMemberAsync(Guid conversationId, Guid userId) =>
+        _conversations.AddMemberAsync(conversationId, userId, _clockService.Now);
+
+    public async Task AddMemberToTripGroupAsync(Guid tripId, Guid userId)
+    {
+        var conv = await _conversations.GetGroupConversationForTripAsync(tripId);
+        if (conv == null) return;
+        await _conversations.AddMemberAsync(conv.Id, userId, _clockService.Now);
+    }
+    
+    private static string GetMessagePreview(Message? msg) // TODO: move to a helper/extension method
+    {
+        if (msg == null) return string.Empty;
+
+        return msg.Type switch
+        {
+            MessageType.Text => msg.Payload?["text"]?.ToString() ?? string.Empty,
+            MessageType.Location => "[Location]",
+            MessageType.PriceOffer => "[Price Offer]",
+            MessageType.PriceAccept => "[Price Accept]",
+            MessageType.OfferApproval => "[Offer Approval]",
+            _ => string.Empty
+        };
+    }
 }

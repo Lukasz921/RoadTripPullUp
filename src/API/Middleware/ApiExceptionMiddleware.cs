@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Microsoft.Extensions.Hosting;
+using Users.Application.Exceptions;
 
 namespace API.Middleware;
 
@@ -44,6 +45,27 @@ public class ApiExceptionMiddleware
             title = "Validation Error";
             type = "https://tools.ietf.org/html/rfc7231#section-6.5.1";
         }
+        else if (exception is UserValidationException uvex)
+        {
+            code = System.Net.HttpStatusCode.BadRequest;
+            message = uvex.Message;
+            title = "Validation Error";
+            type = "https://tools.ietf.org/html/rfc7231#section-6.5.1";
+        }
+        else if (exception is UserAlreadyExistsException uaex)
+        {
+            code = System.Net.HttpStatusCode.Conflict;
+            message = uaex.Message;
+            title = "Conflict";
+            type = "https://tools.ietf.org/html/rfc7231#section-6.5.8";
+        }
+        else if (exception is InvalidCredentialsException icex)
+        {
+            code = System.Net.HttpStatusCode.Unauthorized;
+            message = icex.Message;
+            title = "Unauthorized";
+            type = "https://tools.ietf.org/html/rfc7231#section-6.5.1";
+        }
         else if (exception is Application.Exceptions.NotFoundException nf)
         {
             code = System.Net.HttpStatusCode.NotFound;
@@ -57,6 +79,13 @@ public class ApiExceptionMiddleware
             message = fex.Message;
             title = "Forbidden";
             type = "https://tools.ietf.org/html/rfc7231#section-6.5.3";
+        }
+        else if (exception is Application.Exceptions.RoutingEngineUnavailableException ruex)
+        {
+            code = System.Net.HttpStatusCode.BadGateway;
+            message = ruex.Message;
+            title = "Routing Engine Unavailable";
+            type = "https://tools.ietf.org/html/rfc7231#section-6.6.4";
         }
         else if (exception is Application.Exceptions.SeatUnavailableException suex)
         {

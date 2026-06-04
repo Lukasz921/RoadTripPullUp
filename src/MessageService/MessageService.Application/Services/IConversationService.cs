@@ -11,4 +11,6 @@ public interface IConversationService
     Task<Conversation?> GetGroupForTripAsync(Guid tripId);
     Task<List<Conversation>> GetDirectForTripAsync(Guid tripId, Guid userId);
     Task JoinConversationAsync(Guid conversationId, Guid userId);
+    Task AddMemberAsync(Guid conversationId, Guid userId);
+    Task AddMemberToTripGroupAsync(Guid tripId, Guid userId);
 }

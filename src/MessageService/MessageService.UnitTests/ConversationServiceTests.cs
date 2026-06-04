@@ -39,7 +39,8 @@ public class ConversationServiceTests
             Members = [new ConversationMember { UserId = userId }]
         };
 
-        convRepo.Setup(r => r.GetForUserAsync(userId, 0, 20)).ReturnsAsync([conv]);
+        convRepo.Setup(r => r.GetForUserWithLastMessageAsync(userId, 0, 20))
+            .ReturnsAsync(new List<(Conversation conversation, Message? lastMessage)> { (conv, null) });
 
         var svc = new ConversationService(convRepo.Object, userRepo.Object, clock.Object);
         var list = await svc.GetForUserAsync(userId, 0, 20);

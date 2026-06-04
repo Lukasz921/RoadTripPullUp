@@ -101,4 +101,21 @@ public class ConversationRepository : IConversationRepository
         await _db.SaveChangesAsync();
         return cm;
     }
+
+    public async Task AddMemberAsync(Guid conversationId, Guid userId, DateTime joinedAt)
+    {
+        var alreadyMember = await _db.ConversationMembers
+            .AnyAsync(m => m.ConversationId == conversationId && m.UserId == userId);
+
+        if (alreadyMember) return;
+
+        _db.ConversationMembers.Add(new ConversationMember
+        {
+            ConversationId = conversationId,
+            UserId         = userId,
+            JoinedAt       = joinedAt,
+            Role           = 0
+        });
+        await _db.SaveChangesAsync();
+    }
 }

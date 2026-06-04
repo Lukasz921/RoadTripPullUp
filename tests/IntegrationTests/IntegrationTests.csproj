@@ -28,6 +28,11 @@
     <ProjectReference Include="..\..\src\Core\Core.csproj" />
     <ProjectReference Include="..\..\src\Infrastructure\Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\Users\Users.csproj" />
+    <ProjectReference Include="..\..\src\TripService\TripService.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\..\docker\trip-db\init\*.sql" CopyToOutputDirectory="PreserveNewest" Link="sql\%(Filename)%(Extension)" />
   </ItemGroup>
 
 </Project>

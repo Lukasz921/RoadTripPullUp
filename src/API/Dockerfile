@@ -7,6 +7,7 @@ COPY ["src/Application/Application.csproj", "src/Application/"]
 COPY ["src/Infrastructure/Infrastructure.csproj", "src/Infrastructure/"]
 COPY ["src/Core/Core.csproj", "src/Core/"]
 COPY ["src/Users/Users.csproj", "src/Users/"]
+COPY ["src/TripService/TripService.csproj", "src/TripService/"]
 
 # MessageService projects so the API's ProjectReference resolves during docker build
 COPY ["src/MessageService/MessageService.API/MessageService.API.csproj", "src/MessageService/MessageService.API/"]
