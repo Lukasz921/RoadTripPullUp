@@ -8,11 +8,7 @@ public class ConversationMember
     public Guid UserId
     {
         get => User?.Id ?? Guid.Empty;
-        set
-        {
-            if (User != null)
-                User.Id = value;
-        }
+        set => User?.Id = value;
     } // TODO: check the logic further
     public User? User { get; set; }
 
