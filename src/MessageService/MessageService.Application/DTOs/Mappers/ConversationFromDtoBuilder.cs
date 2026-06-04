@@ -12,7 +12,7 @@ public class ConversationFromDtoBuilder
     {
         _conversation = new Conversation
         {
-            Type = createConversationDto.Type,
+            Type = ConversationType.Direct,
             TripId = createConversationDto.TripId,
             Title = createConversationDto.Title,
             Date = createConversationDto.Date,
