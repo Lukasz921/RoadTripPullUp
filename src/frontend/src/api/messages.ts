@@ -75,8 +75,19 @@ export const getConversations = async (params?: ConversationListParams): Promise
 };
 
 export const getConversation = async (conversationId: string): Promise<ConversationDTO> => {
-  const response = await messageApi.get(`/conversations/${conversationId}`);
-  return response.data;
+  // const response = await messageApi.get(`/conversations/${conversationId}`);
+  // return response.data;
+  void conversationId; // TODO: remove mock
+  return {
+    ConversationId: conversationId,
+    Type: 'Direct',
+    TripId: 'trip-1',
+    Name: 'Marek Kowalski',
+    Participants: ['user-1', 'user-2'],
+    LastMessageId: 'msg-2',
+    LastMessagePreview: 'Hi, is there still a seat available?',
+    LastMessageCreatedAt: '2026-06-03T10:05:00Z',
+  };
 };
 
 
