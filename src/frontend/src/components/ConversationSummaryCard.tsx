@@ -5,15 +5,16 @@ import { formatDate } from '../utils/format';
 interface ConversationSummaryCardProps {
   conversation: ConversationDTO;
   isGroup?: boolean;
+  navigationState?: Record<string, unknown>;
 }
 
-export default function ConversationSummaryCard({ conversation, isGroup }: ConversationSummaryCardProps) {
+export default function ConversationSummaryCard({ conversation, isGroup, navigationState }: ConversationSummaryCardProps) {
   const navigate = useNavigate();
   const title = conversation.Name ?? (isGroup ? 'Group chat' : 'Direct chat');
 
   return (
     <div
-      onClick={() => navigate(`/conversation/${conversation.ConversationId}`)}
+      onClick={() => navigate(`/conversation/${conversation.ConversationId}`, { state: navigationState })}
       className={`cursor-pointer rounded-xl border bg-white px-5 py-4 transition hover:bg-[#f0f9e8] ${
         isGroup ? 'border-[#8cc63f] border-l-4' : 'border-[#d7e8c8]'
       }`}

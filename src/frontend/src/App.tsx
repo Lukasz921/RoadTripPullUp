@@ -9,6 +9,7 @@ import MyRidesPage from './pages/MyRidesPage';
 import TripDetailsPage from './pages/TripDetailsPage';
 import TripChatsListPage from './pages/TripChatsListPage';
 import ChatPage from './pages/ChatPage';
+import MyConversationsPage from './pages/MyConversationsPage';
 
 export default function App() {
   return (
@@ -25,6 +26,7 @@ export default function App() {
         <Route path="/trip/:id" element={<TripDetailsPage />} />
         <Route path="/trip/:id/chats" element={<TripChatsListPage />} />
         <Route path="/conversation/:id" element={<ChatPage />} />
+        <Route path="/my-conversations" element={<MyConversationsPage />} />
       </Routes>
     </BrowserRouter>
   );

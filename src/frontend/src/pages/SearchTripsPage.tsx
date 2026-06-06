@@ -44,6 +44,7 @@ export default function SearchTripsPage() {
     try {
       const { conversationId } = await createConversation({
         TripId: trip.id,
+        Title: 'Title',
         Participants: [trip.driverId],
       });
       navigate(`/conversation/${conversationId}`);
