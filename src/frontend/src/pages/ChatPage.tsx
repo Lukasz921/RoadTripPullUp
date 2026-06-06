@@ -3,7 +3,7 @@ import { useParams, useLocation } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import { getConversation, type ConversationDTO } from '../api/messages';
-import { joinTrip } from '../api/trips';
+import { addToTrip } from '../api/trips';
 
 export default function ChatPage() {
   const { id: conversationId } = useParams<{ id: string }>();
@@ -13,14 +13,16 @@ export default function ChatPage() {
   const [joining, setJoining] = useState(false);
   const [joinError, setJoinError] = useState('');
 
-  async function handleAddToTrip() {
+  async function addToTripHandler() {
     if (!conversation) return;
+    const passengerId = conversation.Participants[0];
+    if (!passengerId) return;
     setJoining(true);
     setJoinError('');
     try {
-      await joinTrip(conversation.TripId);
+      await addToTrip(conversation.TripId, passengerId);
     } catch {
-      setJoinError('Failed to join trip. Please try again.');
+      setJoinError('Failed to add to trip. Please try again.');
     } finally {
       setJoining(false);
     }
@@ -47,7 +49,7 @@ export default function ChatPage() {
               <div className="mt-4">
                 <button
                   type="button"
-                  onClick={handleAddToTrip}
+                  onClick={addToTripHandler}
                   disabled={joining}
                   className="rounded-xl bg-[#8cc63f] px-4 py-2 text-sm font-semibold text-[#12351f] hover:bg-[#a6dd55] disabled:opacity-60"
                 >

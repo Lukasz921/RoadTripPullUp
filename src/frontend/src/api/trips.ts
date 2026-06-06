@@ -113,8 +113,8 @@ export const getTripById = async (tripId: string) => {
   return response.data;
 };
 
-export const joinTrip = async (tripId: string) => {
-  await tripApi.post(`/${tripId}/join`);
+export const addToTrip = async (tripId: string, passengerId: string) => {
+  await tripApi.post(`/${tripId}/passengers`, { PassengerId: passengerId });
 };
 
 export const deleteTrip = async (tripId: string) => {
