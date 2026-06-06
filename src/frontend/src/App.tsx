@@ -7,7 +7,7 @@ import SearchTripsPage from './pages/SearchTripsPage';
 import JoinedRidesPage from './pages/JoinedRidesPage';
 import MyRidesPage from './pages/MyRidesPage';
 import TripDetailsPage from './pages/TripDetailsPage';
-import ChatsPage from './pages/ChatsPage';
+import TripChatsListPage from './pages/TripChatsListPage';
 import ChatPage from './pages/ChatPage';
 
 export default function App() {
@@ -23,7 +23,7 @@ export default function App() {
         <Route path="/joined-rides" element={<JoinedRidesPage />} />
         <Route path="/my-rides" element={<MyRidesPage />} />
         <Route path="/trip/:id" element={<TripDetailsPage />} />
-        <Route path="/trip/:id/chats" element={<ChatsPage />} />
+        <Route path="/trip/:id/chats" element={<TripChatsListPage />} />
         <Route path="/conversation/:id" element={<ChatPage />} />
       </Routes>
     </BrowserRouter>

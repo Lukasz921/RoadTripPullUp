@@ -5,7 +5,7 @@ import Footer from '../components/layout/Footer';
 import ConversationSummaryCard from '../components/ConversationSummaryCard';
 import { getGroupConversationByTrip, getDirectConversationsByTrip, type ConversationDTO } from '../api/messages';
 
-export default function ChatsPage() {
+export default function TripChatsListPage() {
   const { id: tripId } = useParams<{ id: string }>();
 
   const [groupConversation, setGroupConversation] = useState<ConversationDTO | null>(null);
