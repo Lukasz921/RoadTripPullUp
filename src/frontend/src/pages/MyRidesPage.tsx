@@ -45,7 +45,7 @@ export default function MyRidesPage() {
               <TripSummaryCard
                 key={trip.id}
                 trip={trip}
-                action={{ label: 'Chats', onClick: () => navigate(`/trip/${trip.id}/chats`) }}
+                action={{ label: 'Chats', onClick: () => navigate(`/trip/${trip.id}/chats`, { state: { showAddToTrip: true } }) }}
               />
             ))}
           </div>

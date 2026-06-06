@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import { getConversation, type ConversationDTO } from '../api/messages';
 
 export default function ChatPage() {
   const { id: conversationId } = useParams<{ id: string }>();
+  const { state } = useLocation();
+  const showAddToTrip: boolean = state?.showAddToTrip ?? false;
   const [conversation, setConversation] = useState<ConversationDTO | null>(null);
 
   useEffect(() => {
@@ -25,6 +27,14 @@ export default function ChatPage() {
             <p className="mt-1 text-sm text-[#5d7056]">
               {conversation.Participants.length} participant{conversation.Participants.length !== 1 ? 's' : ''}
             </p>
+            {showAddToTrip && (
+              <button
+                type="button"
+                className="mt-4 rounded-xl bg-[#8cc63f] px-4 py-2 text-sm font-semibold text-[#12351f] hover:bg-[#a6dd55]"
+              >
+                Add to trip
+              </button>
+            )}
           </div>
         )}
       </div>

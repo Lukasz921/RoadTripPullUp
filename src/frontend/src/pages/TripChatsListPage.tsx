@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import ConversationList from '../components/ConversationList';
@@ -7,6 +7,8 @@ import { getGroupConversationByTrip, getDirectConversationsByTrip, type Conversa
 
 export default function TripChatsListPage() {
   const { id: tripId } = useParams<{ id: string }>();
+  const { state } = useLocation();
+  const showAddToTrip: boolean = state?.showAddToTrip ?? false;
 
   const [groupConversation, setGroupConversation] = useState<ConversationDTO | null>(null);
   const [directConversations, setDirectConversations] = useState<ConversationDTO[]>([]);
@@ -43,6 +45,7 @@ export default function TripChatsListPage() {
           ]}
           loading={loading}
           error={error}
+          chatState={showAddToTrip ? { showAddToTrip: true } : undefined}
         />
       </div>
       <Footer />

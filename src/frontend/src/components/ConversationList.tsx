@@ -5,9 +5,10 @@ interface ConversationListProps {
   conversations: ConversationDTO[];
   loading: boolean;
   error: string;
+  chatState?: Record<string, unknown>;
 }
 
-export default function ConversationList({ conversations, loading, error }: ConversationListProps) {
+export default function ConversationList({ conversations, loading, error, chatState }: ConversationListProps) {
   return (
     <>
       {loading && <p className="text-sm text-[#5d7056]">Loading conversations...</p>}
@@ -26,6 +27,7 @@ export default function ConversationList({ conversations, loading, error }: Conv
               key={conv.ConversationId}
               conversation={conv}
               isGroup={conv.Type === 'Group'}
+              navigationState={chatState}
             />
           ))}
         </div>
