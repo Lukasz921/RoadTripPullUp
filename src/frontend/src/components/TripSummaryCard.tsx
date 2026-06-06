@@ -20,7 +20,7 @@ interface TripSummaryCardProps {
   detailsState?: Record<string, unknown>;
   action?: {
     label: string;
-    onClick: (trip: Trip) => void;
+    onClick: () => void;
   };
 }
 
@@ -69,7 +69,7 @@ export default function TripSummaryCard({ trip, actualDetourMeters, detailsState
         {action && (
           <button
             type="button"
-            onClick={() => action.onClick(trip)}
+            onClick={action.onClick}
             className="flex-1 rounded-xl border border-[#12351f] px-4 py-2 text-sm font-semibold text-[#12351f] hover:bg-[#e8f5e0]"
           >
             {action.label}

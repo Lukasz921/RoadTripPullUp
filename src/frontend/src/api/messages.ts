@@ -30,8 +30,10 @@ export interface ConversationListParams {
 }
 
 export const createConversation = async (dto: CreateConversationDTO): Promise<{ conversationId: string }> => {
-  const response = await messageApi.post('/conversations', { ...dto, Type: 'Direct' });
-  return response.data;
+  // const response = await messageApi.post('/conversations', { ...dto, Type: 'Direct' });
+  // return response.data;
+  void dto; // TODO: remove mock
+  return { conversationId: 'mock-direct-1' };
 };
 
 export const getConversations = async (params?: ConversationListParams): Promise<ConversationDTO[]> => {

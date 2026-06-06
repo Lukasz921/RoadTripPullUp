@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import LocationAutocomplete from '../components/LocationAutocomplete';
@@ -8,12 +9,15 @@ import NumberInput from '../components/ui/NumberInput';
 import Spinner from '../components/ui/Spinner';
 import TripSummaryCard from '../components/TripSummaryCard';
 import { submitSearch as submitSearchApi, pollSearch, type SearchJobResultDTO } from '../api/trips';
+import { createConversation } from '../api/messages';
 import type { Place } from '../utils/geoapify';
 import type { TripSummary } from '../types/trip';
 
 const PAGE_SIZE = 10;
 
 export default function SearchTripsPage() {
+  const navigate = useNavigate();
+
   // Route
   const [originQuery, setOriginQuery] = useState('');
   const [destinationQuery, setDestinationQuery] = useState('');
@@ -32,7 +36,23 @@ export default function SearchTripsPage() {
   const [polling, setPolling] = useState(false);
   const [results, setResults] = useState<TripSummary[] | null>(null);
   const [error, setError] = useState('');
+  const [askingTripId, setAskingTripId] = useState<string | null>(null);
   const pollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  async function handleAskAboutTrip(trip: TripSummary) {
+    setAskingTripId(trip.id);
+    try {
+      const { conversationId } = await createConversation({
+        TripId: trip.id,
+        Participants: [trip.driverId],
+      });
+      navigate(`/conversation/${conversationId}`);
+    } catch {
+      setError('Failed to start conversation. Please try again.');
+    } finally {
+      setAskingTripId(null);
+    }
+  }
 
   function stopPolling() {
     if (pollRef.current !== null) {
@@ -252,6 +272,10 @@ export default function SearchTripsPage() {
                   key={trip.id}
                   trip={trip}
                   actualDetourMeters={trip.actualDetourMeters}
+                  action={{
+                    label: askingTripId === trip.id ? 'Creating…' : 'Ask about trip',
+                    onClick: () => handleAskAboutTrip(trip),
+                  }}
                 />
               ))}
             </section>
