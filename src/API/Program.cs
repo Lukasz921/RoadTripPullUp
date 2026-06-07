@@ -86,7 +86,10 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
         builder.Configuration.GetConnectionString("Redis") ?? "localhost:6379"));
 builder.Services.AddSingleton<IJobStore, RedisJobStore>();
 
-builder.Services.AddScoped<IRoutingEngine, ValhallaRoutingEngine>();
+if (builder.Environment.IsDevelopment())
+    builder.Services.AddScoped<IRoutingEngine, MockRoutingEngine>();
+else
+    builder.Services.AddScoped<IRoutingEngine, ValhallaRoutingEngine>();
 builder.Services.AddScoped<IUserChecker, UserChecker>();
 builder.Services.AddScoped<ITripsV1Service, TripsV1Service>();
 builder.Services.AddScoped<ITripsSearchService, TripsSearchService>();
