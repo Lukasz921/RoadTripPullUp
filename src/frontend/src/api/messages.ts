@@ -92,8 +92,8 @@ export const getConversation = async (conversationId: string): Promise<Conversat
 
 
 export const getGroupConversationByTrip = async (tripId: string): Promise<ConversationDTO> => {
-  // const response = await messageApi.get(`/conversations/byTripId/group/${tripId}`);
-  // return response.data;
+  const response = await messageApi.get(`/conversations/byTripId/group/${tripId}`);
+  return response.data;
   void tripId; // TODO: remove mock
   return {
     ConversationId: 'mock-group-1',
