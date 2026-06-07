@@ -70,7 +70,7 @@ public class ConversationsController : ControllerBase
         return Ok(dto);
     }
     
-    [HttpGet("/byTripId/direct/{tripId:guid}")]
+    [HttpGet("byTripId/direct/{tripId:guid}")]
     public async Task<IActionResult> GetDirectForTrip(Guid tripId)
     {
         var userId = GetUserId();
