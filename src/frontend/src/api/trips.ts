@@ -19,6 +19,8 @@ export interface TripDTO {
   passengerIds: string[];
   status: string;
   createdAt: string;
+  conversationId?: string;
+  routePolylinePoints?: LatLng[];
 }
 
 export interface CreateTripDTO {
