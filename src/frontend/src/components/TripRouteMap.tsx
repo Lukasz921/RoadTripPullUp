@@ -1,13 +1,15 @@
 import { useEffect, useRef } from 'react';
 import { loadLeaflet } from '../utils/leaflet';
 import type { Place } from '../utils/geoapify';
+import type { LatLng } from '../api/trips';
 
 interface TripRouteMapProps {
   origin: Place | null;
   destination: Place | null;
+  polylinePoints?: LatLng[];
 }
 
-export default function TripRouteMap({ origin, destination }: TripRouteMapProps) {
+export default function TripRouteMap({ origin, destination, polylinePoints }: TripRouteMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const layersRef = useRef<any[]>([]);
@@ -57,7 +59,12 @@ export default function TripRouteMap({ origin, destination }: TripRouteMapProps)
         points.push([destination.lat, destination.lng]);
       }
 
-      if (points.length === 2) {
+      if (polylinePoints && polylinePoints.length >= 2) {
+        const coords: [number, number][] = polylinePoints.map((p) => [p.lat, p.lng]);
+        const line = L.polyline(coords, { color: '#8cc63f', weight: 4 }).addTo(mapRef.current);
+        layersRef.current.push(line);
+        mapRef.current.fitBounds(line.getBounds(), { padding: [48, 48] });
+      } else if (points.length === 2) {
         const line = L.polyline(points, { color: '#8cc63f', weight: 3, dashArray: '8 6' }).addTo(mapRef.current);
         layersRef.current.push(line);
         mapRef.current.fitBounds(L.latLngBounds(points), { padding: [48, 48] });
@@ -67,7 +74,7 @@ export default function TripRouteMap({ origin, destination }: TripRouteMapProps)
     });
 
     return () => { cancelled = true; };
-  }, [origin, destination]);
+  }, [origin, destination, polylinePoints]);
 
   useEffect(() => {
     return () => {
