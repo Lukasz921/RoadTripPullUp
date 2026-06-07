@@ -6,8 +6,8 @@ namespace MessageService.Infrastructure.Repositories;
 
 public class UserRepository : IUserRepository
 {
-    private readonly AppDbContext _db;
-    public UserRepository(AppDbContext db) => _db = db;
+    private readonly MessagesDbContext _db;
+    public UserRepository(MessagesDbContext db) => _db = db;
 
     public async Task<User?> GetByIdAsync(Guid id)
     {

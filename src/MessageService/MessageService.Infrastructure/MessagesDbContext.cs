@@ -3,9 +3,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MessageService.Infrastructure;
 
-public class AppDbContext : DbContext
+public class MessagesDbContext : DbContext
 {
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+    public MessagesDbContext(DbContextOptions<MessagesDbContext> options) : base(options) { }
 
     public DbSet<User> Users => Set<User>();
     public DbSet<Conversation> Conversations => Set<Conversation>();

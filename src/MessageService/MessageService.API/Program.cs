@@ -41,8 +41,8 @@ namespace MessageService.API
             services.AddEndpointsApiExplorer();
 
             // DbContext
-            var conn = configuration.GetConnectionString("DefaultConnection") ?? "Host=localhost;Database=messages;Username=postgres;Password=postgres";
-            services.AddDbContext<AppDbContext>(options =>
+            var conn = configuration.GetConnectionString("MessagesConnection") ?? "Host=db;Database=messages_db;Username=postgres;Password=postgres";
+            services.AddDbContext<MessagesDbContext>(options =>
                 options.UseNpgsql(conn)
             );
 
@@ -116,7 +116,7 @@ namespace MessageService.API
             // Apply migrations at startup (optional, useful for dev)
             using (var scope = app.Services.CreateScope())
             {
-                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                var db = scope.ServiceProvider.GetRequiredService<MessagesDbContext>();
                 db.Database.Migrate();
             }
 

@@ -6,9 +6,9 @@ namespace MessageService.Infrastructure.Repositories;
 
 public class MessageRepository : IMessageRepository
 {
-    private readonly AppDbContext _db;
+    private readonly MessagesDbContext _db;
 
-    public MessageRepository(AppDbContext db)
+    public MessageRepository(MessagesDbContext db)
     {
         _db = db;
     }
