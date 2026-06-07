@@ -32,9 +32,76 @@ Release mode uses the [Valhalla](https://github.com/valhalla/valhalla) routing e
 
 #### Step 1 — Download Poland tiles (one-time, ~1.5 GB download, ~40 min to build)
 
-The easiest way is to let Valhalla download and build tiles automatically on first start. The `tile_urls` environment variable in `docker-compose.prod.yml` already points to the Poland extract from Geofabrik.
+There are two ways to get the tiles. Try automatic first; if it fails, use manual.
+
+**Option A — automatic download (Valhalla downloads the file itself)**
+
+The `tile_urls` environment variable in `docker-compose.prod.yml` already points to the Poland extract from Geofabrik. Just start the stack and Valhalla will download and build tiles on its own.
+
+Skip to Step 2.
+
+---
+
+**Option B — manual download (if automatic fails or is too slow)**
+
+Download the Poland PBF file yourself and copy it into the container. This is more reliable on slow or restricted connections.
+
+**1. Download the file**
+
+Linux / macOS:
+```bash
+wget -O poland-latest.osm.pbf https://download.geofabrik.de/europe/poland-latest.osm.pbf
+```
+
+Windows (PowerShell):
+```powershell
+Invoke-WebRequest -Uri "https://download.geofabrik.de/europe/poland-latest.osm.pbf" -OutFile "poland-latest.osm.pbf"
+```
+
+Or just open the URL in a browser and save the file: https://download.geofabrik.de/europe/poland-latest.osm.pbf
+
+The file is ~1.5 GB and only needs to be downloaded once.
+
+**2. Edit `docker-compose.prod.yml` — disable the auto-download**
+
+Change `tile_urls` so Valhalla does not try to download anything:
+
+```yaml
+environment:
+  - tile_urls=
+  - serve_tiles=True
+  - build_admins=False
+  - build_time_zones=False
+```
+
+**3. Start only the Valhalla container**
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d valhalla
+```
+
+**4. Copy the PBF file into the container**
+
+```bash
+docker cp poland-latest.osm.pbf valhalla:/custom_files/
+```
+
+**5. Restart Valhalla so it picks up the file and starts building**
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.prod.yml restart valhalla
+```
+
+Watch the build:
+```bash
+docker logs -f valhalla
+```
+
+Tile building takes ~40 minutes. When done you will see `Starting valhalla service!`.
 
 > **Note:** Tile building only happens once. The result is stored in the `valhalla_data` Docker volume and reused on all future starts.
+
+---
 
 #### Step 2 — Start in release mode
 
