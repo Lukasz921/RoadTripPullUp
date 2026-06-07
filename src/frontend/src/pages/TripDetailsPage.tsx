@@ -91,7 +91,7 @@ export default function TripDetailsPage() {
             <section className="rounded-2xl bg-white p-4 shadow-sm" style={{ height: '420px' }}>
               <h2 className="mb-3 text-lg font-semibold text-[#12351f]">Route</h2>
               <div className="h-[calc(100%-2.5rem)]">
-                <TripRouteMap origin={origin} destination={destination} />
+                <TripRouteMap origin={origin} destination={destination} polylinePoints={trip.routePolylinePoints} />
               </div>
             </section>
           </div>
