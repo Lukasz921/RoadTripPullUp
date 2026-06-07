@@ -45,6 +45,7 @@ public class ArchitectureTests
         Assert.True(result.IsSuccessful, "Projekt Application nie może zależeć od bazy danych ani API!");
     }
 
+    /* Obecnie nie istnieje namespace Infrastructure, więc ten test jest zakomentowany.
     [Fact]
     public void Infrastructure_Should_Not_HaveDependencyOnApi()
     {
@@ -61,4 +62,5 @@ public class ArchitectureTests
         // Assert
         Assert.True(result.IsSuccessful, "Projekt Infrastructure nie może zależeć od API!");
     }
+    */
 }
