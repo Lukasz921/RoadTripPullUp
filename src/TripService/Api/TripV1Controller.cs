@@ -46,7 +46,6 @@ public class TripV1Controller : ControllerBase
             var conversationId = await _conversations.CreateConversationAsync(
                 new CreateConversationDto
                 {
-                    Type         = ConversationType.Group,
                     TripId       = Guid.Parse(trip.Id),
                     Title        = "Group Chat",
                     Date         = trip.DepartureTime,

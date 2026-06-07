@@ -10,5 +10,6 @@ public interface IConversationRepository
     Task<List<(Conversation conversation, Message? lastMessage)>> GetForUserWithLastMessageAsync(Guid userId, int skip, int take);
     Task<Conversation?> GetGroupConversationForTripAsync(Guid tripId);
     Task<List<Conversation>> GetDirectConversationsForTripAsync(Guid tripId, Guid userId);
+    Task<ConversationMember> AddUserToConversationAsync(ConversationMember cm);
     Task AddMemberAsync(Guid conversationId, Guid userId, DateTime joinedAt);
 }

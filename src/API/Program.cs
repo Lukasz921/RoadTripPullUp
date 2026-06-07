@@ -2,10 +2,8 @@ using Users;
 using Users.Infrastructure;
 using Microsoft.OpenApi;
 using Scalar.AspNetCore;
-using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Application.Messages;
-using Infrastructure.Messages;
 using TripService.Api;
 using TripService.Application;
 using TripService.Infrastructure;
@@ -93,15 +91,9 @@ builder.Services.AddScoped<IUserChecker, UserChecker>();
 builder.Services.AddScoped<ITripsV1Service, TripsV1Service>();
 builder.Services.AddScoped<ITripsSearchService, TripsSearchService>();
 builder.Services.AddHostedService<SearchWorker>();
-// Register Infrastructure DbContext (different from MessageService.Infrastructure.AppDbContext registered by AddMessageService)
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-builder.Services.AddScoped<IMessageRepository, MessageRepository>();
-builder.Services.AddScoped<IMessagingService, MessagingService>();
 
 builder.Services.AddDbContext<UsersDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("UsersConnection")));
 
 var app = builder.Build();
 
@@ -126,9 +118,6 @@ app.UseAuthorization();
 
 using (var scope = app.Services.CreateScope())
 {
-    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    dbContext.Database.Migrate();
-    
     var userDbContext = scope.ServiceProvider.GetRequiredService<UsersDbContext>();
     userDbContext.Database.Migrate();
 }

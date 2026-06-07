@@ -6,9 +6,9 @@ namespace MessageService.Infrastructure.Repositories;
 
 public class ConversationRepository : IConversationRepository
 {
-    private readonly AppDbContext _db;
+    private readonly MessagesDbContext _db;
 
-    public ConversationRepository(AppDbContext db)
+    public ConversationRepository(MessagesDbContext db)
     {
         _db = db;
     }
@@ -93,6 +93,13 @@ public class ConversationRepository : IConversationRepository
             .Include(c => c.Members)
                 .ThenInclude(cm => cm.User)
             .ToListAsync();
+    }
+
+    public async Task<ConversationMember> AddUserToConversationAsync(ConversationMember cm)
+    {
+        _db.ConversationMembers.Add(cm);
+        await _db.SaveChangesAsync();
+        return cm;
     }
 
     public async Task AddMemberAsync(Guid conversationId, Guid userId, DateTime joinedAt)

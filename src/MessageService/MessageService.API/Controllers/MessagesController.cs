@@ -1,6 +1,9 @@
 using System.Security.Claims;
+using Application.Exceptions;
 using MessageService.Application.DTOs;
+using MessageService.Application.Helpers;
 using MessageService.Application.Services;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MessageService.API.Controllers;
@@ -20,11 +23,12 @@ public class MessagesController : ControllerBase
     [HttpPost("messages")]
     public async Task<IActionResult> Create([FromBody] CreateMessageDto dto)
     {
+        // TODO: add validation that the message type is text
+        // Currently only text messages are supported
         var userId = GetUserId();
-        if (dto.ConversationId == Guid.Empty)
-            return BadRequest(new { error = "conversationId is required" });
+        if (dto.ConversationId == Guid.Empty) throw new InvalidParametersException("conversationId is required");
 
-        var id = await _messages.CreateMessageAsync(dto.ConversationId, dto, userId);
+        var id = await _messages.CreateMessageAsync(dto, userId);
         return CreatedAtAction(nameof(Get), new { conversationId = dto.ConversationId, messageId = id }, new { messageId = id });
     }
 
@@ -34,46 +38,7 @@ public class MessagesController : ControllerBase
         [FromQuery] int? fromConversation = null,
         [FromQuery] int? toConversation = null)
     {
-        int skip;
-        int take;
-
-        if (fromConversation != null && toConversation != null)
-        {
-            if (fromConversation < 0 || toConversation < 0) return BadRequest(new { error = "fromConversation and toConversation must be non-negative" });
-            if (toConversation < fromConversation) return BadRequest(new { error = "toConversation must be >= fromConversation" });
-
-            skip = fromConversation.Value;
-            // inclusive range: from..to => count = to - from + 1
-            try
-            {
-                checked
-                {
-                    take = toConversation.Value - fromConversation.Value + 1;
-                }
-            }
-            catch (OverflowException)
-            {
-                return BadRequest(new { error = "range too large" });
-            }
-        }
-        else if (fromConversation != null)
-        {
-            if (fromConversation < 0) return BadRequest(new { error = "fromConversation must be non-negative" });
-            skip = fromConversation.Value;
-            take = 20; // default window size
-        }
-        else if (toConversation != null)
-        {
-            if (toConversation < 0) return BadRequest(new { error = "toConversation must be non-negative" });
-            skip = 0;
-            take = toConversation.Value + 1; // take first (to+1) items
-        }
-        else
-        {
-            // no range provided: default to first page/window
-            skip = 0;
-            take = 20;
-        }
+        FromToIntoSkipTake.Convert(fromConversation, toConversation, out var skip, out var take);
         
         var list = await _messages.GetMessagesAsync(conversationId, skip, take);
         return Ok(list);
@@ -84,8 +49,7 @@ public class MessagesController : ControllerBase
     public async Task<IActionResult> Get(Guid messageId)
     {
         var m = await _messages.GetByIdAsync(messageId);
-        if (m == null) return NotFound();
-        return Ok(m);
+        return m == null ? throw new NotFoundException("Message not found") : Ok(m);
     }
 
     // GET /api/v1/message/messages/sync?lastReceivedAt=timestamp
@@ -102,6 +66,7 @@ public class MessagesController : ControllerBase
     [HttpPost("messages/read")]
     public async Task<IActionResult> Read([FromBody] ReadReceiptRequest req)
     {
+        // TODO: work on this
         if (req.ConversationId == Guid.Empty) return UnprocessableEntity(new { error = "conversationId is required" });
 
         var userId = GetUserId();
@@ -111,7 +76,7 @@ public class MessagesController : ControllerBase
             // fetch the message to ensure it belongs to conversation
             var m = await _messages.GetByIdAsync(req.LastReadMessageId.Value);
             if (m == null) return NotFound();
-            if (m.ConversationId != req.ConversationId) return BadRequest(new { error = "message does not belong to conversation" });
+            if (m.ConversationId != req.ConversationId) throw new InvalidParametersException("Message with given id does not belong to conversation with given id");
 
             // mark all messages up to this id as read: service expects list of ids, but we can pass a singleton for now
             // assume service implementation will interpret this correctly; otherwise it can be adapted later
@@ -126,7 +91,8 @@ public class MessagesController : ControllerBase
             return NoContent();
         }
 
-        return UnprocessableEntity(new { error = "Provide either LastReadMessageId or LastReadTimestamp" });
+        throw new InvalidParametersException("Provide either LastReadMessageId or LastReadTimestamp");
+        
     }
 
     private Guid GetUserId()

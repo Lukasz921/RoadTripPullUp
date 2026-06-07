@@ -94,6 +94,13 @@ public class ApiExceptionMiddleware
             title = "Seat Unavailable";
             type = "https://tools.ietf.org/html/rfc7231#section-6.5.8";
         }
+        else if (exception is Application.Exceptions.InvalidParametersException ipex)
+        {
+            code = System.Net.HttpStatusCode.BadRequest;
+            message = ipex.Message;
+            title = "Invalid Parameters";
+            type = "https://tools.ietf.org/html/rfc7231#section-6.5.1";
+        }
         else if (exception is InvalidOperationException ioe && exception.Message.Contains("concurrency conflict"))
         {
             code = System.Net.HttpStatusCode.Conflict;

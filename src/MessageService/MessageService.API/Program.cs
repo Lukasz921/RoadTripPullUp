@@ -41,8 +41,8 @@ namespace MessageService.API
             services.AddEndpointsApiExplorer();
 
             // DbContext
-            var conn = configuration.GetConnectionString("DefaultConnection") ?? "Host=localhost;Database=messages;Username=postgres;Password=postgres";
-            services.AddDbContext<AppDbContext>(options =>
+            var conn = configuration.GetConnectionString("MessagesConnection") ?? "Host=db;Database=messages_db;Username=postgres;Password=postgres";
+            services.AddDbContext<MessagesDbContext>(options =>
                 options.UseNpgsql(conn)
             );
 
@@ -76,33 +76,22 @@ namespace MessageService.API
             {
                 // Preserve any existing Events by wrapping them.
                 var prev = options.Events;
-                var wrapped = new JwtBearerEvents();
-
-                wrapped.OnMessageReceived = async context =>
+                var wrapped = new JwtBearerEvents
                 {
-                    var accessToken = context.Request.Query["access_token"].FirstOrDefault();
-                    var path = context.HttpContext.Request.Path;
-                    if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hub/chat"))
+                    OnMessageReceived = async context =>
                     {
-                        context.Token = accessToken;
-                    }
+                        var accessToken = context.Request.Query["access_token"].FirstOrDefault();
+                        var path = context.HttpContext.Request.Path;
+                        if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hub/chat"))
+                        {
+                            context.Token = accessToken;
+                        }
 
-                    if (prev?.OnMessageReceived != null)
-                    {
                         await prev.OnMessageReceived(context);
-                    }
-                };
-
-                // wire-through other commonly used handlers to avoid losing previously configured behavior
-                wrapped.OnAuthenticationFailed = async context =>
-                {
-                    if (prev?.OnAuthenticationFailed != null)
-                        await prev.OnAuthenticationFailed(context);
-                };
-                wrapped.OnTokenValidated = async context =>
-                {
-                    if (prev?.OnTokenValidated != null)
-                        await prev.OnTokenValidated(context);
+                    },
+                    // wire-through other commonly used handlers to avoid losing previously configured behavior
+                    OnAuthenticationFailed = async context => { await prev.OnAuthenticationFailed(context); },
+                    OnTokenValidated = async context => { await prev.OnTokenValidated(context); }
                 };
 
                 options.Events = wrapped;
@@ -127,7 +116,7 @@ namespace MessageService.API
             // Apply migrations at startup (optional, useful for dev)
             using (var scope = app.Services.CreateScope())
             {
-                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                var db = scope.ServiceProvider.GetRequiredService<MessagesDbContext>();
                 db.Database.Migrate();
             }
 

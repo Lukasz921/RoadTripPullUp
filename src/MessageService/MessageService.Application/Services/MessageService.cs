@@ -1,5 +1,5 @@
 using MessageService.Application.DTOs;
-using MessageService.Core.Models;
+using MessageService.Application.DTOs.Mappers;
 using MessageService.Core.RepositoryInterfaces;
 
 namespace MessageService.Application.Services;
@@ -9,41 +9,27 @@ public class MessageService : IMessageService
     private readonly IMessageRepository _messages;
     private readonly IConversationRepository _conversations;
     private readonly INotificationService _notifier;
+    private readonly IClockService _clockService;
 
-    public MessageService(IMessageRepository messages, IConversationRepository conversations, INotificationService notifier)
+    public MessageService(IMessageRepository messages, IConversationRepository conversations, INotificationService notifier, IClockService clockService)
     {
         _messages = messages;
         _conversations = conversations;
         _notifier = notifier;
+        _clockService = clockService;
     }
 
-    public async Task<Guid> CreateMessageAsync(Guid conversationId, CreateMessageDto dto, Guid senderId)
+    public async Task<Guid> CreateMessageAsync(CreateMessageDto dto, Guid senderId)
     {
-        var conv = await _conversations.GetByIdAsync(conversationId);
+        var conv = await _conversations.GetByIdAsync(dto.ConversationId);
         if (conv == null) throw new KeyNotFoundException("conversation not found");
 
         // validate sender is member
         if (conv.Members.All(m => m.UserId != senderId)) throw new UnauthorizedAccessException("sender not in conversation");
 
-        // type restrictions per spec
-        if (conv.Type == ConversationType.Direct)
-        {
-            if (dto.Type == MessageType.Location) throw new InvalidOperationException("LOCATION not allowed in DIRECT");
-        }
-        else
-        {
-            if(dto.Type is MessageType.PriceOffer or MessageType.PriceAccept or MessageType.OfferApproval)
-                throw new InvalidOperationException("price negotiation not allowed in GROUP");
-        }
-
-        var msg = new Message
-        {
-            ConversationId = conversationId,
-            SenderId = senderId,
-            Type = dto.Type,
-            Payload = dto.Payload,
-            CreatedAt = DateTime.UtcNow
-        };
+        var messageBuilder = new MessageFromDtoBuilder(dto, _clockService).WithSender(senderId);
+        if (!messageBuilder.ValidateType(conv.Type)) throw new InvalidOperationException("message type not allowed in conversation type");
+        var msg = messageBuilder.Build();
 
         var created = await _messages.CreateAsync(msg);
 
@@ -56,50 +42,26 @@ public class MessageService : IMessageService
     public async Task<IEnumerable<MessageDto>> GetMessagesAsync(Guid conversationId, int skip, int take)
     {
         var messages = await _messages.GetForConversationAsync(conversationId, skip, take);
-        return messages.Select(m => new MessageDto
-        {
-            MessageId = m.Id,
-            ConversationId = m.ConversationId,
-            SenderId = m.SenderId,
-            Type = m.Type,
-            Payload = m.Payload,
-            CreatedAt = m.CreatedAt
-        });
+        return messages.Select(m => new MessageIntoDtoBuilder(m).Build());
     }
 
     public async Task<MessageDto?> GetByIdAsync(Guid messageId)
     {
         var m = await _messages.GetByIdAsync(messageId);
-        if (m == null) return null;
-        return new MessageDto
-        {
-            MessageId = m.Id,
-            ConversationId = m.ConversationId,
-            SenderId = m.SenderId,
-            Type = m.Type,
-            Payload = m.Payload,
-            CreatedAt = m.CreatedAt
-        };
+        return m == null ? null : new MessageIntoDtoBuilder(m).Build();
     }
 
     public async Task MarkMessagesReadAsync(Guid conversationId, IEnumerable<Guid> messageIds, Guid readerId, DateTime readAt)
     {
-        await _messages.MarkMessagesReadAsync(conversationId, messageIds, readerId, readAt);
+        var guids = messageIds as Guid[] ?? messageIds.ToArray();
+        await _messages.MarkMessagesReadAsync(conversationId, guids, readerId, readAt);
         // publish read events
-        await _notifier.PublishMessagesReadAsync(conversationId, messageIds, readerId, readAt);
+        await _notifier.PublishMessagesReadAsync(conversationId, guids, readerId, readAt);
     }
 
     public async Task<IEnumerable<MessageDto>> SyncMessagesAsync(Guid userId, DateTime lastReceivedAt)
     {
         var messages = await _messages.GetForUserSinceAsync(userId, lastReceivedAt);
-        return messages.Select(m => new MessageDto
-        {
-            MessageId = m.Id,
-            ConversationId = m.ConversationId,
-            SenderId = m.SenderId,
-            Type = m.Type,
-            Payload = m.Payload,
-            CreatedAt = m.CreatedAt
-        });
+        return messages.Select(m => new MessageIntoDtoBuilder(m).Build());
     }
 }

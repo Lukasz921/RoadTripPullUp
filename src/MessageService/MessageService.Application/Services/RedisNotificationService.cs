@@ -9,13 +9,12 @@ public class RedisNotificationService : INotificationService
 {
     private readonly IConnectionMultiplexer _redis;
     private readonly IHubContext _hub;
-    private readonly IDatabase _db;
 
     public RedisNotificationService(IConnectionMultiplexer redis, IHubContext hub)
     {
         _redis = redis;
         _hub = hub;
-        _db = redis.GetDatabase();
+        redis.GetDatabase();
     }
 
     public async Task PublishMessageCreatedAsync(Message message)

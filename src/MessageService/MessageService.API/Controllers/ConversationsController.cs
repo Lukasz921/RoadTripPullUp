@@ -1,7 +1,9 @@
 using System.Security.Claims;
+using Application.Exceptions;
 using MessageService.Application.DTOs;
+using MessageService.Application.DTOs.Mappers;
+using MessageService.Application.Helpers;
 using MessageService.Application.Services;
-using MessageService.Core.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MessageService.API.Controllers;
@@ -11,12 +13,10 @@ namespace MessageService.API.Controllers;
 public class ConversationsController : ControllerBase
 {
     private readonly IConversationService _conversations;
-    private readonly IClockService _clockService;
 
-    public ConversationsController(IConversationService conversations, IClockService clockService)
+    public ConversationsController(IConversationService conversations)
     {
         _conversations = conversations;
-        _clockService = clockService;
     }
 
     [HttpPost]
@@ -33,46 +33,7 @@ public class ConversationsController : ControllerBase
     {
         var userId = GetUserId();
 
-        int skip;
-        int take;
-
-        if (fromConversation != null && toConversation != null)
-        {
-            if (fromConversation < 0 || toConversation < 0) return BadRequest(new { error = "fromConversation and toConversation must be non-negative" });
-            if (toConversation < fromConversation) return BadRequest(new { error = "toConversation must be >= fromConversation" });
-
-            skip = fromConversation.Value;
-            // inclusive range: from..to => count = to - from + 1
-            try
-            {
-                checked
-                {
-                    take = toConversation.Value - fromConversation.Value + 1;
-                }
-            }
-            catch (OverflowException)
-            {
-                return BadRequest(new { error = "range too large" });
-            }
-        }
-        else if (fromConversation != null)
-        {
-            if (fromConversation < 0) return BadRequest(new { error = "fromConversation must be non-negative" });
-            skip = fromConversation.Value;
-            take = 20; // default window size
-        }
-        else if (toConversation != null)
-        {
-            if (toConversation < 0) return BadRequest(new { error = "toConversation must be non-negative" });
-            skip = 0;
-            take = toConversation.Value + 1; // take first (to+1) items
-        }
-        else
-        {
-            // no range provided: default to first page/window
-            skip = 0;
-            take = 20;
-        }
+        FromToIntoSkipTake.Convert(fromConversation, toConversation, out var skip, out var take);
 
         // updatedAfter is currently not used by the repository's GetForUserAsync signature; keep it for future use
         var convs = await _conversations.GetForUserAsync(userId, skip, take);
@@ -83,27 +44,16 @@ public class ConversationsController : ControllerBase
     public async Task<IActionResult> Get(Guid conversationId)
     {
         var conv = await _conversations.GetByIdAsync(conversationId);
-        if (conv == null) return NotFound();
+        if (conv == null) throw new NotFoundException("Conversation with given id not found");
 
         // authorization: ensure current user is member
         var userId = GetUserId();
-        if (conv.Members.All(m => m.UserId != userId)) return Forbid();
+        if (conv.Members.All(m => m.UserId != userId))
+            throw new ForbiddenException("User is not member of the conversation");
         
-        var lastMsg = conv.Messages.OrderByDescending(m => m.CreatedAt).FirstOrDefault();
-
-        var dto = new ConversationDto
-        {
-            ConversationId = conv.Id,
-            Type = conv.Type,
-            Name = conv.Title,
-            Date = conv.Date,
-            TripId = conv.TripId,
-            Participants = conv.Members.Select(m => m.UserId).ToList(),
-            LastMessageId = lastMsg?.Id ?? Guid.Empty,
-            LastMessagePreview = GetMessagePreview(lastMsg),
-            LastMessageCreatedAt = lastMsg?.CreatedAt ?? DateTime.UnixEpoch
-        };
-
+        var dto = new ConversationIntoDtoBuilder(conv)
+            .WithLastMessage(conv.Messages.OrderByDescending(m => m.CreatedAt).FirstOrDefault())
+            .Build();
         return Ok(dto);
     }
 
@@ -112,21 +62,11 @@ public class ConversationsController : ControllerBase
     {
         var conv = await _conversations.GetGroupForTripAsync(tripId);
         var userId = GetUserId();
-        if (conv == null) return NotFound();
-        if (conv.Members.All(m => m.UserId != userId)) return Forbid();
-        var dto = new ConversationDto
-        {
-            ConversationId = conv.Id,
-            Type = conv.Type,
-            Name = conv.Title,
-            Date = conv.Date,
-            TripId = conv.TripId,
-            Participants = conv.Members.Select(m => m.UserId).ToList(),
-            LastMessageId = conv.Messages.OrderByDescending(m => m.CreatedAt).FirstOrDefault()?.Id ?? Guid.Empty,
-            LastMessagePreview = GetMessagePreview(conv.Messages.OrderByDescending(m => m.CreatedAt).FirstOrDefault()),
-            LastMessageCreatedAt = conv.Messages.OrderByDescending(m => m.CreatedAt).FirstOrDefault()?.CreatedAt ??
-                                   DateTime.UnixEpoch
-        };
+        if (conv == null) throw new NotFoundException("Conversation with given id not found");
+        if (conv.Members.All(m => m.UserId != userId)) throw new ForbiddenException("User is not member of the conversation");
+        var dto = new ConversationIntoDtoBuilder(conv)
+            .WithLastMessage(conv.Messages.OrderByDescending(m => m.CreatedAt).FirstOrDefault())
+            .Build();
         return Ok(dto);
     }
     
@@ -135,54 +75,15 @@ public class ConversationsController : ControllerBase
     {
         var userId = GetUserId();
         var convs = await _conversations.GetDirectForTripAsync(tripId, userId);
-        var dtos = convs.Select(conv => new ConversationDto
-        {
-            ConversationId = conv.Id,
-            Type = conv.Type,
-            Name = conv.Title,
-            Date = conv.Date,
-            TripId = conv.TripId,
-            Participants = conv.Members.Select(m => m.UserId).ToList(),
-            LastMessageId = conv.Messages.OrderByDescending(m => m.CreatedAt).FirstOrDefault()?.Id ?? Guid.Empty,
-            LastMessagePreview = GetMessagePreview(conv.Messages.OrderByDescending(m => m.CreatedAt).FirstOrDefault()),
-            LastMessageCreatedAt = conv.Messages.OrderByDescending(m => m.CreatedAt).FirstOrDefault()?.CreatedAt ??
-                                   DateTime.UnixEpoch
-        });
+        var dtos = convs.Select(conv => new ConversationIntoDtoBuilder(conv)
+            .WithLastMessage(conv.Messages.OrderByDescending(m => m.CreatedAt).FirstOrDefault())
+            .Build());
         return Ok(dtos);
-    }
-
-    [HttpPost("{conversationId:guid}/join/{userId:guid}")]
-    public async Task<IActionResult> Join(Guid conversationId, Guid userId)
-    {
-        var conv = await _conversations.GetByIdAsync(conversationId);
-        if (conv == null) return NotFound();
-        
-        var callerId = GetUserId();
-        if (conv.Members.All(m => m.UserId != callerId)) return Forbid();
-        if (conv.Members.Any(m => m.UserId == userId)) return BadRequest(new { error = "already a member" });
-
-        await _conversations.AddMemberAsync(conversationId, userId);
-        return NoContent();
     }
 
     private Guid GetUserId()
     {
         var sub = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         return string.IsNullOrEmpty(sub) ? Guid.Empty : Guid.Parse(sub);
-    }
-    
-    private static string GetMessagePreview(Message? msg) // TODO: move to a helper/extension method
-    {
-        if (msg == null) return string.Empty;
-
-        return msg.Type switch
-        {
-            MessageType.Text => msg.Payload?["text"]?.ToString() ?? string.Empty,
-            MessageType.Location => "[Location]",
-            MessageType.PriceOffer => "[Price Offer]",
-            MessageType.PriceAccept => "[Price Accept]",
-            MessageType.OfferApproval => "[Offer Approval]",
-            _ => string.Empty
-        };
     }
 }
