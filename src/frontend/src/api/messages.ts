@@ -30,29 +30,109 @@ export interface ConversationListParams {
 }
 
 export const createConversation = async (dto: CreateConversationDTO): Promise<{ conversationId: string }> => {
-  const response = await messageApi.post('/conversations', { ...dto, Type: 'Direct' });
-  return response.data;
+  // const response = await messageApi.post('/conversations', { ...dto, Type: 'Direct' });
+  // return response.data;
+  void dto; // TODO: remove mock
+  return { conversationId: 'mock-direct-1' };
 };
 
 export const getConversations = async (params?: ConversationListParams): Promise<ConversationDTO[]> => {
-  const response = await messageApi.get('/conversations', { params });
-  return response.data;
+  // const response = await messageApi.get('/conversations', { params });
+  // return response.data;
+  void params; // TODO: remove mock
+  return [
+    {
+      ConversationId: 'mock-group-1',
+      Type: 'Group',
+      TripId: 'trip-1',
+      Name: 'Warsaw → Kraków crew',
+      Participants: ['user-1', 'user-2', 'user-3', 'user-4'],
+      LastMessageId: 'msg-1',
+      LastMessagePreview: 'Anyone need a stop in Łódź?',
+      LastMessageCreatedAt: '2026-06-03T14:22:00Z',
+    },
+    {
+      ConversationId: 'mock-direct-1',
+      Type: 'Direct',
+      TripId: 'trip-1',
+      Name: 'Marek Kowalski',
+      Participants: ['user-1', 'user-2'],
+      LastMessageId: 'msg-2',
+      LastMessagePreview: 'Hi, is there still a seat available?',
+      LastMessageCreatedAt: '2026-06-03T10:05:00Z',
+    },
+    {
+      ConversationId: 'mock-direct-2',
+      Type: 'Direct',
+      TripId: 'trip-2',
+      Name: 'Anna Nowak',
+      Participants: ['user-1', 'user-3'],
+      LastMessageId: 'msg-3',
+      LastMessagePreview: 'Great, see you at 8am!',
+      LastMessageCreatedAt: '2026-06-02T18:45:00Z',
+    },
+  ];
 };
 
 export const getConversation = async (conversationId: string): Promise<ConversationDTO> => {
-  const response = await messageApi.get(`/conversations/${conversationId}`);
-  return response.data;
+  // const response = await messageApi.get(`/conversations/${conversationId}`);
+  // return response.data;
+  void conversationId; // TODO: remove mock
+  return {
+    ConversationId: conversationId,
+    Type: 'Direct',
+    TripId: 'trip-1',
+    Name: 'Marek Kowalski',
+    Participants: ['user-1', 'user-2'],
+    LastMessageId: 'msg-2',
+    LastMessagePreview: 'Hi, is there still a seat available?',
+    LastMessageCreatedAt: '2026-06-03T10:05:00Z',
+  };
 };
 
 
 export const getGroupConversationByTrip = async (tripId: string): Promise<ConversationDTO> => {
-  const response = await messageApi.get(`/conversations/byTripId/group/${tripId}`);
-  return response.data;
+  // const response = await messageApi.get(`/conversations/byTripId/group/${tripId}`);
+  // return response.data;
+  void tripId; // TODO: remove mock
+  return {
+    ConversationId: 'mock-group-1',
+    Type: 'Group',
+    TripId: tripId,
+    Name: 'Warsaw → Kraków crew',
+    Participants: ['user-1', 'user-2', 'user-3', 'user-4'],
+    LastMessageId: 'msg-1',
+    LastMessagePreview: 'Anyone need a stop in Łódź?',
+    LastMessageCreatedAt: '2026-06-03T14:22:00Z',
+  };
 };
 
 export const getDirectConversationsByTrip = async (tripId: string): Promise<ConversationDTO[]> => {
-  const response = await messageApi.get(`/conversations/byTripId/direct/${tripId}`);
-  return response.data;
+  // const response = await messageApi.get(`/conversations/byTripId/direct/${tripId}`);
+  // return response.data;
+  void tripId; // TODO: remove mock
+  return [
+    {
+      ConversationId: 'mock-direct-1',
+      Type: 'Direct',
+      TripId: tripId,
+      Name: 'Marek Kowalski',
+      Participants: ['user-1', 'user-2'],
+      LastMessageId: 'msg-2',
+      LastMessagePreview: 'Hi, is there still a seat available?',
+      LastMessageCreatedAt: '2026-06-03T10:05:00Z',
+    },
+    {
+      ConversationId: 'mock-direct-2',
+      Type: 'Direct',
+      TripId: tripId,
+      Name: 'Anna Nowak',
+      Participants: ['user-1', 'user-3'],
+      LastMessageId: 'msg-3',
+      LastMessagePreview: 'Great, see you at 8am!',
+      LastMessageCreatedAt: '2026-06-02T18:45:00Z',
+    },
+  ];
 };
 
 
