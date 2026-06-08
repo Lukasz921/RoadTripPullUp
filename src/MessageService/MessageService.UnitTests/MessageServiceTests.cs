@@ -40,6 +40,7 @@ public class MessageServiceTests
 
         var dto = new CreateMessageDto
         {
+            ConversationId = conversationId,
             Type = MessageType.Text,
             Payload = new JsonObject { ["text"] = "hello" }
         };
