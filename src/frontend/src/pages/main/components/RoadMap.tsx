@@ -56,7 +56,7 @@ export default function RoadMap({ sectionRef }: RoadMapProps) {
   }, [sectionRef]);
 
   return (
-    <svg viewBox="0 0 1000 900" className="h-full w-full rounded-[2rem] bg-[#79a85c]">
+    <svg viewBox="0 0 1000 900" className="h-full w-full rounded-4xl bg-[#79a85c]">
       <rect width="1000" height="900" fill="#79a85c" />
       <path d="M0 130 C190 70 300 140 500 90 C700 40 850 130 1000 70 V0 H0 Z" fill="#6f9d52" />
       <path d="M0 780 C180 720 350 820 540 760 C720 700 830 805 1000 735 V900 H0 Z" fill="#6c994d" />
