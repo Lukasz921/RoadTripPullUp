@@ -8,10 +8,9 @@ import TripRouteMap from '../components/TripRouteMap';
 import NumberInput from '../components/ui/NumberInput';
 import Spinner from '../components/ui/Spinner';
 import TripSummaryCard from '../components/TripSummaryCard';
-import { submitSearch as submitSearchApi, pollSearch, type SearchJobResultDTO } from '../api/trips';
+import { submitSearch as submitSearchApi, pollSearch, type SearchJobResultDTO, type TripSummaryV1DTO } from '../api/trips';
 import { createConversation } from '../api/messages';
 import type { Place } from '../utils/geoapify';
-import type { TripSummary } from '../types/trip';
 
 const PAGE_SIZE = 10;
 
@@ -34,12 +33,12 @@ export default function SearchTripsPage() {
   // State
   const [submitting, setSubmitting] = useState(false);
   const [polling, setPolling] = useState(false);
-  const [results, setResults] = useState<TripSummary[] | null>(null);
+  const [results, setResults] = useState<TripSummaryV1DTO[] | null>(null);
   const [error, setError] = useState('');
   const [askingTripId, setAskingTripId] = useState<string | null>(null);
   const pollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  async function handleAskAboutTrip(trip: TripSummary) {
+  async function handleAskAboutTrip(trip: TripSummaryV1DTO) {
     setAskingTripId(trip.id);
     try {
       const { conversationId } = await createConversation({

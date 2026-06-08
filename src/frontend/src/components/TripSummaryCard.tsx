@@ -1,21 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { LatLng } from '../types/trip';
+import type { TripDTO, TripSummaryV1DTO } from '../api/trips';
 import { reverseGeocode } from '../api/reverseGeocode';
 import { formatDate, metersToKm, formatCoords } from '../utils/format';
 
-interface Trip {
-  id: string;
-  source: LatLng;
-  target: LatLng;
-  departureTime: string;
-  pricePerSeat: number;
-  availableSeats: number;
-  maxDetourMeters: number;
-}
-
 interface TripSummaryCardProps {
-  trip: Trip;
+  trip: TripDTO | TripSummaryV1DTO;
   actualDetourMeters?: number;
   detailsState?: Record<string, unknown>;
   action?: {
