@@ -20,11 +20,11 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    # 2. Instalacja .NET 8 na maszynie wirtualnej
+    # 2. Instalacja .NET 10 na maszynie wirtualnej
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '8.0.x'
+        dotnet-version: '10.0.x'
 
     # 3. Pobranie paczek NuGet
     - name: Restore dependencies
@@ -35,8 +35,9 @@ jobs:
       run: dotnet build --no-restore --configuration Release
 
     # 5. Uruchomienie testów (jednostkowych i integracyjnych)
+    # E2E tests require a live Valhalla + trip_db — excluded from CI
     - name: Run tests
-      run: dotnet test --no-build --configuration Release --verbosity normal
+      run: dotnet test --no-build --configuration Release --verbosity normal --filter "Category!=E2E"
 
   # ------------------------------------
   # ZADANIE 2: Sprawdzenie Frontendu (Vite/React)

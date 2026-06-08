@@ -68,7 +68,11 @@ node_modules/
 dist/
 dist-ssr/
 
+# Vite cache
+.vite/
+
 # Pliki środowiskowe (lokalne sekrety)
+.env
 .env.local
 .env.*.local
 
@@ -105,3 +109,7 @@ pnpm-debug.log*
 # =========================
 .DS_Store
 Thumbs.db
+
+
+# Docker
+docker-compose.override.yml

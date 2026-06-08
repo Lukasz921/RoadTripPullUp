@@ -1,59 +1,57 @@
-using Infrastructure;
+using Users;
+using Users.Infrastructure;
+using Microsoft.OpenApi;
+using Scalar.AspNetCore;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.OpenApi.Models;
-using Application.Interfaces;
-using Application.Interfaces.Trip;
-using Application.Interfaces.Messaging;
-using Infrastructure.Authentication;
-using Infrastructure.Repositories;
-using Application.Services;
+using Application.Messages;
+using TripService.Api;
+using TripService.Application;
+using TripService.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using API.Middleware;
+using StackExchange.Redis;
+using MessageService.API; // add extension methods from MessageService project
+using MessageService.API.Hubs; // add ChatHub for IHubContext
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Register MessageService services (DbContext, SignalR, Redis, DI, validators, etc.)
+builder.AddMessageService();
+
+builder.Services.AddOpenApi(options =>
+{
+    options.AddDocumentTransformer((document, context, cancellationToken) =>
+    {
+        document.Info.Title = "RoadTripPullUp API";
+        document.Components ??= new OpenApiComponents();
+        document.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
+        document.Components.SecuritySchemes.Add("Bearer", new OpenApiSecurityScheme
+        {
+            Type = SecuritySchemeType.Http,
+            Scheme = "bearer",
+            BearerFormat = "JWT",
+            In = ParameterLocation.Header,
+            Description = "JWT Authorization header using the Bearer scheme."
+        });
+        return Task.CompletedTask;
+    });
+});
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddApplicationPart(typeof(TripV1Controller).Assembly)
+    .AddApplicationPart(typeof(UsersModule).Assembly);
 
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend",
         policy =>
         {
-            policy.WithOrigins("http://localhost:5173")
+            policy.WithOrigins(builder.Configuration.GetSection("AllowedOrigins").Get<string[]>() ?? ["http://localhost:5173"])
                   .AllowAnyHeader()
                   .AllowAnyMethod();
         });
-});
-
-builder.Services.AddSwaggerGen(c =>
-{
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Description = "JWT Authorization header using the Bearer scheme.",
-        Name = "Authorization",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.Http,
-        Scheme = "bearer",
-        BearerFormat = "JWT"
-    });
-
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            Array.Empty<string>()
-        }
-    });
 });
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -76,38 +74,55 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
-builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
-builder.Services.AddScoped<IJwtProvider, JwtProvider>();
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-// definicje dla controlerow
-builder.Services.AddScoped<ITripRepository, TripRepository>();
-builder.Services.AddScoped<IRouteRepository, RouteRepository>();
-builder.Services.AddScoped<ITripRequestRepository, TripRequestRepository>();
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<ITripService, TripService>();
-builder.Services.AddScoped<IMessageRepository, MessageRepository>();
-builder.Services.AddScoped<IMessagingService, MessagingService>();
+builder.Services.AddUsersModule();
 
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddHttpClient("valhalla", client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["Valhalla:BaseUrl"] ?? "http://valhalla:8002");
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
+builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
+    ConnectionMultiplexer.Connect(
+        builder.Configuration.GetConnectionString("Redis") ?? "localhost:6379"));
+builder.Services.AddSingleton<IJobStore, RedisJobStore>();
+
+if (builder.Environment.IsDevelopment())
+    builder.Services.AddScoped<IRoutingEngine, MockRoutingEngine>();
+else
+    builder.Services.AddScoped<IRoutingEngine, ValhallaRoutingEngine>();
+builder.Services.AddScoped<IUserChecker, UserChecker>();
+builder.Services.AddScoped<ITripsV1Service, TripsV1Service>();
+builder.Services.AddScoped<ITripsSearchService, TripsSearchService>();
+builder.Services.AddHostedService<SearchWorker>();
+
+builder.Services.AddDbContext<UsersDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("UsersConnection")));
 
 var app = builder.Build();
 
 // use exception middleware early to catch exceptions from downstream
 app.UseMiddleware<ApiExceptionMiddleware>();
 
-app.UseSwagger();
-app.UseSwaggerUI();
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+    app.MapScalarApiReference();
+}
+
+// wire message service (maps hub, applies migrations for message DB, enables message swagger in dev)
+app.UseMessageService();
 
 app.UseCors("AllowFrontend");
-app.UseHttpsRedirection();
+if (!app.Environment.IsDevelopment())
+    app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
+
 using (var scope = app.Services.CreateScope())
 {
-    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    dbContext.Database.Migrate();
+    var userDbContext = scope.ServiceProvider.GetRequiredService<UsersDbContext>();
+    userDbContext.Database.Migrate();
 }
 
 app.MapControllers();

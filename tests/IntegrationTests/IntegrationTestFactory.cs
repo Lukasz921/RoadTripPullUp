@@ -1,11 +1,10 @@
-using Infrastructure;
+using Users.Infrastructure;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Testcontainers.PostgreSql;
-using Xunit;
 
 namespace IntegrationTests;
 
@@ -21,13 +20,14 @@ public class IntegrationTestFactory : WebApplicationFactory<Program>, IAsyncLife
     {
         builder.ConfigureTestServices(services =>
         {
-            var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<AppDbContext>));
-            if (descriptor != null)
+
+            var userDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<UsersDbContext>));
+            if (userDescriptor != null)
             {
-                services.Remove(descriptor);
+                services.Remove(userDescriptor);
             }
 
-            services.AddDbContext<AppDbContext>(options =>
+            services.AddDbContext<UsersDbContext>(options =>
             {
                 options.UseNpgsql(_dbContainer.GetConnectionString());
             });
@@ -39,8 +39,9 @@ public class IntegrationTestFactory : WebApplicationFactory<Program>, IAsyncLife
         await _dbContainer.StartAsync();
         
         using var scope = Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        await db.Database.MigrateAsync();
+
+        var userDb = scope.ServiceProvider.GetRequiredService<UsersDbContext>();
+        await userDb.Database.MigrateAsync();
     }
 
     public new async Task DisposeAsync()

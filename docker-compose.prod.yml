@@ -1,0 +1,30 @@
+services:
+  valhalla:
+    image: ghcr.io/gis-ops/docker-valhalla/valhalla:latest
+    container_name: valhalla
+    ports:
+      - "8002:8002"
+    volumes:
+      - valhalla_data:/custom_files
+    environment:
+      - tile_urls=https://download.geofabrik.de/europe/poland-latest.osm.pbf
+      - serve_tiles=True
+      - build_admins=False
+      - build_time_zones=False
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8002/status || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 1800s
+
+  api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - Valhalla__BaseUrl=http://valhalla:8002
+    depends_on:
+      valhalla:
+        condition: service_healthy
+
+volumes:
+  valhalla_data:

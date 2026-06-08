@@ -7,13 +7,45 @@ services:
       POSTGRES_PASSWORD: admin
       POSTGRES_DB: app_db
     ports:
-      - "5432:5432"
+        - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./docker/db/init:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d app_db"]
       interval: 5s
       timeout: 5s
+      retries: 5
+
+  trip_db:
+    image: postgis/postgis:16-3.4
+    container_name: trip_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: trip_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - trip_db_data:/var/lib/postgresql/data
+      - ./docker/trip-db/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d trip_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: app_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
       retries: 5
 
   api:
@@ -23,15 +55,25 @@ services:
     container_name: app_api
     ports:
       - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__MessagesConnection=Host=db;Port=5432;Database=messages_db;Username=postgres;Password=admin
+      - ConnectionStrings__UsersConnection=Host=db;Port=5432;Database=app_db;Username=postgres;Password=admin
+      - ConnectionStrings__TripConnection=Host=trip_db;Port=5432;Database=trip_db;Username=postgres;Password=admin
+      - ConnectionStrings__Redis=redis:6379
+      - Valhalla__BaseUrl=http://valhalla:8002
     depends_on:
       db:
+        condition: service_healthy
+      trip_db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
 
   frontend:
     build:
       context: ./src/frontend
       dockerfile: Dockerfile
-    container_name: app_frontend
     ports:
       - "5173:5173"
     volumes:
@@ -42,3 +84,5 @@ services:
 
 volumes:
   postgres_data:
+  trip_db_data:
+  redis_data:

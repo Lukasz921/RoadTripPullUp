@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../api/axiosConfig';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
@@ -7,11 +7,28 @@ import TextInput from '../components/ui/TextInput';
 
 type Mode = 'login' | 'register';
 
+type Sex = 'MALE' | 'FEMALE' | 'OTHER';
+
 interface FormState {
   email: string;
   password: string;
   name: string;
   surname: string;
+  phoneNumber: string;
+  dateOfBirth: string;
+  sex: Sex | '';
+}
+
+function extractErrorMessage(err: any): string | undefined {
+  const data = err?.response?.data;
+  if (!data) return undefined;
+  if (data.detail) return data.detail;
+  if (data.errors) {
+    const first = Object.values(data.errors as Record<string, string[]>).flat()[0];
+    if (first) return first;
+  }
+  if (data.title) return data.title;
+  return undefined;
 }
 
 const INITIAL_FORM: FormState = {
@@ -19,10 +36,14 @@ const INITIAL_FORM: FormState = {
   password: '',
   name: '',
   surname: '',
+  phoneNumber: '',
+  dateOfBirth: '',
+  sex: '',
 };
 
 export default function LoginRegisterPage() {
-  const [mode, setMode] = useState<Mode>('login');
+  const { pathname } = useLocation();
+  const [mode, setMode] = useState<Mode>(pathname === '/register' ? 'register' : 'login');
   const [form, setForm] = useState<FormState>(INITIAL_FORM);
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -50,11 +71,19 @@ export default function LoginRegisterPage() {
           surname: form.surname,
           email: form.email,
           password: form.password,
+          phoneNumber: form.phoneNumber,
+          dateOfBirth: form.dateOfBirth,
+          sex: form.sex,
         });
-        navigate('/home');
+        const loginResponse = await api.post('/auth/login', {
+          email: form.email,
+          password: form.password,
+        });
+        localStorage.setItem('token', loginResponse.data.token);
+        navigate('/');
       } catch (err: any) {
         console.error('Register error:', err);
-        setError(err.response?.data?.detail ?? 'Registration failed. Please try again.');
+        setError(extractErrorMessage(err) ?? 'Registration failed. Please try again.');
       }
       return;
     }
@@ -65,10 +94,10 @@ export default function LoginRegisterPage() {
         password: form.password,
       });
       localStorage.setItem('token', response.data.token);
-      navigate('/home');
+      navigate('/');
     } catch (err: any) {
       console.error('Login error:', err);
-      setError(err.response?.data?.detail ?? 'Login failed. Please try again.');
+      setError(extractErrorMessage(err) ?? 'Login failed. Please try again.');
     }
   }
 
@@ -89,20 +118,54 @@ export default function LoginRegisterPage() {
 
           <form onSubmit={submitForm} className="mt-6 space-y-4">
             {isRegister && (
-              <div className="grid gap-4 sm:grid-cols-2">
+              <>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <TextInput
+                    label="Name"
+                    value={form.name}
+                    onChange={(v) => updateField('name', v)}
+                    placeholder="Name"
+                  />
+                  <TextInput
+                    label="Surname"
+                    value={form.surname}
+                    onChange={(v) => updateField('surname', v)}
+                    placeholder="Surname"
+                  />
+                </div>
+
                 <TextInput
-                  label="Name"
-                  value={form.name}
-                  onChange={(v) => updateField('name', v)}
-                  placeholder="Name"
+                  label="Phone number"
+                  type="tel"
+                  value={form.phoneNumber}
+                  onChange={(v) => updateField('phoneNumber', v)}
+                  placeholder="+48 123 456 789"
                 />
-                <TextInput
-                  label="Surname"
-                  value={form.surname}
-                  onChange={(v) => updateField('surname', v)}
-                  placeholder="Surname"
-                />
-              </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <TextInput
+                    label="Date of birth"
+                    type="date"
+                    value={form.dateOfBirth}
+                    onChange={(v) => updateField('dateOfBirth', v)}
+                    placeholder=""
+                  />
+
+                  <label className="block">
+                    <span className="text-sm text-[#5d7056]">Sex</span>
+                    <select
+                      value={form.sex}
+                      onChange={(e) => updateField('sex', e.target.value)}
+                      className="mt-1 h-12 w-full rounded-xl border border-[#d7e8c8] bg-white px-4 font-semibold text-[#12351f] outline-none focus:border-[#8cc63f]"
+                    >
+                      <option value="" disabled>Select…</option>
+                      <option value="MALE">Male</option>
+                      <option value="FEMALE">Female</option>
+                      <option value="OTHER">Other</option>
+                    </select>
+                  </label>
+                </div>
+              </>
             )}
 
             <TextInput
