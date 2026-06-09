@@ -191,32 +191,3 @@ Request (body):
 Response (204 No Content) — brak body.
 
 Błędy: 400/404/422
-
----
-
-### GET /api/v1/message/users/{userId}
-Opis: pobiera podstawowe dane użytkownika.
-
-Response (200 OK) — body:
-```json
-{
-  "id": "<guid>",
-  "username": "string",
-  "displayName": "string"
-}
-```
-Błędy: 404
-
----
-
-## Enumy
-`MessageType`:
-- `Text`
-- `PriceOffer`
-- `PriceAccept`
-- `OfferApproval`
-- `Location`
-
-`ConversationType`:
-- `Direct`
-- `Group`
