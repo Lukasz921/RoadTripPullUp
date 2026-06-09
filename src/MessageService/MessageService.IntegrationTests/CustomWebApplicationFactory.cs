@@ -27,7 +27,19 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
             using var scope = sp.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<MessagesDbContext>();
             db.Database.EnsureDeleted();
-            db.Database.Migrate();
+            for (int i = 0; i < 10; i++)
+            {
+                try
+                {
+                    db.Database.Migrate();
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Attempt {i + 1}: Failed to migrate database. Exception: {ex.Message}");
+                    Thread.Sleep(2000); // wait before retrying
+                }
+            }
         });
     }
 }

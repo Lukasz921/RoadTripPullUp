@@ -4,6 +4,7 @@ using Xunit.Abstractions;
 
 namespace MessageService.IntegrationTests;
 
+[Collection("IntegrationTestCollection")]
 public class ConversationTests : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly ITestOutputHelper _testOutputHelper;

@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 
 namespace MessageService.IntegrationTests;
 
+[Collection("IntegrationTestCollection")]
 public class MessageTests : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly HttpClient _client;
