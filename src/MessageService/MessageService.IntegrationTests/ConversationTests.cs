@@ -70,4 +70,118 @@ public class ConversationTests : IClassFixture<CustomWebApplicationFactory>
         Assert.Equal(JsonValueKind.Array, participants.Value.ValueKind);
         Assert.Equal(3, participants.Value.GetArrayLength()); // creator + 2 participants
     }
+
+    [Fact]
+    public async Task GetNonExistingConversation_ReturnsNotFound()
+    {
+        // Act
+        var response = await _client.GetAsync($"/api/v1/message/conversations/{Guid.NewGuid()}");
+        
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task CreateConversationWithoutParticipants_ReturnsBadRequest()
+    {
+        // Arrange
+        var createConversationDto = new
+        {
+            TripId = Guid.NewGuid(),
+            Title = "Test Conversation",
+            Date = DateTime.UtcNow,
+            Participants = new List<Guid>() // empty participants
+        };
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/api/v1/message/conversations", createConversationDto);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+    
+    [Fact]
+    public async Task GetConversationForTrip_ReturnsOk()
+    {
+        // Arrange
+        var tripId = Guid.NewGuid();
+        var createConversationDto = new
+        {
+            TripId = tripId,
+            Title = "Test Conversation",
+            Date = DateTime.UtcNow,
+            Participants = new List<Guid> { Guid.NewGuid(), Guid.NewGuid() }
+        };
+        var firstResponse = await _client.PostAsJsonAsync("/api/v1/message/conversations", createConversationDto);
+        var responseData = await firstResponse.Content.ReadFromJsonAsync<Dictionary<string, object>>();
+        var conversationId = responseData?["conversationId"] != null ? Guid.Parse(responseData["conversationId"].ToString() ?? "") : Guid.Empty;
+        if (conversationId == Guid.Empty) throw new Exception("Failed to create conversation for test");
+        
+        // Act
+        var response = await _client.GetAsync($"/api/v1/message/conversations/byTripId/direct/{tripId}");
+        
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var conversation = await response.Content.ReadFromJsonAsync<List<Dictionary<string, object>>>();
+        Assert.NotNull(conversation);
+        Assert.Single(conversation); // only one conversation created for the trip in this test
+        var conv = conversation[0];
+        Assert.True(conv.ContainsKey("conversationId"));
+        Assert.True(conv.ContainsKey("tripId"));
+    }
+
+    [Fact]
+    public async Task GetNonExistingConversationForTrip_ReturnsNotFound()
+    {
+        // Act
+        var response = await _client.GetAsync($"/api/v1/message/conversations/byTripId/group/{Guid.NewGuid()}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetDirectConversationsForTrip_ReturnsOk()
+    {
+        // Arrange
+        var tripId = Guid.NewGuid();
+        var createConversationDto = new
+        {
+            TripId = tripId,
+            Title = "Test Conversation",
+            Date = DateTime.UtcNow,
+            Participants = new List<Guid> { Guid.NewGuid(), Guid.NewGuid() }
+        };
+        var firstResponse = await _client.PostAsJsonAsync("/api/v1/message/conversations", createConversationDto);
+        var responseData = await firstResponse.Content.ReadFromJsonAsync<Dictionary<string, object>>();
+        var conversationId = responseData?["conversationId"] != null
+            ? Guid.Parse(responseData["conversationId"].ToString() ?? "")
+            : Guid.Empty;
+        if (conversationId == Guid.Empty) throw new Exception("Failed to create conversation for test");
+
+        // Act
+        var response = await _client.GetAsync($"/api/v1/message/conversations/byTripId/direct/{tripId}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var conversations = await response.Content.ReadFromJsonAsync<List<Dictionary<string, object>>>();
+        Assert.NotNull(conversations);
+        Assert.Single(conversations); // only one conversation created for the trip in this test
+        var conversation = conversations[0];
+        Assert.True(conversation.ContainsKey("conversationId"));
+        Assert.True(conversation.ContainsKey("tripId"));
+    }
+
+    [Fact]
+    public async Task GetDirectConversationsForTripWithNoConversations_ReturnsOk()
+    {
+        // Act
+        var response = await _client.GetAsync($"/api/v1/message/conversations/byTripId/direct/{Guid.NewGuid()}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var conversations = await response.Content.ReadFromJsonAsync<List<Dictionary<string, object>>>();
+        Assert.NotNull(conversations);
+        Assert.Empty(conversations); // no conversations for the trip
+    }
 }
