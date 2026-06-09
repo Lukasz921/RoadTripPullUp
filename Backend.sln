@@ -39,7 +39,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Users", "src\Users\Users.cs
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Users.Tests", "tests\Users.Tests\Users.Tests.csproj", "{E4961F7B-3898-46E6-84EA-F4B129BDCB70}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MessageService.IntegrationTests", "src\MessageService\MessageService.IntegrationTests\MessageService.IntegrationTests\MessageService.IntegrationTests.csproj", "{E96409A2-AE9B-49F3-81FC-4776F21796C0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MessageService.IntegrationTests", "src\MessageService\MessageService.IntegrationTests\MessageService.IntegrationTests.csproj", "{E96409A2-AE9B-49F3-81FC-4776F21796C0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -15,6 +15,7 @@ COPY ["src/MessageService/MessageService.Application/MessageService.Application.
 COPY ["src/MessageService/MessageService.Infrastructure/MessageService.Infrastructure.csproj", "src/MessageService/MessageService.Infrastructure/"]
 COPY ["src/MessageService/MessageService.Core/MessageService.Core.csproj", "src/MessageService/MessageService.Core/"]
 COPY ["src/MessageService/MessageService.UnitTests/MessageService.UnitTests.csproj", "src/MessageService/MessageService.UnitTests/"]
+COPY ["src/MessageService/MessageService.IntegrationTests/MessageService.IntegrationTests.csproj", "src/MessageService/MessageService.IntegrationTests/"]
 
 COPY ["tests/UnitTests/UnitTests.csproj", "tests/UnitTests/"]
 COPY ["tests/IntegrationTests/IntegrationTests.csproj", "tests/IntegrationTests/"]
