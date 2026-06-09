@@ -6,4 +6,5 @@ public class CreateConversationDto
     public string? Title { get; set; }
     public DateTime? Date { get; set; }
     public List<Guid> Participants { get; set; } = [];
+    public string? Type { get; set; } = "direct";
 }

@@ -44,7 +44,8 @@ public class TripsOrchestratorController : ControllerBase
                     TripId       = Guid.Parse(trip.Id),
                     Title        = "Group Chat",
                     Date         = trip.DepartureTime,
-                    Participants = [Guid.Parse(driverId)]
+                    Participants = [Guid.Parse(driverId)],
+                    Type         = "group"
                 },
                 Guid.Parse(driverId));
 
