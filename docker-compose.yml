@@ -57,6 +57,7 @@ services:
       - "8080:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=app_db;Username=postgres;Password=admin
       - ConnectionStrings__MessagesConnection=Host=db;Port=5432;Database=messages_db;Username=postgres;Password=admin
       - ConnectionStrings__UsersConnection=Host=db;Port=5432;Database=app_db;Username=postgres;Password=admin
       - ConnectionStrings__TripConnection=Host=trip_db;Port=5432;Database=trip_db;Username=postgres;Password=admin

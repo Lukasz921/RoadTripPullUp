@@ -11,6 +11,7 @@ using TripService.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using API;
 using API.Middleware;
 using StackExchange.Redis;
 using MessageService.API; // add extension methods from MessageService project
@@ -92,7 +93,7 @@ if (builder.Environment.IsDevelopment())
 else
     builder.Services.AddScoped<IRoutingEngine, ValhallaRoutingEngine>();
 builder.Services.AddScoped<ITripRepository, TripRepository>();
-builder.Services.AddScoped<IUserChecker, UserChecker>();
+builder.Services.AddScoped<IUserChecker, UserCheckerAdapter>();
 builder.Services.AddScoped<ITripsService, TripsService>();
 builder.Services.AddScoped<ITripsSearchService, TripsSearchService>();
 builder.Services.AddHostedService<SearchWorker>();
