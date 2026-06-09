@@ -186,7 +186,7 @@ public class TripsSearchService : ITripsSearchService
                 continue;
 
             validated.Add(new ValidatedResult(
-                Summary: new TripSummaryV1DTO
+                Summary: new TripSummaryDTO
                 {
                     Id                  = c.Id,
                     DriverId            = c.DriverId,
@@ -216,5 +216,5 @@ public class TripsSearchService : ITripsSearchService
         short AvailableSeats,
         long PassengerCount);
 
-    private record ValidatedResult(TripSummaryV1DTO Summary);
+    private record ValidatedResult(TripSummaryDTO Summary);
 }

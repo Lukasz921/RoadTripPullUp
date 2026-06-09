@@ -2,8 +2,8 @@ namespace TripService.Application;
 
 public interface ITripRepository
 {
-    Task<TripV1DTO> InsertAsync(Guid driverId, CreateTripV1DTO dto, RouteResult route);
-    Task<TripV1DTO?> FindByIdAsync(Guid id);
+    Task<TripDTO> InsertAsync(Guid driverId, CreateTripDTO dto, RouteResult route);
+    Task<TripDTO?> FindByIdAsync(Guid id);
     Task<PagedTripsDTO> GetByDriverAsync(Guid driverId, int page, int pageSize);
     Task<PagedTripsDTO> GetByPassengerAsync(Guid userId, int page, int pageSize);
     Task<Guid?> GetDriverIdAsync(Guid tripId);

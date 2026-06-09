@@ -3,7 +3,7 @@ using TripService.Application;
 
 namespace TripService.Infrastructure;
 
-public partial class TripsV1Service
+public partial class TripsService
 {
     public async Task AddPassengerAsync(string tripId, string driverId, string passengerId)
     {

@@ -4,14 +4,14 @@ using TripService.Application;
 
 namespace TripService.Infrastructure;
 
-public partial class TripsV1Service : ITripsV1Service
+public partial class TripsService : ITripsService
 {
     private readonly ITripRepository _repository;
     private readonly IRoutingEngine  _routing;
     private readonly IJobStore       _jobStore;
     private readonly IUserChecker    _userChecker;
 
-    public TripsV1Service(ITripRepository repository, IRoutingEngine routing, IJobStore jobStore, IUserChecker userChecker)
+    public TripsService(ITripRepository repository, IRoutingEngine routing, IJobStore jobStore, IUserChecker userChecker)
     {
         _repository  = repository;
         _routing     = routing;

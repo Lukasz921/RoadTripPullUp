@@ -41,7 +41,7 @@ builder.Services.AddOpenApi(options =>
 });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddControllers()
-    .AddApplicationPart(typeof(TripV1Controller).Assembly)
+    .AddApplicationPart(typeof(TripController).Assembly)
     .AddApplicationPart(typeof(UsersModule).Assembly);
 
 builder.Services.AddCors(options =>
@@ -93,7 +93,7 @@ else
     builder.Services.AddScoped<IRoutingEngine, ValhallaRoutingEngine>();
 builder.Services.AddScoped<ITripRepository, TripRepository>();
 builder.Services.AddScoped<IUserChecker, UserChecker>();
-builder.Services.AddScoped<ITripsV1Service, TripsV1Service>();
+builder.Services.AddScoped<ITripsService, TripsService>();
 builder.Services.AddScoped<ITripsSearchService, TripsSearchService>();
 builder.Services.AddHostedService<SearchWorker>();
 

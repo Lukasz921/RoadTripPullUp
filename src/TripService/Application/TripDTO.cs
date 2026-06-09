@@ -1,6 +1,6 @@
 namespace TripService.Application;
 
-public class TripV1DTO
+public class TripDTO
 {
     public string Id { get; set; } = string.Empty;
     public string DriverId { get; set; } = string.Empty;
@@ -19,7 +19,7 @@ public class TripV1DTO
     public List<LatLngDTO>? RoutePolylinePoints { get; set; }
 }
 
-public class CreateTripV1DTO
+public class CreateTripDTO
 {
     public LatLngDTO Source { get; set; } = new();
     public LatLngDTO Target { get; set; } = new();
@@ -36,7 +36,7 @@ public class AddPassengerDTO
 
 public class PagedTripsDTO
 {
-    public List<TripV1DTO> Items { get; set; } = new();
+    public List<TripDTO> Items { get; set; } = new();
     public int Page { get; set; }
     public int PageSize { get; set; }
     public int TotalCount { get; set; }

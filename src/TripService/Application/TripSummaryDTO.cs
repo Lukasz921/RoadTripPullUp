@@ -1,6 +1,6 @@
 namespace TripService.Application;
 
-public class TripSummaryV1DTO
+public class TripSummaryDTO
 {
     public string Id { get; set; } = string.Empty;
     public string DriverId { get; set; } = string.Empty;

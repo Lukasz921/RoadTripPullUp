@@ -3,9 +3,9 @@ using TripService.Application;
 
 namespace TripService.Infrastructure;
 
-public partial class TripsV1Service
+public partial class TripsService
 {
-    public async Task<TripV1DTO> CreateTripAsync(CreateTripV1DTO dto, string driverId)
+    public async Task<TripDTO> CreateTripAsync(CreateTripDTO dto, string driverId)
     {
         if (dto.DepartureTime.ToUniversalTime() <= DateTime.UtcNow)
             throw new ValidationException("departureTime must be in the future.");
@@ -20,7 +20,7 @@ public partial class TripsV1Service
         return await _repository.InsertAsync(Guid.Parse(driverId), dto, route);
     }
 
-    public async Task<TripV1DTO> GetTripAsync(string tripId)
+    public async Task<TripDTO> GetTripAsync(string tripId)
     {
         if (!Guid.TryParse(tripId, out var id))
             throw new NotFoundException($"Trip '{tripId}' not found.");

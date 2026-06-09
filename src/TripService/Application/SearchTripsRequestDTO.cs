@@ -1,6 +1,6 @@
 namespace TripService.Application;
 
-public class SearchTripsV1RequestDTO
+public class SearchTripsRequestDTO
 {
     public LatLngDTO Source { get; set; } = new();
     public LatLngDTO Target { get; set; } = new();

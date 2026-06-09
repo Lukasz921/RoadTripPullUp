@@ -15,7 +15,7 @@ public class TripRepository : ITripRepository
             ?? throw new InvalidOperationException("TripConnection is not configured.");
     }
 
-    public async Task<TripV1DTO> InsertAsync(Guid driverId, CreateTripV1DTO dto, RouteResult route)
+    public async Task<TripDTO> InsertAsync(Guid driverId, CreateTripDTO dto, RouteResult route)
     {
         const string sql = """
             INSERT INTO trip (
@@ -61,10 +61,10 @@ public class TripRepository : ITripRepository
 
         await using var reader = await cmd.ExecuteReaderAsync();
         await reader.ReadAsync();
-        return TripV1Mapper.MapRow(reader, passengerIds: new());
+        return TripMapper.MapRow(reader, passengerIds: new());
     }
 
-    public async Task<TripV1DTO?> FindByIdAsync(Guid id)
+    public async Task<TripDTO?> FindByIdAsync(Guid id)
     {
         const string sql = """
             SELECT
@@ -97,7 +97,7 @@ public class TripRepository : ITripRepository
 
         await using var reader = await cmd.ExecuteReaderAsync();
         if (!await reader.ReadAsync()) return null;
-        return TripV1Mapper.MapRowDetail(reader);
+        return TripMapper.MapRowDetail(reader);
     }
 
     public async Task<PagedTripsDTO> GetByDriverAsync(Guid driverId, int page, int pageSize)
@@ -134,7 +134,7 @@ public class TripRepository : ITripRepository
         cmd.Parameters.AddWithValue("driverId", driverId);
         cmd.Parameters.AddWithValue("pageSize", pageSize);
         cmd.Parameters.AddWithValue("offset",   (page - 1) * pageSize);
-        return await TripV1Mapper.ReadPagedAsync(cmd, page, pageSize);
+        return await TripMapper.ReadPagedAsync(cmd, page, pageSize);
     }
 
     public async Task<PagedTripsDTO> GetByPassengerAsync(Guid userId, int page, int pageSize)
@@ -172,7 +172,7 @@ public class TripRepository : ITripRepository
         cmd.Parameters.AddWithValue("userId",   userId);
         cmd.Parameters.AddWithValue("pageSize", pageSize);
         cmd.Parameters.AddWithValue("offset",   (page - 1) * pageSize);
-        return await TripV1Mapper.ReadPagedAsync(cmd, page, pageSize);
+        return await TripMapper.ReadPagedAsync(cmd, page, pageSize);
     }
 
     public async Task<Guid?> GetDriverIdAsync(Guid tripId)

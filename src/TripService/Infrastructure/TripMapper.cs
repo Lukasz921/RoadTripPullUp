@@ -3,11 +3,11 @@ using TripService.Application;
 
 namespace TripService.Infrastructure;
 
-internal static class TripV1Mapper
+internal static class TripMapper
 {
     internal static async Task<PagedTripsDTO> ReadPagedAsync(NpgsqlCommand cmd, int page, int pageSize)
     {
-        var items = new List<TripV1DTO>();
+        var items = new List<TripDTO>();
         var totalCount = 0;
 
         await using var reader = await cmd.ExecuteReaderAsync();
@@ -27,12 +27,12 @@ internal static class TripV1Mapper
         };
     }
 
-    internal static TripV1DTO MapRowWithPassengers(NpgsqlDataReader r) =>
+    internal static TripDTO MapRowWithPassengers(NpgsqlDataReader r) =>
         MapRow(r, r.GetFieldValue<Guid[]>(r.GetOrdinal("passenger_ids"))
                   .Select(g => g.ToString())
                   .ToList());
 
-    internal static TripV1DTO MapRowDetail(NpgsqlDataReader r)
+    internal static TripDTO MapRowDetail(NpgsqlDataReader r)
     {
         var dto = MapRowWithPassengers(r);
 
@@ -54,7 +54,7 @@ internal static class TripV1Mapper
         return dto;
     }
 
-    internal static TripV1DTO MapRow(NpgsqlDataReader r, List<string> passengerIds) => new()
+    internal static TripDTO MapRow(NpgsqlDataReader r, List<string> passengerIds) => new()
     {
         Id              = r.GetGuid(r.GetOrdinal("id")).ToString(),
         DriverId        = r.GetGuid(r.GetOrdinal("driver_user_id")).ToString(),

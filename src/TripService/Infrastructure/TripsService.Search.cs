@@ -3,7 +3,7 @@ using TripService.Application;
 
 namespace TripService.Infrastructure;
 
-public partial class TripsV1Service
+public partial class TripsService
 {
     public async Task<PagedTripsDTO> GetMyTripsAsync(string driverId, int page, int pageSize)
     {
@@ -21,7 +21,7 @@ public partial class TripsV1Service
         return await _repository.GetByPassengerAsync(userGuid, page, pageSize);
     }
 
-    public async Task<SearchJobCreatedDTO> SubmitSearchAsync(SearchTripsV1RequestDTO dto, string userId)
+    public async Task<SearchJobCreatedDTO> SubmitSearchAsync(SearchTripsRequestDTO dto, string userId)
     {
         if (!DateOnly.TryParse(dto.DateFrom, out _))
             throw new ValidationException("dateFrom must be in YYYY-MM-DD format.");
