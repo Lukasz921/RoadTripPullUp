@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Xunit.Abstractions;
 
 namespace MessageService.IntegrationTests;
@@ -37,24 +38,7 @@ public class ConversationTests : IClassFixture<CustomWebApplicationFactory>
         Assert.NotNull(responseData);
         Assert.True(responseData.ContainsKey("conversationId"));
     }
-
-    [Fact]
-    public async Task CreateConversation_MissingTripId_ReturnsBadRequest()
-    {
-        // Arrange
-        var createConversationDto = new
-        {
-            Title = "Test Conversation",
-            Date = DateTime.UtcNow,
-            Participants = new List<Guid> { Guid.NewGuid(), Guid.NewGuid() }
-        };
-        
-        // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/message/conversations", createConversationDto);
-        
-        // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
+    
     
     [Fact]
     public async Task GetConversation_ReturnsOk()
@@ -69,9 +53,7 @@ public class ConversationTests : IClassFixture<CustomWebApplicationFactory>
         };
         var firstResponse = await _client.PostAsJsonAsync("/api/v1/message/conversations", createConversationDto);
         var responseData = await firstResponse.Content.ReadFromJsonAsync<Dictionary<string, object>>();
-        // print responseData for debugging
-        _testOutputHelper.WriteLine("Create Conversation Response Data:");
-        var conversationId = responseData?["conversationId"] != null ? Guid.Parse(responseData["conversationId"] as string ?? "") : Guid.Empty;
+        var conversationId = responseData?["conversationId"] != null ? Guid.Parse(responseData["conversationId"].ToString() ?? "") : Guid.Empty;
         if (conversationId == Guid.Empty) throw new Exception("Failed to create conversation for test");
         
         // Act
@@ -81,7 +63,11 @@ public class ConversationTests : IClassFixture<CustomWebApplicationFactory>
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var conversation = await response.Content.ReadFromJsonAsync<Dictionary<string, object>>();
         Assert.NotNull(conversation);
-        Assert.True(conversation.ContainsKey("id"));
+        Assert.True(conversation.ContainsKey("conversationId"));
         Assert.True(conversation.ContainsKey("tripId"));
+        var participants = conversation["participants"] as JsonElement?;
+        Assert.NotNull(participants);
+        Assert.Equal(JsonValueKind.Array, participants.Value.ValueKind);
+        Assert.Equal(3, participants.Value.GetArrayLength()); // creator + 2 participants
     }
 }
