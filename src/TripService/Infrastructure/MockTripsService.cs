@@ -4,12 +4,12 @@ using System.Collections.Concurrent;
 
 namespace TripService.Infrastructure;
 
-public class MockTripsV1Service : ITripsV1Service
+public class MockTripsService : ITripsService
 {
     private static readonly ConcurrentDictionary<string, TripData> _trips = new();
     private static readonly ConcurrentDictionary<string, SearchJob> _jobs = new();
 
-    public Task<TripV1DTO> CreateTripAsync(CreateTripV1DTO dto, string driverId)
+    public Task<TripDTO> CreateTripAsync(CreateTripDTO dto, string driverId)
     {
         if (dto.DepartureTime.ToUniversalTime() <= DateTime.UtcNow)
             throw new ValidationException("departureTime must be in the future.");
@@ -40,7 +40,7 @@ public class MockTripsV1Service : ITripsV1Service
         return Task.FromResult(ToTripDTO(trip));
     }
 
-    public Task<TripV1DTO> GetTripAsync(string tripId)
+    public Task<TripDTO> GetTripAsync(string tripId)
     {
         if (!_trips.TryGetValue(tripId, out var trip))
             throw new NotFoundException($"Trip {tripId} not found.");
@@ -105,7 +105,7 @@ public class MockTripsV1Service : ITripsV1Service
         return Task.CompletedTask;
     }
 
-    public Task<SearchJobCreatedDTO> SubmitSearchAsync(SearchTripsV1RequestDTO dto, string userId)
+    public Task<SearchJobCreatedDTO> SubmitSearchAsync(SearchTripsRequestDTO dto, string userId)
     {
         if (!DateOnly.TryParse(dto.DateFrom, out var dateFrom))
             throw new ValidationException("dateFrom must be in YYYY-MM-DD format.");
@@ -195,7 +195,7 @@ public class MockTripsV1Service : ITripsV1Service
         });
     }
 
-    private static TripV1DTO ToTripDTO(TripData t) => new()
+    private static TripDTO ToTripDTO(TripData t) => new()
     {
         Id = t.Id,
         DriverId = t.DriverId,
@@ -212,7 +212,7 @@ public class MockTripsV1Service : ITripsV1Service
         CreatedAt = t.CreatedAt
     };
 
-    private static TripSummaryV1DTO ToTripSummaryDTO(TripData t, LatLngDTO passengerSource) => new()
+    private static TripSummaryDTO ToTripSummaryDTO(TripData t, LatLngDTO passengerSource) => new()
     {
         Id = t.Id,
         DriverId = t.DriverId,
@@ -262,7 +262,7 @@ public class MockTripsV1Service : ITripsV1Service
         public string JobId { get; set; } = string.Empty;
         public string UserId { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
-        public List<TripSummaryV1DTO> Items { get; set; } = new();
+        public List<TripSummaryDTO> Items { get; set; } = new();
         public int Page { get; set; }
         public int PageSize { get; set; }
         public int TotalCount { get; set; }

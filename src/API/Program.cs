@@ -7,9 +7,11 @@ using Application.Messages;
 using TripService.Api;
 using TripService.Application;
 using TripService.Infrastructure;
+using TripService.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using API;
 using API.Middleware;
 using StackExchange.Redis;
 using MessageService.API; // add extension methods from MessageService project
@@ -40,7 +42,7 @@ builder.Services.AddOpenApi(options =>
 });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddControllers()
-    .AddApplicationPart(typeof(TripV1Controller).Assembly)
+    .AddApplicationPart(typeof(TripController).Assembly)
     .AddApplicationPart(typeof(UsersModule).Assembly);
 
 builder.Services.AddCors(options =>
@@ -90,8 +92,9 @@ if (builder.Environment.IsDevelopment())
     builder.Services.AddScoped<IRoutingEngine, MockRoutingEngine>();
 else
     builder.Services.AddScoped<IRoutingEngine, ValhallaRoutingEngine>();
-builder.Services.AddScoped<IUserChecker, UserChecker>();
-builder.Services.AddScoped<ITripsV1Service, TripsV1Service>();
+builder.Services.AddScoped<ITripRepository, TripRepository>();
+builder.Services.AddScoped<IUserChecker, UserCheckerAdapter>();
+builder.Services.AddScoped<ITripsService, TripsService>();
 builder.Services.AddScoped<ITripsSearchService, TripsSearchService>();
 builder.Services.AddHostedService<SearchWorker>();
 

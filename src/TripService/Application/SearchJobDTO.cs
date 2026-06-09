@@ -27,7 +27,7 @@ public class SearchJobResultDTO
     public string JobId { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
     public DateTime? CompletedAt { get; set; }
-    public List<TripSummaryV1DTO>? Items { get; set; }
+    public List<TripSummaryDTO>? Items { get; set; }
     public int Page { get; set; }
     public int PageSize { get; set; }
     public int TotalCount { get; set; }
@@ -64,7 +64,7 @@ public class SearchTripsQueryDTO
 
 public class SyncSearchResultDTO
 {
-    public List<TripSummaryV1DTO> Items { get; set; } = new();
+    public List<TripSummaryDTO> Items { get; set; } = new();
     public int Page { get; set; }
     public int PageSize { get; set; }
     public int TotalCount { get; set; }
