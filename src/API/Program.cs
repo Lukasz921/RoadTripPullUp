@@ -7,6 +7,7 @@ using Application.Messages;
 using TripService.Api;
 using TripService.Application;
 using TripService.Infrastructure;
+using TripService.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -90,6 +91,7 @@ if (builder.Environment.IsDevelopment())
     builder.Services.AddScoped<IRoutingEngine, MockRoutingEngine>();
 else
     builder.Services.AddScoped<IRoutingEngine, ValhallaRoutingEngine>();
+builder.Services.AddScoped<ITripRepository, TripRepository>();
 builder.Services.AddScoped<IUserChecker, UserChecker>();
 builder.Services.AddScoped<ITripsV1Service, TripsV1Service>();
 builder.Services.AddScoped<ITripsSearchService, TripsSearchService>();
