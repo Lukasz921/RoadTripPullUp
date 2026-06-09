@@ -11,7 +11,7 @@ Opis: tworzy nową konwersację.
 Request (body):
 ```json
 {
-  "Type": "Direct | Group",
+  "Type": "direct | group",
   "TripId": "<guid>"
   "Title": "string?",
   "Date": "2026-05-24T12:00:00Z?",
@@ -42,7 +42,7 @@ Response (200 OK) — body: lista obiektów `ConversationDto`:
 [
   {
     "ConversationId": "<guid>",
-    "Type": "Direct | Group",
+    "Type": "direct | group",
     "TripId": "<guid>",
     "Name": "string?",
     "Date": "2026-05-24T12:00:00Z?",
@@ -65,7 +65,7 @@ Response (200 OK) — body: `ConversationDto`:
 ```json
 {
   "ConversationId": "<guid>",
-  "Type": "Direct | Group",
+  "Type": "direct | group",
   "Name": "string?",
   "Date": "2026-05-24T12:00:00Z?",
   "Participants": ["<guid>", ...],
@@ -99,7 +99,7 @@ Request (body):
 ```json
 {
   "ConversationId": "<guid>",
-  "Type": "Text | PriceOffer | PriceAccept | OfferApproval | Location",
+  "Type": "text | priceOffer | priceAccept | offerApproval | location",
   "Payload": { /* dowolny JSON, np. {"text":"..."} */ }
 }
 ```
@@ -128,7 +128,7 @@ Response (200 OK) — body: lista obiektów `MessageDto`:
     "MessageId": "<guid>",
     "ConversationId": "<guid>",
     "SenderId": "<guid>",
-    "Type": "Text | PriceOffer | PriceAccept | OfferApproval | Location",
+    "Type": "text | priceOffer | priceAccept | offerApproval | location",
     "Payload": { /* JSON */ },
     "CreatedAt": "2026-05-24T12:01:00Z"
   },
@@ -149,7 +149,7 @@ Response (200 OK) — body: `MessageDto`:
   "MessageId": "<guid>",
   "ConversationId": "<guid>",
   "SenderId": "<guid>",
-  "Type": "Text | PriceOffer | PriceAccept | OfferApproval | Location",
+  "Type": "text | priceOffer | priceAccept | offerApproval | location",
   "Payload": { /* JSON */ },
   "CreatedAt": "2026-05-24T12:01:00Z"
 }
