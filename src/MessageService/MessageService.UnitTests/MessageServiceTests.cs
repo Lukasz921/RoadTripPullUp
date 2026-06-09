@@ -25,7 +25,7 @@ public class MessageServiceTests
         var conv = new Conversation
         {
             Id = conversationId,
-            Type = ConversationType.Direct,
+            Type = "direct",
             Members = [new ConversationMember { ConversationId = conversationId, UserId = senderId }]
         };
 
@@ -41,7 +41,7 @@ public class MessageServiceTests
         var dto = new CreateMessageDto
         {
             ConversationId = conversationId,
-            Type = MessageType.Text,
+            Type = "text",
             Payload = new JsonObject { ["text"] = "hello" }
         };
 
@@ -50,7 +50,7 @@ public class MessageServiceTests
 
         // Assert
         id.Should().NotBe(Guid.Empty);
-        messageRepo.Verify(r => r.CreateAsync(It.Is<Message>(m => m.ConversationId == conversationId && m.SenderId == senderId && m.Type == MessageType.Text)), Times.Once);
+        messageRepo.Verify(r => r.CreateAsync(It.Is<Message>(m => m.ConversationId == conversationId && m.SenderId == senderId && m.Type == "text")), Times.Once);
         notifier.Verify(n => n.PublishMessageCreatedAsync(It.IsAny<Message>()), Times.Once);
     }
 

@@ -32,7 +32,7 @@ public class ConversationServiceTests
         var conv = new Conversation
         {
             Id = Guid.NewGuid(),
-            Type = ConversationType.Direct,
+            Type = "direct",
             Title = "",
             Members = [new ConversationMember { UserId = userId }]
         };

@@ -8,11 +8,11 @@ public static class MessagePreview
     {
         return msg.Type switch
         {
-            MessageType.Text => msg.Payload?["text"]?.ToString() ?? string.Empty,
-            MessageType.Location => "[Location]",
-            MessageType.PriceOffer => "[Price Offer]",
-            MessageType.PriceAccept => "[Price Accept]",
-            MessageType.OfferApproval => "[Offer Approval]",
+            "text" => msg.Payload?["text"]?.ToString() ?? string.Empty,
+            "location" => "[Location]",
+            "priceOffer" => "[Price Offer]",
+            "priceAccept" => "[Price Accept]",
+            "offerApproval" => "[Offer Approval]",
             _ => string.Empty
         };
     }
