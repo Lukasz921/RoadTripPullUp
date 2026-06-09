@@ -1,3 +1,4 @@
+using Application.Exceptions;
 using FluentAssertions;
 using MessageService.Application.DTOs;
 using MessageService.Application.Services;
@@ -16,7 +17,7 @@ public class ConversationServiceTests
         var clock = new Mock<IClockService>();
         var svc = new ConversationService(convRepo.Object, clock.Object);
 
-        await Assert.ThrowsAsync<ArgumentException>(async () =>
+        await Assert.ThrowsAsync<InvalidParametersException>(async () =>
         {
             await svc.CreateConversationAsync(new CreateConversationDto { Participants = [] }, Guid.NewGuid());
         });
