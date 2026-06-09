@@ -100,7 +100,6 @@ namespace MessageService.API
             // DI for repositories and services
             services.AddScoped<IConversationRepository, ConversationRepository>();
             services.AddScoped<IMessageRepository, MessageRepository>();
-            services.AddScoped<IUserRepository, UserRepository>();
 
             services.AddScoped<IMessageService, MessageService.Application.Services.MessageService>();
             services.AddScoped<IConversationService, ConversationService>();

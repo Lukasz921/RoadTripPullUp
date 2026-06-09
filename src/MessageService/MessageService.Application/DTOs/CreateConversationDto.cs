@@ -1,5 +1,3 @@
-using MessageService.Core.Models;
-
 namespace MessageService.Application.DTOs;
 
 public class CreateConversationDto

@@ -7,7 +7,6 @@ public class MessagesDbContext : DbContext
 {
     public MessagesDbContext(DbContextOptions<MessagesDbContext> options) : base(options) { }
 
-    public DbSet<User> Users => Set<User>();
     public DbSet<Conversation> Conversations => Set<Conversation>();
     public DbSet<ConversationMember> ConversationMembers => Set<ConversationMember>();
     public DbSet<Message> Messages => Set<Message>();
@@ -18,16 +17,6 @@ public class MessagesDbContext : DbContext
         base.OnModelCreating(modelBuilder);
 
         modelBuilder.HasPostgresExtension("uuid-ossp");
-
-        modelBuilder.Entity<User>(b =>
-        {
-            b.ToTable("users");
-            b.HasKey(u => u.Id);
-            b.Property(u => u.Id).HasColumnName("id").HasDefaultValueSql("gen_random_uuid()");
-            b.Property(u => u.DisplayName).HasColumnName("display_name");
-            b.Property(u => u.Username).HasColumnName("username");
-            b.Property(u => u.CreatedAt).HasColumnName("created_at");
-        });
 
         modelBuilder.Entity<Conversation>(b =>
         {
@@ -48,7 +37,6 @@ public class MessagesDbContext : DbContext
             b.Property(cm => cm.UserId).HasColumnName("user_id");
             b.Property(cm => cm.Role).HasColumnName("role");
             b.HasOne(cm => cm.Conversation).WithMany(c => c.Members).HasForeignKey(cm => cm.ConversationId);
-            b.HasOne(cm => cm.User).WithMany().HasForeignKey(cm => cm.UserId);
         });
 
         modelBuilder.Entity<Message>(b =>

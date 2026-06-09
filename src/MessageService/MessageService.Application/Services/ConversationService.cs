@@ -1,3 +1,4 @@
+using Application.Exceptions;
 using MessageService.Application.DTOs;
 using MessageService.Application.DTOs.Mappers;
 using MessageService.Core.Models;
@@ -8,13 +9,11 @@ namespace MessageService.Application.Services;
 public class ConversationService : IConversationService
 {
     private readonly IConversationRepository _conversations;
-    private readonly IUserRepository _users;
     private readonly IClockService _clockService;
 
-    public ConversationService(IConversationRepository conversations, IUserRepository users, IClockService clockService)
+    public ConversationService(IConversationRepository conversations, IClockService clockService)
     {
         _conversations = conversations;
-        _users = users;
         _clockService = clockService;
     }
 
@@ -22,7 +21,7 @@ public class ConversationService : IConversationService
     {
         // basic validation
         if (dto.Participants == null || dto.Participants.Count == 0)
-            throw new ArgumentException("participants required");
+            throw new InvalidParametersException("participants required");
         
         var conv = new ConversationFromDtoBuilder(dto, _clockService)
             .WithMembers(dto.Participants)

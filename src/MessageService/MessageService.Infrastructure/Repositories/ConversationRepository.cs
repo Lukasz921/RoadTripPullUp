@@ -24,7 +24,6 @@ public class ConversationRepository : IConversationRepository
     {
         return await _db.Conversations
             .Include(c => c.Members)
-            .ThenInclude(cm => cm.User)
             .FirstOrDefaultAsync(c => c.Id == id);
     }
 
@@ -53,7 +52,6 @@ public class ConversationRepository : IConversationRepository
         var convs = await _db.Conversations
             .Where(c => convIds.Contains(c.Id))
             .Include(c => c.Members)
-                .ThenInclude(cm => cm.User)
             .OrderByDescending(c => c.CreatedAt)
             .Skip(skip)
             .Take(take)
@@ -77,7 +75,6 @@ public class ConversationRepository : IConversationRepository
     {
         return await _db.Conversations
             .Include(c => c.Members)
-                .ThenInclude(cm => cm.User)
             .FirstOrDefaultAsync(c => c.TripId == tripId && c.Type == ConversationType.Group);
     }
 
@@ -91,7 +88,6 @@ public class ConversationRepository : IConversationRepository
         return await _db.Conversations
             .Where(c => convIds.Contains(c.Id) && c.TripId == tripId && c.Type == ConversationType.Direct)
             .Include(c => c.Members)
-                .ThenInclude(cm => cm.User)
             .ToListAsync();
     }
 
