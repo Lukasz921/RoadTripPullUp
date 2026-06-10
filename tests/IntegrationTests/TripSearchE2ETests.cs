@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Npgsql;
 using TripService.Application;
 using TripService.Infrastructure;
+using TripService.Infrastructure.Repositories;
 
 namespace IntegrationTests;
 
@@ -31,7 +32,7 @@ public class TripSearchE2ETests : IAsyncDisposable
 
         // Create trip Warsaw → Kraków via real Valhalla
         var tripService = BuildTripService(routing);
-        var trip = await tripService.CreateTripAsync(new CreateTripV1DTO
+        var trip = await tripService.CreateTripAsync(new CreateTripDTO
         {
             Source          = new LatLngDTO { Lat = 52.2297, Lng = 21.0122 },
             Target          = new LatLngDTO { Lat = 50.0647, Lng = 19.9450 },
@@ -77,7 +78,7 @@ public class TripSearchE2ETests : IAsyncDisposable
         var tripSvc    = BuildTripService(routing);
         var searchSvc  = BuildSearchService(routing);
 
-        var trip = await tripSvc.CreateTripAsync(new CreateTripV1DTO
+        var trip = await tripSvc.CreateTripAsync(new CreateTripDTO
         {
             Source          = new LatLngDTO { Lat = 52.2297, Lng = 21.0122 }, // Warsaw
             Target          = new LatLngDTO { Lat = 50.0647, Lng = 19.9450 }, // Kraków
@@ -120,7 +121,7 @@ public class TripSearchE2ETests : IAsyncDisposable
         var service = BuildSearchService(routing);
 
         var tripService = BuildTripService(routing);
-        var trip = await tripService.CreateTripAsync(new CreateTripV1DTO
+        var trip = await tripService.CreateTripAsync(new CreateTripDTO
         {
             Source          = new LatLngDTO { Lat = 52.2297, Lng = 21.0122 },
             Target          = new LatLngDTO { Lat = 50.0647, Lng = 19.9450 },
@@ -211,11 +212,11 @@ public class TripSearchE2ETests : IAsyncDisposable
         return new TripsSearchService(config, routing);
     }
 
-    private static TripsV1Service BuildTripService(IRoutingEngine routing)
+    private static TripsService BuildTripService(IRoutingEngine routing)
     {
         var config = BuildConfig();
-        // IJobStore not used by CreateTripAsync — pass a no-op stub
-        return new TripsV1Service(config, routing, new NoOpJobStore(), new NoOpUserChecker());
+        var repository = new TripRepository(config);
+        return new TripsService(repository, routing, new NoOpJobStore(), new NoOpUserChecker());
     }
 
     private static IConfiguration BuildConfig() =>
