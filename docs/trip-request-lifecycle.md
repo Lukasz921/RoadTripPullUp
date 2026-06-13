@@ -1,16 +1,30 @@
-## Trip request lifecycle
+## Passenger flow
+
+The driver adds a passenger directly to a trip — there is no separate request/accept flow.
 
 ```mermaid
-stateDiagram-v2
-    [*] --> Pending : create request
-    Pending --> Rejected : driver rejects
-    Pending --> Cancelled : passenger cancels
-    Rejected  --> [*] : when tip is achied
-    Cancelled --> [*] : when tip is achied
+sequenceDiagram
+    participant Driver
+    participant API
+    participant Passenger
+
+    Driver->>API: POST /api/v1/trips/{tripId}/passengers
+    Note right of API: Validations:<br/>- trip exists and is ACTIVE<br/>- passenger is a different user than the driver<br/>- passenger is not already on the trip<br/>- a seat is available<br/>- passenger exists in the system
+    API-->>Driver: 204 No Content
+    Note over Driver,Passenger: Passenger is added to the trip<br/>and to the trip group chat
 ```
 
+### Endpoint
 
-# Notes
-When an offer is created, the system needs to check whether there is already an existing record in the database. If the offer is pending or rejected, it should not be possible to create another request.
+`POST /api/v1/trips/{tripId}/passengers`
 
-When a trip is archived, the request should be deleted.
+Body:
+```json
+{ "passengerId": "<uuid>" }
+```
+
+Responses:
+- `204` — added successfully
+- `400` — no seats available / passenger already on trip / invalid UUID
+- `403` — caller is not the driver of this trip
+- `404` — trip not found
