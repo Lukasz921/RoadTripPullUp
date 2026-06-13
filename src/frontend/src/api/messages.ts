@@ -30,15 +30,15 @@ export interface ConversationListParams {
 }
 
 export const createConversation = async (dto: CreateConversationDTO): Promise<{ conversationId: string }> => {
-  // const response = await messageApi.post('/conversations', { ...dto, type: 'direct' });
-  // return response.data;
+   const response = await messageApi.post('/conversations', { ...dto, type: 'direct' });
+   return response.data;
   void dto; // TODO: remove mock
   return { conversationId: 'mock-direct-1' };
 };
 
 export const getConversations = async (params?: ConversationListParams): Promise<ConversationDTO[]> => {
-  // const response = await messageApi.get('/conversations', { params });
-  // return response.data;
+  const response = await messageApi.get('/conversations', { params });
+  return response.data;
   void params; // TODO: remove mock
   return [
     {
@@ -75,8 +75,8 @@ export const getConversations = async (params?: ConversationListParams): Promise
 };
 
 export const getConversation = async (conversationId: string): Promise<ConversationDTO> => {
-  // const response = await messageApi.get(`/conversations/${conversationId}`);
-  // return response.data;
+  const response = await messageApi.get(`/conversations/${conversationId}`);
+  return response.data;
   void conversationId; // TODO: remove mock
   return {
     conversationId: conversationId,
@@ -97,8 +97,8 @@ export const getGroupConversationByTrip = async (tripId: string): Promise<Conver
 };
 
 export const getDirectConversationsByTrip = async (tripId: string): Promise<ConversationDTO[]> => {
-  // const response = await messageApi.get(`/conversations/byTripId/direct/${tripId}`);
-  // return response.data;
+   const response = await messageApi.get(`/conversations/byTripId/direct/${tripId}`);
+   return response.data;
   void tripId; // TODO: remove mock
   return [
     {
