@@ -1,5 +1,6 @@
 using Users.Application.DTOs;
 using Users.Application.Interfaces;
+using Users.Application.Exceptions;
 using Users.Core;
 
 namespace Users.Application.Services;
@@ -20,7 +21,7 @@ public class UserService : IUserService
         var user = await _userRepository.FindById(id);
         if (user == null)
         {
-            throw new Exception("User not found.");
+            throw new NotFoundException("User not found.");
         }
 
         return new UserResponseDTO
@@ -45,7 +46,7 @@ public class UserService : IUserService
         var user = await _userRepository.FindById(id);
         if (user == null)
         {
-            throw new Exception("User not found.");
+            throw new NotFoundException("User not found.");
         }
 
         if (user.IsBanned && (user.BannedUntil == null || user.BannedUntil > DateTime.UtcNow))
@@ -56,7 +57,7 @@ public class UserService : IUserService
         if (dto.Name != null) user.Name = dto.Name;
         if (dto.Surname != null) user.Surname = dto.Surname;
         if (dto.PhoneNumber != null) user.PhoneNumber = dto.PhoneNumber;
-        if (dto.DateOfBirth != null) user.DateOfBirth = dto.DateOfBirth.Value;
+        if (dto.DateOfBirth != null) user.DateOfBirth = DateTime.SpecifyKind(dto.DateOfBirth.Value, DateTimeKind.Utc);
         if (dto.Sex != null)
         {
             if (Enum.TryParse<Sex>(dto.Sex, true, out var sex))
@@ -88,7 +89,7 @@ public class UserService : IUserService
         var user = await _userRepository.FindById(dto.UserId);
         if (user == null)
         {
-            throw new Exception("User not found.");
+            throw new NotFoundException("User not found.");
         }
 
         var rating = new Rating
@@ -168,11 +169,11 @@ public class UserService : IUserService
     public async Task Ban(Guid userId, BanUserDTO dto)
     {
         var user = await _userRepository.FindById(userId);
-        if (user == null) throw new Exception("User not found.");
+        if (user == null) throw new NotFoundException("User not found.");
 
         user.IsBanned = true;
         user.BanReason = dto.Reason;
-        user.BannedUntil = dto.Until;
+        user.BannedUntil = dto.Until.HasValue ? DateTime.SpecifyKind(dto.Until.Value, DateTimeKind.Utc) : null;
 
         await _userRepository.Save(user);
     }
@@ -180,7 +181,7 @@ public class UserService : IUserService
     public async Task Unban(Guid userId)
     {
         var user = await _userRepository.FindById(userId);
-        if (user == null) throw new Exception("User not found.");
+        if (user == null) throw new NotFoundException("User not found.");
 
         user.IsBanned = false;
         user.BanReason = null;
@@ -192,7 +193,7 @@ public class UserService : IUserService
     public async Task ChangeRole(Guid userId, UserRole newRole)
     {
         var user = await _userRepository.FindById(userId);
-        if (user == null) throw new Exception("User not found.");
+        if (user == null) throw new NotFoundException("User not found.");
 
         user.Role = newRole;
         await _userRepository.Save(user);
@@ -203,7 +204,7 @@ public class UserService : IUserService
         var user = await _userRepository.FindById(id);
         if (user == null)
         {
-            throw new Exception("User not found.");
+            throw new NotFoundException("User not found.");
         }
 
         var isBanned = user.IsBanned && (user.BannedUntil == null || user.BannedUntil > DateTime.UtcNow);

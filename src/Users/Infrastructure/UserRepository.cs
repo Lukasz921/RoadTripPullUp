@@ -15,16 +15,22 @@ public class UserRepository : IUserRepository
 
     public async Task Save(User user)
     {
-        var exists = await _context.Users.AnyAsync(u => u.Id == user.Id);
-
-        if (!exists)
+        var trackedEntity = _context.Users.Local.FirstOrDefault(u => u.Id == user.Id);
+        
+        if (trackedEntity == null)
         {
-            _context.Users.Add(user);
+            var exists = await _context.Users.AnyAsync(u => u.Id == user.Id);
+            if (!exists)
+            {
+                _context.Users.Add(user);
+            }
+            else
+            {
+                _context.Users.Update(user);
+            }
         }
-        else
-        {
-            _context.Users.Update(user);
-        }
+        // If it is already tracked, EF Core will detect changes automatically 
+        // when SaveChangesAsync is called, so we don't need to do anything.
 
         await _context.SaveChangesAsync();
     }
