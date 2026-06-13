@@ -16,4 +16,9 @@ public class IntegrationTestCommon
     {
         return await Task.FromResult(Guid.NewGuid());
     }
+
+    private async Task<Guid> CreateConversationNMembers(int n)
+    {
+        return await Task.FromResult(Guid.NewGuid());
+    }
 }
