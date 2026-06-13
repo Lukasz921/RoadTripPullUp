@@ -4,6 +4,7 @@ import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import TripRouteMap from '../components/TripRouteMap';
 import { getTripById, type TripDTO } from '../api/trips';
+import { getUserById } from '../api/user';
 import { reverseGeocode } from '../api/reverseGeocode';
 import { useCurrentUser } from '../hooks/useCurrentUser';
 import type { Place } from '../utils/geoapify';
@@ -27,6 +28,7 @@ export default function TripDetailsPage() {
   const [error, setError] = useState('');
   const [origin, setOrigin] = useState<Place | null>(null);
   const [destination, setDestination] = useState<Place | null>(null);
+  const [nameById, setNameById] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!id) return;
@@ -43,6 +45,26 @@ export default function TripDetailsPage() {
       .catch(() => setError('Failed to load trip details.'))
       .finally(() => setLoading(false));
   }, [id]);
+
+  // Resolve driver + passenger ids to "Name Surname".
+  useEffect(() => {
+    if (!trip) return;
+    let cancelled = false;
+    const ids = [trip.driverId, ...trip.passengerIds];
+    Promise.all(
+      ids.map(async (uid) => {
+        const u = await getUserById(uid);
+        return [uid, `${u.name} ${u.surname}`] as const;
+      }),
+    )
+      .then((entries) => {
+        if (!cancelled) setNameById(Object.fromEntries(entries));
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [trip]);
 
   return (
     <main className="flex min-h-screen flex-col bg-[#f3faee] text-[#12351f]">
@@ -91,6 +113,41 @@ export default function TripDetailsPage() {
                 </button>
               </div>
             )}
+
+            <section className="rounded-2xl bg-white p-6 shadow-sm">
+              <h2 className="mb-4 text-lg font-semibold text-[#12351f]">People</h2>
+
+              <p className="text-xs text-[#5d7056]">Driver</p>
+              <button
+                type="button"
+                onClick={() => {
+                  /* TODO: clickable target not defined yet */
+                }}
+                className="text-left text-sm font-semibold text-[#12351f] hover:underline"
+              >
+                {nameById[trip.driverId] ?? '…'}
+              </button>
+
+              <p className="mt-4 text-xs text-[#5d7056]">Passengers</p>
+              {trip.passengerIds.length === 0 ? (
+                <p className="text-sm text-[#5d7056]">No passengers yet.</p>
+              ) : (
+                <div className="flex flex-col items-start gap-1">
+                  {trip.passengerIds.map((pid) => (
+                    <button
+                      key={pid}
+                      type="button"
+                      onClick={() => {
+                        /* TODO: clickable target not defined yet */
+                      }}
+                      className="text-left text-sm font-semibold text-[#12351f] hover:underline"
+                    >
+                      {nameById[pid] ?? '…'}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </section>
 
             <section className="rounded-2xl bg-white p-4 shadow-sm" style={{ height: '420px' }}>
               <h2 className="mb-3 text-lg font-semibold text-[#12351f]">Route</h2>
