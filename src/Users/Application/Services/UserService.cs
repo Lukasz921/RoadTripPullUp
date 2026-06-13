@@ -189,6 +189,15 @@ public class UserService : IUserService
         await _userRepository.Save(user);
     }
 
+    public async Task ChangeRole(Guid userId, UserRole newRole)
+    {
+        var user = await _userRepository.FindById(userId);
+        if (user == null) throw new Exception("User not found.");
+
+        user.Role = newRole;
+        await _userRepository.Save(user);
+    }
+
     public async Task<UserIntegrationDTO> GetUserIntegrationData(Guid id)
     {
         var user = await _userRepository.FindById(id);

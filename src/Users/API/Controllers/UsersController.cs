@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using Users.Application.DTOs;
 using Users.Application.Interfaces;
+using Users.Core;
 
 namespace Users.API.Controllers;
 
@@ -110,6 +111,14 @@ public class UsersController : ControllerBase
     public async Task<IActionResult> Unban(Guid id)
     {
         await _userService.Unban(id);
+        return Ok();
+    }
+
+    [HttpPost("{id}/role")]
+    [Authorize(Roles = "ADMIN")]
+    public async Task<IActionResult> ChangeRole(Guid id, [FromBody] UserRole role)
+    {
+        await _userService.ChangeRole(id, role);
         return Ok();
     }
 }

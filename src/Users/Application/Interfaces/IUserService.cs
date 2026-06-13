@@ -1,4 +1,5 @@
 using Users.Application.DTOs;
+using Users.Core;
 
 namespace Users.Application.Interfaces;
 
@@ -12,5 +13,6 @@ public interface IUserService
     Task DeleteRating(Guid ratingId, Guid currentUserId);
     Task Ban(Guid userId, BanUserDTO dto);
     Task Unban(Guid userId);
+    Task ChangeRole(Guid userId, UserRole newRole);
     Task<UserIntegrationDTO> GetUserIntegrationData(Guid id);
 }
