@@ -11,6 +11,10 @@ export default function JoinedRidesPage() {
       fetchTrips={getJoinedTrips}
       emptyMessage="You haven't joined any rides yet."
       headerButton={{ label: 'Search rides', onClick: () => navigate('/search') }}
+      cardAction={(trip) => ({
+        label: 'Chats',
+        onClick: () => navigate(`/trip/${trip.id}/chats`, { state: { showAddToTrip: true } }),
+      })}
     />
   );
 }

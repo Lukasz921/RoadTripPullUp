@@ -10,9 +10,9 @@ export default function HistoricRidesPage() {
       title="Ride history"
       fetchTrips={getTripHistory}
       emptyMessage="You have no past rides yet."
-      cardAction={(trip) => ({
-        label: 'Details',
-        onClick: () => navigate(`/trip/${trip.id}`),
+    cardAction={(trip) => ({
+        label: 'Chats',
+        onClick: () => navigate(`/trip/${trip.id}/chats`, { state: { showAddToTrip: true } }),
       })}
     />
   );
