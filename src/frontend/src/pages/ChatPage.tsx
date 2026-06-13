@@ -40,7 +40,7 @@ export default function ChatPage() {
         {conversation && (
           <div className="mb-6 rounded-2xl bg-white p-6 shadow-sm">
             <h1 className="text-2xl font-bold">
-              {conversation.name ?? (conversation.type === 'Group' ? 'Group chat' : 'Direct chat')}
+              {conversation.name ?? (conversation.type === 'group' ? 'Group chat' : 'Direct chat')}
             </h1>
             <p className="mt-1 text-sm text-[#5d7056]">
               {conversation.participants.length} participant{conversation.participants.length !== 1 ? 's' : ''}
