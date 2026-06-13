@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { getMessages, sendMessage, type ConversationDTO, type MessageDTO } from '../api/messages';
+import { getMessages, sendMessage, type ConversationDTO, type MessageDTO } from '../../api/messages';
 import {
   createChatConnection,
   eventToMessage,
@@ -8,9 +8,9 @@ import {
   leaveConversation,
   sendMessageOverHub,
   type MessageCreatedEvent,
-} from '../api/chatHub';
+} from '../../api/chatHub';
 import type { HubConnection } from '@microsoft/signalr';
-import { formatDate } from '../utils/format';
+import { formatDate } from '../../utils/format';
 
 interface ChatProps {
   conversation: ConversationDTO;

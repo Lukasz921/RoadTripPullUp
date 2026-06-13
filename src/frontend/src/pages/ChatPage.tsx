@@ -7,7 +7,7 @@ import { addToTrip, getTripById, type TripDTO } from '../api/trips';
 import { getUserById } from '../api/user';
 import { reverseGeocode } from '../api/reverseGeocode';
 import { useCurrentUser } from '../hooks/useCurrentUser';
-import Chat from '../components/Chat';
+import Chat from './chat/Chat';
 
 export default function ChatPage() {
   const { id: conversationId } = useParams<{ id: string }>();
@@ -78,12 +78,15 @@ export default function ChatPage() {
 
   const isGroup = conversation?.type?.toLowerCase() === 'group';
   const isDriver = !!trip && !!user && trip.driverId === user.id;
-  const showAddToTrip = isDriver && !isGroup;
+  // The participant who would be added (the other person in a direct chat).
+  const passengerId = conversation && user
+    ? conversation.participants.find((id) => id !== user.id)
+    : undefined;
+  const alreadyPassenger = !!trip && !!passengerId && trip.passengerIds.includes(passengerId);
+  const showAddToTrip = isDriver && !isGroup && !alreadyPassenger;
 
   async function addToTripHandler() {
-    if (!conversation || !user) return;
-    const passengerId = conversation.participants.find((id) => id !== user.id);
-    if (!passengerId) return;
+    if (!conversation || !passengerId) return;
     setJoining(true);
     setJoinError('');
     try {
@@ -103,7 +106,7 @@ export default function ChatPage() {
           <div className="mb-6 flex items-start justify-between gap-4 rounded-2xl bg-white p-6 shadow-sm">
             <div>
               <h1 className="text-2xl font-bold">
-                {otherNames.length > 0 ? otherNames.join(', ') : 'Chat'}
+                {isGroup ? 'Group chat' : otherNames.length > 0 ? otherNames.join(', ') : 'Chat'}
               </h1>
               {trip && (
                 <p className="mt-1 text-sm text-[#5d7056]">
