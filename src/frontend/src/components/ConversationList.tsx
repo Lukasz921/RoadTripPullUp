@@ -26,7 +26,7 @@ export default function ConversationList({ conversations, loading, error, chatSt
             <ConversationSummaryCard
               key={conv.conversationId}
               conversation={conv}
-              isGroup={conv.type === 'Group'}
+              isGroup={conv.type === "group"}
               navigationState={chatState}
             />
           ))}

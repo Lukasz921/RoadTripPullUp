@@ -10,7 +10,7 @@ interface ConversationSummaryCardProps {
 
 export default function ConversationSummaryCard({ conversation, isGroup, navigationState }: ConversationSummaryCardProps) {
   const navigate = useNavigate();
-  const title = conversation.name ?? (isGroup ? 'Group chat' : 'Direct chat');
+  const title = isGroup ? 'Group chat' : 'Private chat';
 
   return (
     <div
