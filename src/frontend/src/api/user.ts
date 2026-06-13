@@ -44,18 +44,6 @@ export interface UpdateUserDTO {
   sex?: Sex;
 }
 
-export interface TripIntegrationData {
-  isAdult: boolean;
-  canCreateTrip: boolean;
-}
-
-export interface UserIntegrationDTO {
-  id: string;
-  fullName: string;
-  email: string;
-  trip: TripIntegrationData;
-}
-
 export interface RatingResponseDTO {
   id: string;
   raterId: string;
@@ -98,11 +86,6 @@ export const getCurrentUser = async (): Promise<CurrentUser> => {
 
 export const updateCurrentUser = async (dto: UpdateUserDTO): Promise<void> => {
   await authApi.patch('/users/me', dto);
-};
-
-export const getIntegrationData = async (): Promise<UserIntegrationDTO> => {
-  const response = await authApi.get<UserIntegrationDTO>('/users/me/integration-data');
-  return response.data;
 };
 
 // --- Ratings ---
