@@ -11,4 +11,7 @@ public class UserResponseDTO
     public string Sex { get; init; } = string.Empty;
     public double AvgRating { get; init; }
     public int RatingsCount { get; init; }
-    }
+    public bool IsBanned { get; init; }
+    public string? BanReason { get; init; }
+    public DateTime? BannedUntil { get; init; }
+}

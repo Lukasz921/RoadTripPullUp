@@ -10,5 +10,7 @@ public interface IUserService
     Task<RatingResponseDTO> GetRating(Guid ratingId);
     Task<List<RatingResponseDTO>> GetUserRatings(Guid userId);
     Task DeleteRating(Guid ratingId, Guid currentUserId);
+    Task Ban(Guid userId, BanUserDTO dto);
+    Task Unban(Guid userId);
     Task<UserIntegrationDTO> GetUserIntegrationData(Guid id);
 }

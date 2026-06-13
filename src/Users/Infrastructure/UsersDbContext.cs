@@ -28,6 +28,9 @@ public class UsersDbContext : DbContext
             entity.Property(u => u.DateOfBirth).IsRequired();
             entity.Property(u => u.AvgRating).HasDefaultValue(0);
             entity.Property(u => u.RatingsCount).HasDefaultValue(0);
+            entity.Property(u => u.IsBanned).HasDefaultValue(false);
+            entity.Property(u => u.BanReason).HasMaxLength(500);
+            entity.Property(u => u.BannedUntil).IsRequired(false);
         });
 
         modelBuilder.Entity<Rating>(entity =>

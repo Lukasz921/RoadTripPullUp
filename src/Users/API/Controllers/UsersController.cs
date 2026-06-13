@@ -96,4 +96,20 @@ public class UsersController : ControllerBase
         await _userService.DeleteRating(ratingId, userId);
         return NoContent();
     }
+
+    [HttpPost("{id}/ban")]
+    [Authorize(Roles = "ADMIN")]
+    public async Task<IActionResult> Ban(Guid id, [FromBody] BanUserDTO dto)
+    {
+        await _userService.Ban(id, dto);
+        return Ok();
+    }
+
+    [HttpPost("{id}/unban")]
+    [Authorize(Roles = "ADMIN")]
+    public async Task<IActionResult> Unban(Guid id)
+    {
+        await _userService.Unban(id);
+        return Ok();
+    }
 }
