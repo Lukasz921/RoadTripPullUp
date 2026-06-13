@@ -74,6 +74,34 @@ public class UsersApiTests : IClassFixture<IntegrationTestFactory>
         ratings.Should().ContainSingle(r => r.Value == 5 && r.Comment == "Good");
     }
 
+    [Fact]
+    public async Task User_CanUpdateProfile()
+    {
+        // 1. Register and login
+        var token = await RegisterAndLogin("update@test.com", "Update123!", "Old", "Name");
+        _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+        // 2. Update profile
+        var updateDto = new UpdateUserDTO 
+        { 
+            Name = "NewName", 
+            Surname = "NewSurname",
+            PhoneNumber = "999888777",
+            Sex = "FEMALE"
+        };
+        var patchResponse = await _client.PatchAsJsonAsync("/api/users/me", updateDto);
+        patchResponse.EnsureSuccessStatusCode();
+
+        // 3. Verify update
+        var getResponse = await _client.GetAsync("/api/users/me");
+        getResponse.EnsureSuccessStatusCode();
+        var user = await getResponse.Content.ReadFromJsonAsync<UserResponseDTO>();
+        user!.Name.Should().Be("NewName");
+        user!.Surname.Should().Be("NewSurname");
+        user!.PhoneNumber.Should().Be("999888777");
+        user!.Sex.Should().Be("FEMALE");
+    }
+
     private async Task<string> RegisterAndLogin(string email, string password, string name, string surname, UserRole? role = null)
     {
         var user = await RegisterUser(email, password, name, surname);

@@ -111,6 +111,43 @@ public class UserServiceTests
     }
 
     [Fact]
+    public async Task Update_ShouldUpdateFieldsCorrectly()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var user = new User 
+        { 
+            Id = userId, 
+            Name = "OldName", 
+            Surname = "OldSurname",
+            PhoneNumber = "123",
+            DateOfBirth = new DateTime(1990, 1, 1),
+            Sex = Sex.OTHER
+        };
+        _userRepositoryMock.Setup(r => r.FindById(userId)).ReturnsAsync(user);
+
+        var dto = new UpdateUserDTO 
+        { 
+            Name = "NewName", 
+            Surname = "NewSurname",
+            PhoneNumber = "456",
+            DateOfBirth = new DateTime(1991, 2, 2),
+            Sex = "MALE"
+        };
+
+        // Act
+        await _userService.Update(userId, dto);
+
+        // Assert
+        user.Name.Should().Be("NewName");
+        user.Surname.Should().Be("NewSurname");
+        user.PhoneNumber.Should().Be("456");
+        user.DateOfBirth.Should().Be(new DateTime(1991, 2, 2));
+        user.Sex.Should().Be(Sex.MALE);
+        _userRepositoryMock.Verify(r => r.Save(user), Times.Once);
+    }
+
+    [Fact]
     public async Task Update_ShouldThrow_WhenUserIsBanned()
     {
         // Arrange
