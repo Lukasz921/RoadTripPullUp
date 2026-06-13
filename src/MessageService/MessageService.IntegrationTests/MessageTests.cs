@@ -78,7 +78,7 @@ public class MessageTests : IClassFixture<CustomWebApplicationFactory>
         
         var messageResponse = await _client.PostAsJsonAsync("/api/v1/message/messages", createMessageDto);
         var response2 = await messageResponse.Content.ReadFromJsonAsync<Dictionary<string, Guid>>();
-        var messageId = response2?["messageId"] != null ? Guid.Parse(response2["messageId"].ToString() ?? "") : Guid.Empty;
+        var messageId = response2?["messageId"] != null ? Guid.Parse(response2["messageId"].ToString()) : Guid.Empty;
         if (messageId == Guid.Empty) throw new Exception("Failed to create message for test");
         
         // Act
