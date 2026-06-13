@@ -39,7 +39,9 @@ export default function AddTripPage() {
     const payload = {
       source: { lat: origin.lat, lng: origin.lng },
       target: { lat: destination.lat, lng: destination.lng },
-      departureTime: `${departureDate}T${departureTime}:00`,
+      // Interpret the picked date+time as local, then send a proper UTC instant
+      // so it round-trips correctly regardless of timezone.
+      departureTime: new Date(`${departureDate}T${departureTime}`).toISOString(),
       maxDetourMeters: Number(maxDetourMeters),
       pricePerSeat: Number(pricePerSeat),
       availableSeats: Number(seats),
