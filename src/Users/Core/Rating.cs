@@ -11,4 +11,5 @@ public class Rating
 
     // Navigation properties (optional, but good for EF)
     public User? User { get; set; }
+    public User? Rater { get; set; }
 }

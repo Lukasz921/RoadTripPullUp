@@ -69,4 +69,12 @@ public class UsersController : ControllerBase
 
         return Ok();
     }
+
+    [HttpGet("{id}/ratings")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetRatings(Guid id)
+    {
+        var ratings = await _userService.GetUserRatings(id);
+        return Ok(ratings);
+    }
 }

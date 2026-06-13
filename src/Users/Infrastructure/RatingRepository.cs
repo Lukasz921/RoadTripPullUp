@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Users.Application.Interfaces;
 using Users.Core;
 
@@ -16,5 +17,14 @@ public class RatingRepository : IRatingRepository
     {
         await _dbContext.Ratings.AddAsync(rating);
         await _dbContext.SaveChangesAsync();
+    }
+
+    public async Task<List<Rating>> GetByUserId(Guid userId)
+    {
+        return await _dbContext.Ratings
+            .Include(r => r.Rater)
+            .Where(r => r.UserId == userId)
+            .OrderByDescending(r => r.CreatedAt)
+            .ToListAsync();
     }
 }

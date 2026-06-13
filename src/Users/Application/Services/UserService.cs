@@ -97,6 +97,20 @@ public class UserService : IUserService
         await _userRepository.Save(user);
     }
 
+    public async Task<List<RatingResponseDTO>> GetUserRatings(Guid userId)
+    {
+        var ratings = await _ratingRepository.GetByUserId(userId);
+        return ratings.Select(r => new RatingResponseDTO
+        {
+            Id = r.Id,
+            RaterId = r.RaterId,
+            RaterName = r.Rater != null ? $"{r.Rater.Name} {r.Rater.Surname}" : "Unknown",
+            Value = r.Value,
+            Comment = r.Comment,
+            CreatedAt = r.CreatedAt
+        }).ToList();
+    }
+
     public async Task<UserIntegrationDTO> GetUserIntegrationData(Guid id)
     {
         var user = await _userRepository.FindById(id);

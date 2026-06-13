@@ -41,6 +41,11 @@ public class UsersDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(r => r.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(r => r.Rater)
+                .WithMany()
+                .HasForeignKey(r => r.RaterId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }
