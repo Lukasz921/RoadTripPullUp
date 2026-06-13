@@ -7,7 +7,7 @@ import { addToTrip, getTripById, type TripDTO } from '../api/trips';
 import { getUserById } from '../api/user';
 import { reverseGeocode } from '../api/reverseGeocode';
 import { useCurrentUser } from '../hooks/useCurrentUser';
-import Chat from '../components/Chat';
+import Chat from './chat/Chat';
 
 export default function ChatPage() {
   const { id: conversationId } = useParams<{ id: string }>();
@@ -103,7 +103,7 @@ export default function ChatPage() {
           <div className="mb-6 flex items-start justify-between gap-4 rounded-2xl bg-white p-6 shadow-sm">
             <div>
               <h1 className="text-2xl font-bold">
-                {otherNames.length > 0 ? otherNames.join(', ') : 'Chat'}
+                {isGroup ? 'Group chat' : otherNames.length > 0 ? otherNames.join(', ') : 'Chat'}
               </h1>
               {trip && (
                 <p className="mt-1 text-sm text-[#5d7056]">
