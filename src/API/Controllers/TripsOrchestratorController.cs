@@ -1,9 +1,12 @@
 using System.Security.Claims;
+using API.DTOs;
 using MessageService.Application.DTOs;
 using MessageService.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TripService.Application;
+using Users.Application.DTOs;
+using Users.Application.Interfaces;
 
 namespace API.Controllers;
 
@@ -14,15 +17,18 @@ public class TripsOrchestratorController : ControllerBase
 {
     private readonly ITripsService _trips;
     private readonly IConversationService _conversations;
+    private readonly IUserService _users;
     private readonly ILogger<TripsOrchestratorController> _logger;
 
     public TripsOrchestratorController(
         ITripsService trips,
         IConversationService conversations,
+        IUserService users,
         ILogger<TripsOrchestratorController> logger)
     {
         _trips         = trips;
         _conversations = conversations;
+        _users         = users;
         _logger        = logger;
     }
 
@@ -84,6 +90,51 @@ public class TripsOrchestratorController : ControllerBase
         }
 
         return NoContent();
+    }
+
+    [HttpPost("trips/{tripId}/rate-user")]
+    public async Task<IActionResult> RateUser([FromRoute] string tripId, [FromBody] RateUserDTO dto)
+    {
+        var currentUserIdStr = GetUserId();
+        if (currentUserIdStr == null) return Unauthorized();
+        var currentUserId = Guid.Parse(currentUserIdStr);
+
+        var trip = await _trips.GetTripAsync(tripId);
+        if (trip == null) return NotFound("Trip not found.");
+
+        // Check if current user participated in the trip
+        bool isCurrentUserDriver = trip.DriverId == currentUserIdStr;
+        bool isCurrentUserPassenger = trip.PassengerIds.Contains(currentUserIdStr);
+
+        if (!isCurrentUserDriver && !isCurrentUserPassenger)
+        {
+            return Forbid();
+        }
+
+        // Check if target user participated in the trip
+        string targetUserIdStr = dto.UserId.ToString();
+        bool isTargetDriver = trip.DriverId == targetUserIdStr;
+        bool isTargetPassenger = trip.PassengerIds.Contains(targetUserIdStr);
+
+        if (!isTargetDriver && !isTargetPassenger)
+        {
+            return BadRequest("Target user didn't participate in this trip.");
+        }
+
+        if (currentUserId == dto.UserId)
+        {
+            return BadRequest("You cannot rate yourself.");
+        }
+
+        await _users.AddRating(new Users.Application.DTOs.AddRatingDTO
+        {
+            UserId = dto.UserId,
+            RaterId = currentUserId,
+            Value = dto.Value,
+            Comment = dto.Comment
+        });
+
+        return Ok();
     }
 
     private string? GetUserId() =>
