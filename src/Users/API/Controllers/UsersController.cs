@@ -30,6 +30,14 @@ public class UsersController : ControllerBase
         return Ok(user);
     }
 
+    [HttpGet("{id}")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetById(Guid id)
+    {
+        var user = await _userService.GetById(id);
+        return Ok(user);
+    }
+
     [HttpPatch("me")]
     public async Task<IActionResult> UpdateCurrent([FromBody] UpdateUserDTO dto)
     {

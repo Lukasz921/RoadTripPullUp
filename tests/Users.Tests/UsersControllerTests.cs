@@ -35,6 +35,22 @@ public class UsersControllerTests
     }
 
     [Fact]
+    public async Task GetById_ShouldReturnUser()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var userDto = new UserResponseDTO { Id = userId, Name = "Test" };
+        _userServiceMock.Setup(s => s.GetById(userId)).ReturnsAsync(userDto);
+
+        // Act
+        var result = await _controller.GetById(userId);
+
+        // Assert
+        var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
+        okResult.Value.Should().Be(userDto);
+    }
+
+    [Fact]
     public async Task RateUser_ShouldCallService()
     {
         // Arrange
