@@ -35,6 +35,8 @@ export default function ProfilePage() {
               <ProfileRow label="Sex" value={user.sex} />
               <ProfileRow label="Email" value={user.email} />
               {user.phoneNumber && <ProfileRow label="Phone" value={user.phoneNumber} />}
+              <ProfileRow label="Rating" value={user.avgRating > 0 ? user.avgRating.toFixed(2) : 'No rating'} />
+              <ProfileRow label="Ratings count" value={user.ratingsCount} />
             </div>
           )}
         </header>
@@ -59,6 +61,20 @@ export default function ProfilePage() {
             My conversations
           </button>
         </div>
+
+        {user?.isBanned && (
+          <div className="mt-6 rounded-2xl bg-red-50 p-6 shadow-sm ring-1 ring-red-200">
+            <p className="font-semibold text-red-700">Your account is banned</p>
+            {user.banReason && (
+              <p className="mt-1 text-sm text-red-600">Reason: {user.banReason}</p>
+            )}
+            <p className="mt-1 text-sm text-red-600">
+              {user.bannedUntil
+                ? `Until: ${new Date(user.bannedUntil).toLocaleString()}`
+                : 'This ban is permanent.'}
+            </p>
+          </div>
+        )}
       </div>
 
       <Footer />
