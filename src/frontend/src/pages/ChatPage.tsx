@@ -78,12 +78,15 @@ export default function ChatPage() {
 
   const isGroup = conversation?.type?.toLowerCase() === 'group';
   const isDriver = !!trip && !!user && trip.driverId === user.id;
-  const showAddToTrip = isDriver && !isGroup;
+  // The participant who would be added (the other person in a direct chat).
+  const passengerId = conversation && user
+    ? conversation.participants.find((id) => id !== user.id)
+    : undefined;
+  const alreadyPassenger = !!trip && !!passengerId && trip.passengerIds.includes(passengerId);
+  const showAddToTrip = isDriver && !isGroup && !alreadyPassenger;
 
   async function addToTripHandler() {
-    if (!conversation || !user) return;
-    const passengerId = conversation.participants.find((id) => id !== user.id);
-    if (!passengerId) return;
+    if (!conversation || !passengerId) return;
     setJoining(true);
     setJoinError('');
     try {
