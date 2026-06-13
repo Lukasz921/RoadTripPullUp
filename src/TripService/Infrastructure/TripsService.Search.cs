@@ -21,6 +21,17 @@ public partial class TripsService
         return await _repository.GetByPassengerAsync(userGuid, page, pageSize);
     }
 
+    public async Task<PagedTripsDTO> GetMyPastTripsAsync(string userId, int page, int pageSize)
+    {
+        if (!Guid.TryParse(userId, out var userGuid))
+            return new PagedTripsDTO { Page = page, PageSize = pageSize };
+
+        return await _repository.GetPastTripsAsync(userGuid, page, pageSize);
+    }
+
+    public Task<PagedTripsDTO> GetAllTripsAsync(DateTime? dateFrom, DateTime? dateTo, int page, int pageSize)
+        => _repository.GetAllAsync(dateFrom, dateTo, page, pageSize);
+
     public async Task<SearchJobCreatedDTO> SubmitSearchAsync(SearchTripsRequestDTO dto, string userId)
     {
         if (!DateOnly.TryParse(dto.DateFrom, out _))

@@ -6,6 +6,8 @@ public interface ITripRepository
     Task<TripDTO?> FindByIdAsync(Guid id);
     Task<PagedTripsDTO> GetByDriverAsync(Guid driverId, int page, int pageSize);
     Task<PagedTripsDTO> GetByPassengerAsync(Guid userId, int page, int pageSize);
+    Task<PagedTripsDTO> GetPastTripsAsync(Guid userId, int page, int pageSize);
+    Task<PagedTripsDTO> GetAllAsync(DateTime? dateFrom, DateTime? dateTo, int page, int pageSize);
     Task<Guid?> GetDriverIdAsync(Guid tripId);
     Task DeleteAsync(Guid id);
 
