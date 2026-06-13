@@ -1,15 +1,5 @@
 import { useEffect, useState } from 'react';
-import { authApi } from '../api/axiosConfig';
-
-interface CurrentUser {
-  id: string;
-  name: string;
-  surname: string;
-  email: string;
-  phoneNumber?: string;
-  dateOfBirth: string;
-  sex: string;
-}
+import { getCurrentUser, type CurrentUser } from '../api/user';
 
 interface UseCurrentUserResult {
   user: CurrentUser | null;
@@ -23,9 +13,8 @@ export function useCurrentUser(): UseCurrentUserResult {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    authApi
-      .get<CurrentUser>('/users/me')
-      .then((res) => setUser(res.data))
+    getCurrentUser()
+      .then((data) => setUser(data))
       .catch((err) => {
         console.error('Failed to load user:', err);
         setError('Failed to load profile.');
