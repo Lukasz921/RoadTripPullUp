@@ -103,6 +103,9 @@ public class TripsOrchestratorController : ControllerBase
         var trip = await _trips.GetTripAsync(tripId);
         if (trip == null) return NotFound("Trip not found.");
 
+        if (trip.DepartureTime.ToUniversalTime() > DateTime.UtcNow)
+            return BadRequest(new { error = new { code = "TRIP_NOT_COMPLETED", message = "You can only rate users after the trip has taken place." } });
+
         // Check if current user participated in the trip
         bool isCurrentUserDriver = trip.DriverId == currentUserIdStr;
         bool isCurrentUserPassenger = trip.PassengerIds.Contains(currentUserIdStr);

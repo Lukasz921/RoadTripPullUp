@@ -45,4 +45,16 @@ public partial class TripsService
 
         await _repository.DeleteAsync(id);
     }
+
+    public async Task AdminDeleteTripAsync(string tripId)
+    {
+        if (!Guid.TryParse(tripId, out var id))
+            throw new NotFoundException($"Trip '{tripId}' not found.");
+
+        var ownerId = await _repository.GetDriverIdAsync(id);
+        if (ownerId is null)
+            throw new NotFoundException($"Trip '{tripId}' not found.");
+
+        await _repository.DeleteAsync(id);
+    }
 }

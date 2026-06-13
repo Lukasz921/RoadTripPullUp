@@ -50,7 +50,7 @@ public class MockTripsService : ITripsService
     public Task<PagedTripsDTO> GetMyTripsAsync(string driverId, int page, int pageSize)
     {
         var all = _trips.Values
-            .Where(t => t.DriverId == driverId && t.Status == "ACTIVE")
+            .Where(t => t.DriverId == driverId && t.Status == "ACTIVE" && t.DepartureTime >= DateTime.UtcNow)
             .OrderBy(t => t.DepartureTime)
             .ToList();
 
@@ -64,8 +64,22 @@ public class MockTripsService : ITripsService
     public Task<PagedTripsDTO> GetMyPassengerTripsAsync(string userId, int page, int pageSize)
     {
         var all = _trips.Values
-            .Where(t => t.Status == "ACTIVE" && t.PassengerIds.Contains(userId))
+            .Where(t => t.Status == "ACTIVE" && t.PassengerIds.Contains(userId) && t.DepartureTime >= DateTime.UtcNow)
             .OrderBy(t => t.DepartureTime)
+            .ToList();
+
+        var items = all.Skip((page - 1) * pageSize).Take(pageSize).Select(ToTripDTO).ToList();
+        return Task.FromResult(new PagedTripsDTO
+        {
+            Items = items, Page = page, PageSize = pageSize, TotalCount = all.Count
+        });
+    }
+
+    public Task<PagedTripsDTO> GetMyPastTripsAsync(string userId, int page, int pageSize)
+    {
+        var all = _trips.Values
+            .Where(t => t.DepartureTime < DateTime.UtcNow && (t.DriverId == userId || t.PassengerIds.Contains(userId)))
+            .OrderByDescending(t => t.DepartureTime)
             .ToList();
 
         var items = all.Skip((page - 1) * pageSize).Take(pageSize).Select(ToTripDTO).ToList();
@@ -100,6 +114,30 @@ public class MockTripsService : ITripsService
             throw new NotFoundException($"Trip {tripId} not found.");
         if (trip.DriverId != driverId)
             throw new ForbiddenException("You can only delete your own trips.");
+
+        _trips.TryRemove(tripId, out _);
+        return Task.CompletedTask;
+    }
+
+    public Task<PagedTripsDTO> GetAllTripsAsync(DateTime? dateFrom, DateTime? dateTo, int page, int pageSize)
+    {
+        var all = _trips.Values
+            .Where(t => dateFrom == null || t.DepartureTime >= dateFrom.Value)
+            .Where(t => dateTo   == null || t.DepartureTime <= dateTo.Value)
+            .OrderBy(t => t.DepartureTime)
+            .ToList();
+
+        var items = all.Skip((page - 1) * pageSize).Take(pageSize).Select(ToTripDTO).ToList();
+        return Task.FromResult(new PagedTripsDTO
+        {
+            Items = items, Page = page, PageSize = pageSize, TotalCount = all.Count
+        });
+    }
+
+    public Task AdminDeleteTripAsync(string tripId)
+    {
+        if (!_trips.TryGetValue(tripId, out _))
+            throw new NotFoundException($"Trip {tripId} not found.");
 
         _trips.TryRemove(tripId, out _);
         return Task.CompletedTask;

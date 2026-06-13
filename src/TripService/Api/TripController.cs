@@ -55,6 +55,23 @@ public class TripController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("trips/history")]
+    [ProducesResponseType(typeof(PagedTripsDTO), 200)]
+    public async Task<IActionResult> GetTripHistory(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
+    {
+        var userId = GetUserId();
+        if (userId == null)
+            return Unauthorized(new { error = new { code = "UNAUTHORIZED", message = "Missing or invalid token." } });
+
+        pageSize = Math.Clamp(pageSize, 1, 100);
+        page = Math.Max(page, 1);
+
+        var result = await _service.GetMyPastTripsAsync(userId, page, pageSize);
+        return Ok(result);
+    }
+
     [HttpGet("trips/{tripId}")]
     [ProducesResponseType(typeof(TripDTO), 200)]
     [ProducesResponseType(404)]
