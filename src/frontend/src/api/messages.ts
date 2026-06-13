@@ -6,22 +6,22 @@ export type MessageType = 'Text' | 'PriceOffer' | 'PriceAccept' | 'OfferApproval
 // --- Conversations ---
 
 export interface CreateConversationDTO {
-  TripId: string;
-  Title?: string;
-  Date?: string;
-  Participants: string[];
+  tripId: string;
+  title?: string;
+  date?: string;
+  participants: string[];
 }
 
 export interface ConversationDTO {
-  ConversationId: string;
-  Type: ConversationType;
-  TripId: string;
-  Name?: string;
-  Date?: string;
-  Participants: string[];
-  LastMessageId: string;
-  LastMessagePreview: string;
-  LastMessageCreatedAt: string;
+  conversationId: string;
+  type: ConversationType;
+  tripId: string;
+  name?: string;
+  date?: string;
+  participants: string[];
+  lastMessageId: string;
+  lastMessagePreview: string;
+  lastMessageCreatedAt: string;
 }
 
 export interface ConversationListParams {
@@ -30,7 +30,7 @@ export interface ConversationListParams {
 }
 
 export const createConversation = async (dto: CreateConversationDTO): Promise<{ conversationId: string }> => {
-  // const response = await messageApi.post('/conversations', { ...dto, Type: 'Direct' });
+  // const response = await messageApi.post('/conversations', { ...dto, type: 'direct' });
   // return response.data;
   void dto; // TODO: remove mock
   return { conversationId: 'mock-direct-1' };
@@ -42,34 +42,34 @@ export const getConversations = async (params?: ConversationListParams): Promise
   void params; // TODO: remove mock
   return [
     {
-      ConversationId: 'mock-group-1',
-      Type: 'Group',
-      TripId: 'trip-1',
-      Name: 'Warsaw → Kraków crew',
-      Participants: ['user-1', 'user-2', 'user-3', 'user-4'],
-      LastMessageId: 'msg-1',
-      LastMessagePreview: 'Anyone need a stop in Łódź?',
-      LastMessageCreatedAt: '2026-06-03T14:22:00Z',
+      conversationId: 'mock-group-1',
+      type: 'Group',
+      tripId: 'trip-1',
+      name: 'Warsaw → Kraków crew',
+      participants: ['user-1', 'user-2', 'user-3', 'user-4'],
+      lastMessageId: 'msg-1',
+      lastMessagePreview: 'Anyone need a stop in Łódź?',
+      lastMessageCreatedAt: '2026-06-03T14:22:00Z',
     },
     {
-      ConversationId: 'mock-direct-1',
-      Type: 'Direct',
-      TripId: 'trip-1',
-      Name: 'Marek Kowalski',
-      Participants: ['user-1', 'user-2'],
-      LastMessageId: 'msg-2',
-      LastMessagePreview: 'Hi, is there still a seat available?',
-      LastMessageCreatedAt: '2026-06-03T10:05:00Z',
+      conversationId: 'mock-direct-1',
+      type: 'Direct',
+      tripId: 'trip-1',
+      name: 'Marek Kowalski',
+      participants: ['user-1', 'user-2'],
+      lastMessageId: 'msg-2',
+      lastMessagePreview: 'Hi, is there still a seat available?',
+      lastMessageCreatedAt: '2026-06-03T10:05:00Z',
     },
     {
-      ConversationId: 'mock-direct-2',
-      Type: 'Direct',
-      TripId: 'trip-2',
-      Name: 'Anna Nowak',
-      Participants: ['user-1', 'user-3'],
-      LastMessageId: 'msg-3',
-      LastMessagePreview: 'Great, see you at 8am!',
-      LastMessageCreatedAt: '2026-06-02T18:45:00Z',
+      conversationId: 'mock-direct-2',
+      type: 'Direct',
+      tripId: 'trip-2',
+      name: 'Anna Nowak',
+      participants: ['user-1', 'user-3'],
+      lastMessageId: 'msg-3',
+      lastMessagePreview: 'Great, see you at 8am!',
+      lastMessageCreatedAt: '2026-06-02T18:45:00Z',
     },
   ];
 };
@@ -79,14 +79,14 @@ export const getConversation = async (conversationId: string): Promise<Conversat
   // return response.data;
   void conversationId; // TODO: remove mock
   return {
-    ConversationId: conversationId,
-    Type: 'Direct',
-    TripId: 'trip-1',
-    Name: 'Marek Kowalski',
-    Participants: ['user-1', 'user-2'],
-    LastMessageId: 'msg-2',
-    LastMessagePreview: 'Hi, is there still a seat available?',
-    LastMessageCreatedAt: '2026-06-03T10:05:00Z',
+    conversationId: conversationId,
+    type: 'Direct',
+    tripId: 'trip-1',
+    name: 'Marek Kowalski',
+    participants: ['user-1', 'user-2'],
+    lastMessageId: 'msg-2',
+    lastMessagePreview: 'Hi, is there still a seat available?',
+    lastMessageCreatedAt: '2026-06-03T10:05:00Z',
   };
 };
 
@@ -94,17 +94,6 @@ export const getConversation = async (conversationId: string): Promise<Conversat
 export const getGroupConversationByTrip = async (tripId: string): Promise<ConversationDTO> => {
   const response = await messageApi.get(`/conversations/byTripId/group/${tripId}`);
   return response.data;
-  void tripId; // TODO: remove mock
-  return {
-    ConversationId: 'mock-group-1',
-    Type: 'Group',
-    TripId: tripId,
-    Name: 'Warsaw → Kraków crew',
-    Participants: ['user-1', 'user-2', 'user-3', 'user-4'],
-    LastMessageId: 'msg-1',
-    LastMessagePreview: 'Anyone need a stop in Łódź?',
-    LastMessageCreatedAt: '2026-06-03T14:22:00Z',
-  };
 };
 
 export const getDirectConversationsByTrip = async (tripId: string): Promise<ConversationDTO[]> => {
@@ -113,51 +102,42 @@ export const getDirectConversationsByTrip = async (tripId: string): Promise<Conv
   void tripId; // TODO: remove mock
   return [
     {
-      ConversationId: 'mock-direct-1',
-      Type: 'Direct',
-      TripId: tripId,
-      Name: 'Marek Kowalski',
-      Participants: ['user-1', 'user-2'],
-      LastMessageId: 'msg-2',
-      LastMessagePreview: 'Hi, is there still a seat available?',
-      LastMessageCreatedAt: '2026-06-03T10:05:00Z',
+      conversationId: 'mock-direct-1',
+      type: 'Direct',
+      tripId: tripId,
+      name: 'Marek Kowalski',
+      participants: ['user-1', 'user-2'],
+      lastMessageId: 'msg-2',
+      lastMessagePreview: 'Hi, is there still a seat available?',
+      lastMessageCreatedAt: '2026-06-03T10:05:00Z',
     },
     {
-      ConversationId: 'mock-direct-2',
-      Type: 'Direct',
-      TripId: tripId,
-      Name: 'Anna Nowak',
-      Participants: ['user-1', 'user-3'],
-      LastMessageId: 'msg-3',
-      LastMessagePreview: 'Great, see you at 8am!',
-      LastMessageCreatedAt: '2026-06-02T18:45:00Z',
+      conversationId: 'mock-direct-2',
+      type: 'Direct',
+      tripId: tripId,
+      name: 'Anna Nowak',
+      participants: ['user-1', 'user-3'],
+      lastMessageId: 'msg-3',
+      lastMessagePreview: 'Great, see you at 8am!',
+      lastMessageCreatedAt: '2026-06-02T18:45:00Z',
     },
   ];
 };
 
-
-
-
-
-
-
-
-
-
 // --- Messages ---
 
 export interface CreateMessageDTO {
-  ConversationId: string;
-  Payload: Record<string, unknown>;
+  conversationId: string;
+  payload: Record<string, unknown>;
 }
 
 export interface MessageDTO {
-  MessageId: string;
-  ConversationId: string;
-  SenderId: string;
-  Type: MessageType;
-  Payload: Record<string, unknown>;
-  CreatedAt: string;
+  messageId: string;
+  conversationId: string;
+  senderId: string;
+  type: MessageType;
+  payload: Record<string, unknown>;
+  createdAt: string;
 }
 
 export interface MessageListParams {
@@ -171,13 +151,13 @@ export interface SyncResponseDTO {
 }
 
 export interface ReadReceiptDTO {
-  ConversationId: string;
-  LastReadMessageId?: string;
-  LastReadTimestamp?: string;
+  conversationId: string;
+  lastReadMessageId?: string;
+  lastReadTimestamp?: string;
 }
 
 export const sendMessage = async (dto: CreateMessageDTO): Promise<{ messageId: string }> => {
-  const response = await messageApi.post('/messages', { ...dto, Type: 'Text' });
+  const response = await messageApi.post('/messages', { ...dto, type: 'Text' });
   return response.data;
 };
 
@@ -200,17 +180,4 @@ export const syncMessages = async (lastReceivedAt?: string): Promise<SyncRespons
 
 export const markAsRead = async (dto: ReadReceiptDTO): Promise<void> => {
   await messageApi.post('/messages/read', dto);
-};
-
-// --- Users ---
-
-export interface MessageUserDTO {
-  id: string;
-  username: string;
-  displayName: string;
-}
-
-export const getMessageUser = async (userId: string): Promise<MessageUserDTO> => {
-  const response = await messageApi.get(`/users/${userId}`);
-  return response.data;
 };

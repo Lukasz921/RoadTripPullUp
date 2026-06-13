@@ -10,11 +10,11 @@ interface ConversationSummaryCardProps {
 
 export default function ConversationSummaryCard({ conversation, isGroup, navigationState }: ConversationSummaryCardProps) {
   const navigate = useNavigate();
-  const title = conversation.Name ?? (isGroup ? 'Group chat' : 'Direct chat');
+  const title = conversation.name ?? (isGroup ? 'Group chat' : 'Direct chat');
 
   return (
     <div
-      onClick={() => navigate(`/conversation/${conversation.ConversationId}`, { state: navigationState })}
+      onClick={() => navigate(`/conversation/${conversation.conversationId}`, { state: navigationState })}
       className={`cursor-pointer rounded-xl border bg-white px-5 py-4 transition hover:bg-[#f0f9e8] ${
         isGroup ? 'border-[#8cc63f] border-l-4' : 'border-[#d7e8c8]'
       }`}
@@ -29,16 +29,16 @@ export default function ConversationSummaryCard({ conversation, isGroup, navigat
           <p className="font-semibold text-[#12351f]">{title}</p>
         </div>
         <p className="shrink-0 text-xs text-[#5d7056]">
-          {conversation.LastMessageCreatedAt ? formatDate(conversation.LastMessageCreatedAt) : ''}
+          {conversation.lastMessageCreatedAt ? formatDate(conversation.lastMessageCreatedAt) : ''}
         </p>
       </div>
 
-      {conversation.LastMessagePreview && (
-        <p className="mt-1 truncate text-sm text-[#5d7056]">{conversation.LastMessagePreview}</p>
+      {conversation.lastMessagePreview && (
+        <p className="mt-1 truncate text-sm text-[#5d7056]">{conversation.lastMessagePreview}</p>
       )}
 
       <p className="mt-2 text-xs text-[#5d7056]">
-        {conversation.Participants.length} participant{conversation.Participants.length !== 1 ? 's' : ''}
+        {conversation.participants.length} participant{conversation.participants.length !== 1 ? 's' : ''}
       </p>
     </div>
   );
