@@ -7,6 +7,7 @@ import { addToTrip, getTripById, type TripDTO } from '../api/trips';
 import { getUserById } from '../api/user';
 import { reverseGeocode } from '../api/reverseGeocode';
 import { useCurrentUser } from '../hooks/useCurrentUser';
+import Chat from '../components/Chat';
 
 export default function ChatPage() {
   const { id: conversationId } = useParams<{ id: string }>();
@@ -15,7 +16,7 @@ export default function ChatPage() {
   const [trip, setTrip] = useState<TripDTO | null>(null);
   const [startPlace, setStartPlace] = useState('');
   const [endPlace, setEndPlace] = useState('');
-  const [participantNames, setParticipantNames] = useState<string[]>([]);
+  const [nameById, setNameById] = useState<Record<string, string>>({});
   const [joining, setJoining] = useState(false);
   const [joinError, setJoinError] = useState('');
 
@@ -47,20 +48,33 @@ export default function ChatPage() {
     };
   }, [conversation]);
 
-  // Fetch names of the participants other than the logged-in user.
+  // Resolve every participant id to "Name Surname" once; reuse the current user's own data for self.
   useEffect(() => {
     if (!conversation || !user) return;
-    const otherIds = conversation.participants.filter((id) => id !== user.id);
     let cancelled = false;
-    Promise.all(otherIds.map((id) => getUserById(id)))
-      .then((users) => {
-        if (!cancelled) setParticipantNames(users.map((u) => `${u.name} ${u.surname}`));
+    Promise.all(
+      conversation.participants.map(async (id) => {
+        if (id === user.id) return [id, `${user.name} ${user.surname}`] as const;
+        const u = await getUserById(id);
+        return [id, `${u.name} ${u.surname}`] as const;
+      }),
+    )
+      .then((entries) => {
+        if (!cancelled) setNameById(Object.fromEntries(entries));
       })
       .catch(() => {});
     return () => {
       cancelled = true;
     };
   }, [conversation, user]);
+
+  const otherNames =
+    conversation && user
+      ? conversation.participants
+          .filter((id) => id !== user.id)
+          .map((id) => nameById[id])
+          .filter(Boolean)
+      : [];
 
   const isGroup = conversation?.type?.toLowerCase() === 'group';
   const isDriver = !!trip && !!user && trip.driverId === user.id;
@@ -84,12 +98,12 @@ export default function ChatPage() {
   return (
     <main className="flex min-h-screen flex-col bg-[#f3faee] text-[#12351f]">
       <Navbar />
-      <div className="mx-auto w-full max-w-3xl flex-1 px-6 pb-16 pt-28">
+      <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-6 pb-16 pt-28">
         {conversation && (
           <div className="mb-6 flex items-start justify-between gap-4 rounded-2xl bg-white p-6 shadow-sm">
             <div>
               <h1 className="text-2xl font-bold">
-                {participantNames.length > 0 ? participantNames.join(', ') : 'Chat'}
+                {otherNames.length > 0 ? otherNames.join(', ') : 'Chat'}
               </h1>
               {trip && (
                 <p className="mt-1 text-sm text-[#5d7056]">
@@ -113,6 +127,10 @@ export default function ChatPage() {
               </div>
             )}
           </div>
+        )}
+
+        {conversation && user && (
+          <Chat conversation={conversation} currentUserId={user.id} nameById={nameById} />
         )}
       </div>
       <Footer />
