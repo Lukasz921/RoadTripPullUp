@@ -4,7 +4,7 @@ import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import TripRouteMap from '../components/TripRouteMap';
 import { getTripById, type TripDTO } from '../api/trips';
-import { getUserById } from '../api/user';
+import { getUserById, type CurrentUser } from '../api/user';
 import { reverseGeocode } from '../api/reverseGeocode';
 import { useCurrentUser } from '../hooks/useCurrentUser';
 import type { Place } from '../utils/geoapify';
@@ -28,7 +28,7 @@ export default function TripDetailsPage() {
   const [error, setError] = useState('');
   const [origin, setOrigin] = useState<Place | null>(null);
   const [destination, setDestination] = useState<Place | null>(null);
-  const [nameById, setNameById] = useState<Record<string, string>>({});
+  const [userById, setUserById] = useState<Record<string, CurrentUser>>({});
 
   useEffect(() => {
     if (!id) return;
@@ -46,7 +46,7 @@ export default function TripDetailsPage() {
       .finally(() => setLoading(false));
   }, [id]);
 
-  // Resolve driver + passenger ids to "Name Surname".
+  // Resolve driver + passenger ids to full user records (used for display and passed on click).
   useEffect(() => {
     if (!trip) return;
     let cancelled = false;
@@ -54,17 +54,26 @@ export default function TripDetailsPage() {
     Promise.all(
       ids.map(async (uid) => {
         const u = await getUserById(uid);
-        return [uid, `${u.name} ${u.surname}`] as const;
+        return [uid, u] as const;
       }),
     )
       .then((entries) => {
-        if (!cancelled) setNameById(Object.fromEntries(entries));
+        if (!cancelled) setUserById(Object.fromEntries(entries));
       })
       .catch(() => {});
     return () => {
       cancelled = true;
     };
   }, [trip]);
+
+  // Clicking yourself goes to the editable profile; clicking anyone else to their read-only profile.
+  function openUser(uid: string) {
+    if (uid === user?.id) {
+      navigate('/profile');
+    } else {
+      navigate(`/user/${uid}`, { state: { user: userById[uid] } });
+    }
+  }
 
   return (
     <main className="flex min-h-screen flex-col bg-[#f3faee] text-[#12351f]">
@@ -120,12 +129,12 @@ export default function TripDetailsPage() {
               <p className="text-xs text-[#5d7056]">Driver</p>
               <button
                 type="button"
-                onClick={() => {
-                  /* TODO: clickable target not defined yet */
-                }}
+                onClick={() => openUser(trip.driverId)}
                 className="text-left text-sm font-semibold text-[#12351f] hover:underline"
               >
-                {nameById[trip.driverId] ?? '…'}
+                {userById[trip.driverId]
+                  ? `${userById[trip.driverId].name} ${userById[trip.driverId].surname}`
+                  : '…'}
               </button>
 
               <p className="mt-4 text-xs text-[#5d7056]">Passengers</p>
@@ -137,12 +146,10 @@ export default function TripDetailsPage() {
                     <button
                       key={pid}
                       type="button"
-                      onClick={() => {
-                        /* TODO: clickable target not defined yet */
-                      }}
+                      onClick={() => openUser(pid)}
                       className="text-left text-sm font-semibold text-[#12351f] hover:underline"
                     >
-                      {nameById[pid] ?? '…'}
+                      {userById[pid] ? `${userById[pid].name} ${userById[pid].surname}` : '…'}
                     </button>
                   ))}
                 </div>
