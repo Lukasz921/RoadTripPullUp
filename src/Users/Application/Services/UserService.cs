@@ -111,6 +111,46 @@ public class UserService : IUserService
         }).ToList();
     }
 
+    public async Task<RatingResponseDTO> GetRating(Guid ratingId)
+    {
+        var r = await _ratingRepository.GetById(ratingId);
+        if (r == null) throw new Exception("Rating not found.");
+
+        return new RatingResponseDTO
+        {
+            Id = r.Id,
+            RaterId = r.RaterId,
+            RaterName = r.Rater != null ? $"{r.Rater.Name} {r.Rater.Surname}" : "Unknown",
+            Value = r.Value,
+            Comment = r.Comment,
+            CreatedAt = r.CreatedAt
+        };
+    }
+
+    public async Task DeleteRating(Guid ratingId, Guid currentUserId)
+    {
+        var rating = await _ratingRepository.GetById(ratingId);
+        if (rating == null) throw new Exception("Rating not found.");
+
+        if (rating.RaterId != currentUserId)
+        {
+            throw new Exception("You can only delete your own ratings.");
+        }
+
+        var user = await _userRepository.FindById(rating.UserId);
+        if (user != null)
+        {
+            // Recalculate average rating
+            double totalScore = (user.AvgRating * user.RatingsCount) - rating.Value;
+            user.RatingsCount--;
+            user.AvgRating = user.RatingsCount > 0 ? totalScore / user.RatingsCount : 0;
+            
+            await _userRepository.Save(user);
+        }
+
+        await _ratingRepository.Delete(rating);
+    }
+
     public async Task<UserIntegrationDTO> GetUserIntegrationData(Guid id)
     {
         var user = await _userRepository.FindById(id);

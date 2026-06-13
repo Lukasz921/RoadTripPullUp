@@ -77,4 +77,23 @@ public class UsersController : ControllerBase
         var ratings = await _userService.GetUserRatings(id);
         return Ok(ratings);
     }
+
+    [HttpGet("ratings/{ratingId}")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetRating(Guid ratingId)
+    {
+        var rating = await _userService.GetRating(ratingId);
+        return Ok(rating);
+    }
+
+    [HttpDelete("ratings/{ratingId}")]
+    public async Task<IActionResult> DeleteRating(Guid ratingId)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null) return Unauthorized();
+
+        var userId = Guid.Parse(userIdClaim.Value);
+        await _userService.DeleteRating(ratingId, userId);
+        return NoContent();
+    }
 }

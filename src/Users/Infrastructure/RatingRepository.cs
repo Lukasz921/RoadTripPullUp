@@ -19,6 +19,13 @@ public class RatingRepository : IRatingRepository
         await _dbContext.SaveChangesAsync();
     }
 
+    public async Task<Rating?> GetById(Guid id)
+    {
+        return await _dbContext.Ratings
+            .Include(r => r.Rater)
+            .FirstOrDefaultAsync(r => r.Id == id);
+    }
+
     public async Task<List<Rating>> GetByUserId(Guid userId)
     {
         return await _dbContext.Ratings
@@ -26,5 +33,11 @@ public class RatingRepository : IRatingRepository
             .Where(r => r.UserId == userId)
             .OrderByDescending(r => r.CreatedAt)
             .ToListAsync();
+    }
+
+    public async Task Delete(Rating rating)
+    {
+        _dbContext.Ratings.Remove(rating);
+        await _dbContext.SaveChangesAsync();
     }
 }
