@@ -42,9 +42,9 @@ export default function SearchTripsPage() {
     setAskingTripId(trip.id);
     try {
       const { conversationId } = await createConversation({
-        TripId: trip.id,
-        Title: 'Title',
-        Participants: [trip.driverId],
+        tripId: trip.id,
+        title: 'Title',
+        participants: [trip.driverId],
       });
       navigate(`/conversation/${conversationId}`);
     } catch {

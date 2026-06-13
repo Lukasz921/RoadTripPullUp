@@ -44,18 +44,6 @@ export interface UpdateUserDTO {
   sex?: Sex;
 }
 
-export interface TripIntegrationData {
-  isAdult: boolean;
-  canCreateTrip: boolean;
-}
-
-export interface UserIntegrationDTO {
-  id: string;
-  fullName: string;
-  email: string;
-  trip: TripIntegrationData;
-}
-
 export interface RatingResponseDTO {
   id: string;
   raterId: string;
@@ -100,9 +88,24 @@ export const updateCurrentUser = async (dto: UpdateUserDTO): Promise<void> => {
   await authApi.patch('/users/me', dto);
 };
 
-export const getIntegrationData = async (): Promise<UserIntegrationDTO> => {
-  const response = await authApi.get<UserIntegrationDTO>('/users/me/integration-data');
-  return response.data;
+// --- Other users ---
+
+export const getUserById = async (userId: string): Promise<CurrentUser> => {
+  // const response = await authApi.get<CurrentUser>(`/users/${userId}`);
+  // return response.data;
+  void userId; // TODO: remove mock
+  return {
+    id: userId,
+    name: 'Marek',
+    surname: 'Kowalski',
+    email: 'marek.kowalski@example.com',
+    phoneNumber: '+48 123 456 789',
+    dateOfBirth: '1990-05-12T00:00:00Z',
+    sex: 'MALE',
+    avgRating: 4.5,
+    ratingsCount: 12,
+    isBanned: false,
+  };
 };
 
 // --- Ratings ---
