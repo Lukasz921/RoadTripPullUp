@@ -10,12 +10,14 @@ import Spinner from '../components/ui/Spinner';
 import TripSummaryCard from '../components/TripSummaryCard';
 import { submitSearch as submitSearchApi, pollSearch, type SearchJobResultDTO, type TripSummaryV1DTO } from '../api/trips';
 import { createConversation } from '../api/messages';
+import { useCurrentUser } from '../hooks/useCurrentUser';
 import type { Place } from '../utils/geoapify';
 
 const PAGE_SIZE = 10;
 
 export default function SearchTripsPage() {
   const navigate = useNavigate();
+  const { user } = useCurrentUser();
 
   // Route
   const [originQuery, setOriginQuery] = useState('');
@@ -272,10 +274,14 @@ export default function SearchTripsPage() {
                   key={trip.id}
                   trip={trip}
                   actualDetourMeters={trip.actualDetourMeters}
-                  action={{
-                    label: askingTripId === trip.id ? 'Creating…' : 'Ask about trip',
-                    onClick: () => handleAskAboutTrip(trip),
-                  }}
+                  action={
+                    trip.driverId === user?.id
+                      ? undefined
+                      : {
+                          label: askingTripId === trip.id ? 'Creating…' : 'Ask about trip',
+                          onClick: () => handleAskAboutTrip(trip),
+                        }
+                  }
                 />
               ))}
             </section>
