@@ -1,21 +1,12 @@
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
-import ProfileRow from './profile/components/ProfileRow';
+import ProfileDetails from './profile/components/ProfileDetails';
 import { useCurrentUser } from '../hooks/useCurrentUser';
-
-function calcAge(dateOfBirth: string): number {
-  const birth = new Date(dateOfBirth);
-  const today = new Date();
-  let age = today.getFullYear() - birth.getFullYear();
-  const monthDiff = today.getMonth() - birth.getMonth();
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) age--;
-  return Math.max(0, age);
-}
 
 export default function ProfilePage() {
   const navigate = useNavigate();
-  const { user, loading: userLoading, error: userError } = useCurrentUser();
+  const { user, loading: userLoading, error: userError, refetch } = useCurrentUser();
 
   return (
     <main className="flex min-h-screen flex-col bg-[#f3faee] text-[#12351f]">
@@ -27,16 +18,7 @@ export default function ProfilePage() {
         <header className="rounded-2xl bg-white p-6 shadow-sm">
           {userLoading && <p className="text-sm text-[#5d7056]">Loading profile...</p>}
           {userError && <p className="rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600">{userError}</p>}
-          {user && (
-            <div className="grid gap-4 sm:grid-cols-2">
-              <ProfileRow label="Name" value={user.name} />
-              <ProfileRow label="Surname" value={user.surname} />
-              <ProfileRow label="Age" value={calcAge(user.dateOfBirth)} />
-              <ProfileRow label="Sex" value={user.sex} />
-              <ProfileRow label="Email" value={user.email} />
-              {user.phoneNumber && <ProfileRow label="Phone" value={user.phoneNumber} />}
-            </div>
-          )}
+          {user && <ProfileDetails user={user} onUpdated={refetch} />}
         </header>
 
         <div className="mt-10 flex gap-2">
@@ -59,6 +41,20 @@ export default function ProfilePage() {
             My conversations
           </button>
         </div>
+
+        {user?.isBanned && (
+          <div className="mt-6 rounded-2xl bg-red-50 p-6 shadow-sm ring-1 ring-red-200">
+            <p className="font-semibold text-red-700">Your account is banned</p>
+            {user.banReason && (
+              <p className="mt-1 text-sm text-red-600">Reason: {user.banReason}</p>
+            )}
+            <p className="mt-1 text-sm text-red-600">
+              {user.bannedUntil
+                ? `Until: ${new Date(user.bannedUntil).toLocaleString()}`
+                : 'This ban is permanent.'}
+            </p>
+          </div>
+        )}
       </div>
 
       <Footer />

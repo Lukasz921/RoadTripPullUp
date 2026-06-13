@@ -1,13 +1,11 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import api from '../api/axiosConfig';
+import { login, register, type Sex } from '../api/user';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import TextInput from '../components/ui/TextInput';
 
 type Mode = 'login' | 'register';
-
-type Sex = 'MALE' | 'FEMALE' | 'OTHER';
 
 interface FormState {
   email: string;
@@ -66,20 +64,20 @@ export default function LoginRegisterPage() {
 
     if (isRegister) {
       try {
-        await api.post('/auth/register', {
+        await register({
           name: form.name,
           surname: form.surname,
           email: form.email,
           password: form.password,
           phoneNumber: form.phoneNumber,
           dateOfBirth: form.dateOfBirth,
-          sex: form.sex,
+          sex: form.sex as Sex,
         });
-        const loginResponse = await api.post('/auth/login', {
+        const loginResponse = await login({
           email: form.email,
           password: form.password,
         });
-        localStorage.setItem('token', loginResponse.data.token);
+        localStorage.setItem('token', loginResponse.token);
         navigate('/');
       } catch (err: any) {
         console.error('Register error:', err);
@@ -89,11 +87,11 @@ export default function LoginRegisterPage() {
     }
 
     try {
-      const response = await api.post('/auth/login', {
+      const response = await login({
         email: form.email,
         password: form.password,
       });
-      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('token', response.token);
       navigate('/');
     } catch (err: any) {
       console.error('Login error:', err);
