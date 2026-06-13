@@ -24,7 +24,6 @@ public class ConversationRepository : IConversationRepository
     {
         return await _db.Conversations
             .Include(c => c.Members)
-            .ThenInclude(cm => cm.User)
             .FirstOrDefaultAsync(c => c.Id == id);
     }
 
@@ -53,7 +52,6 @@ public class ConversationRepository : IConversationRepository
         var convs = await _db.Conversations
             .Where(c => convIds.Contains(c.Id))
             .Include(c => c.Members)
-                .ThenInclude(cm => cm.User)
             .OrderByDescending(c => c.CreatedAt)
             .Skip(skip)
             .Take(take)
@@ -77,8 +75,7 @@ public class ConversationRepository : IConversationRepository
     {
         return await _db.Conversations
             .Include(c => c.Members)
-                .ThenInclude(cm => cm.User)
-            .FirstOrDefaultAsync(c => c.TripId == tripId && c.Type == ConversationType.Group);
+            .FirstOrDefaultAsync(c => c.TripId == tripId && c.Type == "group");
     }
 
     public async Task<List<Conversation>> GetDirectConversationsForTripAsync(Guid tripId, Guid userId)
@@ -89,9 +86,8 @@ public class ConversationRepository : IConversationRepository
             .ToListAsync();
 
         return await _db.Conversations
-            .Where(c => convIds.Contains(c.Id) && c.TripId == tripId && c.Type == ConversationType.Direct)
+            .Where(c => convIds.Contains(c.Id) && c.TripId == tripId && c.Type == "direct")
             .Include(c => c.Members)
-                .ThenInclude(cm => cm.User)
             .ToListAsync();
     }
 

@@ -1,9 +1,11 @@
+using System.Text.Json.Serialization;
+
 namespace MessageService.Core.Models;
 
 public class Conversation
 {
     public Guid Id { get; set; }
-    public ConversationType Type { get; set; }
+    public string Type { get; set; }
     public Guid TripId { get; set; }
     public string? Title { get; set; }
     public DateTime? Date { get; set; }
@@ -11,10 +13,4 @@ public class Conversation
 
     public List<ConversationMember> Members { get; set; } = [];
     public List<Message> Messages { get; set; } = [];
-}
-
-public enum ConversationType
-{
-    Direct,
-    Group
 }

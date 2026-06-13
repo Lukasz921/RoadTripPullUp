@@ -1,3 +1,4 @@
+using Application.Exceptions;
 using FluentAssertions;
 using MessageService.Application.DTOs;
 using MessageService.Application.Services;
@@ -13,11 +14,10 @@ public class ConversationServiceTests
     public async Task CreateConversation_Should_RequireParticipants()
     {
         var convRepo = new Mock<IConversationRepository>();
-        var userRepo = new Mock<IUserRepository>();
         var clock = new Mock<IClockService>();
-        var svc = new ConversationService(convRepo.Object, userRepo.Object, clock.Object);
+        var svc = new ConversationService(convRepo.Object, clock.Object);
 
-        await Assert.ThrowsAsync<ArgumentException>(async () =>
+        await Assert.ThrowsAsync<InvalidParametersException>(async () =>
         {
             await svc.CreateConversationAsync(new CreateConversationDto { Participants = [] }, Guid.NewGuid());
         });
@@ -27,22 +27,21 @@ public class ConversationServiceTests
     public async Task GetForUser_ShouldMapToDto()
     {
         var convRepo = new Mock<IConversationRepository>();
-        var userRepo = new Mock<IUserRepository>();
         var clock = new Mock<IClockService>();
 
         var userId = Guid.NewGuid();
         var conv = new Conversation
         {
             Id = Guid.NewGuid(),
-            Type = ConversationType.Direct,
+            Type = "direct",
             Title = "",
             Members = [new ConversationMember { UserId = userId }]
         };
 
         convRepo.Setup(r => r.GetForUserWithLastMessageAsync(userId, 0, 20))
-            .ReturnsAsync(new List<(Conversation conversation, Message? lastMessage)> { (conv, null) });
+            .ReturnsAsync([(conv, null)]);
 
-        var svc = new ConversationService(convRepo.Object, userRepo.Object, clock.Object);
+        var svc = new ConversationService(convRepo.Object, clock.Object);
         var list = await svc.GetForUserAsync(userId, 0, 20);
         var conversationDtos = list.ToList();
         conversationDtos.Should().HaveCount(1);

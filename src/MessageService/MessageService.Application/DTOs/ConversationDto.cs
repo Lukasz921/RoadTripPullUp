@@ -5,7 +5,7 @@ namespace MessageService.Application.DTOs;
 public class ConversationDto
 {
     public Guid ConversationId { get; set; }
-    public ConversationType Type { get; set; }
+    public string Type { get; set; }
     public Guid TripId { get; set; }
     public string? Name { get; set; }
     public DateTime? Date { get; set; }

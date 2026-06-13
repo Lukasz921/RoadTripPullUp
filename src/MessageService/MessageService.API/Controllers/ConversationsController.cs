@@ -23,6 +23,7 @@ public class ConversationsController : ControllerBase
     public async Task<IActionResult> Create([FromBody] CreateConversationDto dto)
     {
         var userId = GetUserId();
+        if (string.IsNullOrEmpty(dto.Type)) dto.Type = "direct";
         var id = await _conversations.CreateConversationAsync(dto, userId);
         return CreatedAtAction(nameof(Get), new { conversationId = id }, new { conversationId = id });
     }

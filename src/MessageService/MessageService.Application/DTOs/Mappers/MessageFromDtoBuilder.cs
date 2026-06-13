@@ -25,11 +25,11 @@ public class MessageFromDtoBuilder
         return this;
     }
     
-    public bool ValidateType(ConversationType conversationType)
+    public bool ValidateType(string conversationType)
     {
-        return conversationType == ConversationType.Direct
-            ? _message.Type != MessageType.Location
-            : _message.Type is not (MessageType.PriceOffer or MessageType.PriceAccept or MessageType.OfferApproval);
+        return conversationType == "direct"
+            ? _message.Type != "location"
+            : _message.Type is not ("priceOffer" or "priceAccept" or "offerApproval");
     }
     
     public Message Build() => _message;
