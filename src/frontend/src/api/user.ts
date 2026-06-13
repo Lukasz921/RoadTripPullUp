@@ -29,7 +29,56 @@ export interface CurrentUser {
   phoneNumber?: string;
   dateOfBirth: string;
   sex: string;
+  avgRating: number;
+  ratingsCount: number;
+  isBanned: boolean;
+  banReason?: string;
+  bannedUntil?: string;
 }
+
+export interface UpdateUserDTO {
+  name?: string;
+  surname?: string;
+  phoneNumber?: string;
+  dateOfBirth?: string;
+  sex?: Sex;
+}
+
+export interface TripIntegrationData {
+  isAdult: boolean;
+  canCreateTrip: boolean;
+}
+
+export interface UserIntegrationDTO {
+  id: string;
+  fullName: string;
+  email: string;
+  trip: TripIntegrationData;
+}
+
+export interface RatingResponseDTO {
+  id: string;
+  raterId: string;
+  raterName?: string;
+  value: number;
+  comment?: string;
+  createdAt: string;
+}
+
+export interface BanUserDTO {
+  reason: string;
+  until?: string;
+}
+
+// Mirrors Users.Core.UserRole — serialized as a number (no JsonStringEnumConverter on the backend).
+export const UserRole = {
+  RegularUser: 0,
+  Admin: 1,
+} as const;
+
+export type UserRole = (typeof UserRole)[keyof typeof UserRole];
+
+// --- Auth ---
 
 export const register = async (dto: RegisterDTO): Promise<void> => {
   await authApi.post('/auth/register', dto);
@@ -40,7 +89,54 @@ export const login = async (dto: LoginDTO): Promise<LoginResponseDTO> => {
   return response.data;
 };
 
+// --- Current user ---
+
 export const getCurrentUser = async (): Promise<CurrentUser> => {
   const response = await authApi.get<CurrentUser>('/users/me');
   return response.data;
+};
+
+export const updateCurrentUser = async (dto: UpdateUserDTO): Promise<void> => {
+  await authApi.patch('/users/me', dto);
+};
+
+export const getIntegrationData = async (): Promise<UserIntegrationDTO> => {
+  const response = await authApi.get<UserIntegrationDTO>('/users/me/integration-data');
+  return response.data;
+};
+
+// --- Ratings ---
+
+export const rateUser = async (userId: string, value: number, comment?: string): Promise<void> => {
+  await authApi.post(`/users/${userId}/rating`, value, {
+    params: comment ? { comment } : undefined,
+  });
+};
+
+export const getUserRatings = async (userId: string): Promise<RatingResponseDTO[]> => {
+  const response = await authApi.get<RatingResponseDTO[]>(`/users/${userId}/ratings`);
+  return response.data;
+};
+
+export const getRating = async (ratingId: string): Promise<RatingResponseDTO> => {
+  const response = await authApi.get<RatingResponseDTO>(`/users/ratings/${ratingId}`);
+  return response.data;
+};
+
+export const deleteRating = async (ratingId: string): Promise<void> => {
+  await authApi.delete(`/users/ratings/${ratingId}`);
+};
+
+// --- Admin ---
+
+export const banUser = async (userId: string, dto: BanUserDTO): Promise<void> => {
+  await authApi.post(`/users/${userId}/ban`, dto);
+};
+
+export const unbanUser = async (userId: string): Promise<void> => {
+  await authApi.post(`/users/${userId}/unban`);
+};
+
+export const changeRole = async (userId: string, role: UserRole): Promise<void> => {
+  await authApi.post(`/users/${userId}/role`, role);
 };
