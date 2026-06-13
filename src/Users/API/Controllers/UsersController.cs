@@ -50,4 +50,23 @@ public class UsersController : ControllerBase
         var data = await _userService.GetUserIntegrationData(userId);
         return Ok(data);
     }
+
+    [HttpPost("{id}/rating")]
+    public async Task<IActionResult> RateUser(Guid id, [FromBody] int value, [FromQuery] string? comment)
+    {
+        var raterIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (raterIdClaim == null) return Unauthorized();
+
+        var raterId = Guid.Parse(raterIdClaim.Value);
+        
+        await _userService.AddRating(new AddRatingDTO
+        {
+            UserId = id,
+            RaterId = raterId,
+            Value = value,
+            Comment = comment
+        });
+
+        return Ok();
+    }
 }

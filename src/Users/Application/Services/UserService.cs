@@ -7,10 +7,12 @@ namespace Users.Application.Services;
 public class UserService : IUserService
 {
     private readonly IUserRepository _userRepository;
+    private readonly IRatingRepository _ratingRepository;
 
-    public UserService(IUserRepository userRepository)
+    public UserService(IUserRepository userRepository, IRatingRepository ratingRepository)
     {
         _userRepository = userRepository;
+        _ratingRepository = ratingRepository;
     }
 
     public async Task<UserResponseDTO> GetById(Guid id)
@@ -29,7 +31,9 @@ public class UserService : IUserService
             Email = user.Email,
             PhoneNumber = user.PhoneNumber,
             DateOfBirth = user.DateOfBirth,
-            Sex = user.Sex.ToString()
+            Sex = user.Sex.ToString(),
+            AvgRating = user.AvgRating,
+            RatingsCount = user.RatingsCount
         };
     }
 
@@ -56,6 +60,39 @@ public class UserService : IUserService
                 throw new Exception("Invalid value for Sex.");
             }
         }
+
+        await _userRepository.Save(user);
+    }
+
+    public async Task AddRating(AddRatingDTO dto)
+    {
+        if (dto.Value < 1 || dto.Value > 5)
+        {
+            throw new Exception("Rating must be between 1 and 5.");
+        }
+
+        var user = await _userRepository.FindById(dto.UserId);
+        if (user == null)
+        {
+            throw new Exception("User not found.");
+        }
+
+        var rating = new Rating
+        {
+            Id = Guid.NewGuid(),
+            UserId = dto.UserId,
+            RaterId = dto.RaterId,
+            Value = dto.Value,
+            Comment = dto.Comment,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        await _ratingRepository.Add(rating);
+
+        // Update average rating
+        double totalScore = (user.AvgRating * user.RatingsCount) + dto.Value;
+        user.RatingsCount++;
+        user.AvgRating = totalScore / user.RatingsCount;
 
         await _userRepository.Save(user);
     }
