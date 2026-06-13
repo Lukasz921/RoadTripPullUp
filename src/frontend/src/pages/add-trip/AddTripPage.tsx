@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Navbar from '../components/layout/Navbar';
-import Footer from '../components/layout/Footer';
-import LocationAutocomplete from '../components/LocationAutocomplete';
-import MapPoint from '../components/ui/MapPoint';
-import TripRouteMap from '../components/TripRouteMap';
-import NumberInput from '../components/ui/NumberInput';
-import type { Place } from '../utils/geoapify';
-import { createTrip } from '../api/trips';
+import Navbar from '../../components/layout/Navbar';
+import Footer from '../../components/layout/Footer';
+import LocationAutocomplete from '../../components/LocationAutocomplete';
+import MapPoint from '../../components/ui/MapPoint';
+import TripRouteMap from '../../components/TripRouteMap';
+import NumberInput from '../../components/ui/NumberInput';
+import type { Place } from '../../utils/geoapify';
+import { createTrip } from '../../api/trips';
 
 export default function AddTripPage() {
   const navigate = useNavigate();
