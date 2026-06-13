@@ -5,6 +5,7 @@ import Footer from '../components/layout/Footer';
 import TripRouteMap from '../components/TripRouteMap';
 import { getTripById, type TripDTO } from '../api/trips';
 import { reverseGeocode } from '../api/reverseGeocode';
+import { useCurrentUser } from '../hooks/useCurrentUser';
 import type { Place } from '../utils/geoapify';
 import { formatDate, metersToKm, secondsToTime } from '../utils/format';
 
@@ -20,6 +21,7 @@ function Field({ label, value }: { label: string; value: string }) {
 export default function TripDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useCurrentUser();
   const [trip, setTrip] = useState<TripDTO | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -78,15 +80,17 @@ export default function TripDetailsPage() {
               </div>
             </section>
 
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => navigate(`/trip/${id}/chats`)}
-                className="flex-1 rounded-xl bg-[#12351f] px-4 py-3 text-sm font-semibold text-white hover:bg-[#1d4a2d]"
-              >
-                Trip chats
-              </button>
-            </div>
+            {!!user && (trip.driverId === user.id || trip.passengerIds.includes(user.id)) && (
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => navigate(`/trip/${id}/chats`)}
+                  className="flex-1 rounded-xl bg-[#12351f] px-4 py-3 text-sm font-semibold text-white hover:bg-[#1d4a2d]"
+                >
+                  Trip chats
+                </button>
+              </div>
+            )}
 
             <section className="rounded-2xl bg-white p-4 shadow-sm" style={{ height: '420px' }}>
               <h2 className="mb-3 text-lg font-semibold text-[#12351f]">Route</h2>

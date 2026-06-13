@@ -18,6 +18,7 @@ export default function ChatPage() {
   const [endPlace, setEndPlace] = useState('');
   const [nameById, setNameById] = useState<Record<string, string>>({});
   const [joining, setJoining] = useState(false);
+  const [added, setAdded] = useState(false);
   const [joinError, setJoinError] = useState('');
 
   // Fetch the conversation.
@@ -91,6 +92,7 @@ export default function ChatPage() {
     setJoinError('');
     try {
       await addToTrip(conversation.tripId, passengerId);
+      setAdded(true);
     } catch {
       setJoinError('Failed to add to trip. Please try again.');
     } finally {
@@ -119,10 +121,10 @@ export default function ChatPage() {
                 <button
                   type="button"
                   onClick={addToTripHandler}
-                  disabled={joining}
+                  disabled={joining || added}
                   className="rounded-xl bg-[#8cc63f] px-4 py-2 text-sm font-semibold text-[#12351f] hover:bg-[#a6dd55] disabled:opacity-60"
                 >
-                  {joining ? 'Joining…' : 'Add to trip'}
+                  {added ? 'Added' : joining ? 'Joining…' : 'Add to trip'}
                 </button>
                 {joinError && (
                   <p className="mt-2 text-sm text-red-600">{joinError}</p>
