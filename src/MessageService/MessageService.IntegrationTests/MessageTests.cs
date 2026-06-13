@@ -88,11 +88,6 @@ public class MessageTests : IClassFixture<CustomWebApplicationFactory>
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var message = await response.Content.ReadFromJsonAsync<Dictionary<string, object>>();
         
-        // debug output
-        _testOutputHelper.WriteLine("Response content:");
-        foreach (var kvp in message ?? new Dictionary<string, object>())        {
-            _testOutputHelper.WriteLine($"{kvp.Key}: {kvp.Value}");
-        }
         Assert.NotNull(message);
         Assert.True(message.ContainsKey("messageId"));
         // parse payload as JsonObject
