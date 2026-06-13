@@ -17,6 +17,8 @@ export default function NumberInput({ label, value, onChange, placeholder, min =
         step={step}
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        // Prevent mouse-wheel scrolling from silently changing the value.
+        onWheel={(e) => e.currentTarget.blur()}
         placeholder={placeholder}
         className="mt-1 h-12 w-full rounded-xl border border-[#d7e8c8] bg-white px-4 font-semibold text-[#12351f] outline-none focus:border-[#8cc63f]"
       />

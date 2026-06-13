@@ -133,3 +133,24 @@ export const pollSearch = async (jobId: string) => {
   const response = await tripApi.get<SearchJobProgressDTO | SearchJobResultDTO>(`/search/${jobId}`);
   return { status: response.status, data: response.data };
 };
+
+// GET /trips/history — paged list of the user's past trips.
+export const getTripHistory = async (page = 1, pageSize = 20) => {
+  const response = await tripApi.get<PagedTripsDTO>('/history', { params: { page, pageSize } });
+  return response.data;
+};
+
+export interface SearchTripsQueryDTO {
+  sourceLat: number;
+  sourceLng: number;
+  targetLat: number;
+  targetLng: number;
+  dateFrom: string;
+  dateTo: string;
+  maxPrice?: number;
+  minSeats?: number;
+  sortBy?: string;
+  page?: number;
+  pageSize?: number;
+}
+

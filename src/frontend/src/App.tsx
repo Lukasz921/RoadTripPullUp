@@ -1,15 +1,16 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import LoginRegisterPage from './pages/LoginRegisterPage.tsx';
 import MainPage from './pages/MainPage';
-import ProfilePage from './pages/ProfilePage';
-import AddTripPage from './pages/AddTripPage';
+import ProfilePage from './pages/profile/ProfilePage.tsx';
+import AddTripPage from './pages/add-trip/AddTripPage.tsx';
 import SearchTripsPage from './pages/SearchTripsPage';
-import JoinedRidesPage from './pages/JoinedRidesPage';
-import MyRidesPage from './pages/MyRidesPage';
+import JoinedRidesPage from './pages/rides-page/JoinedRidesPage.tsx';
+import MyRidesPage from './pages/rides-page/MyRidesPage.tsx';
 import TripDetailsPage from './pages/TripDetailsPage';
 import TripChatsListPage from './pages/TripChatsListPage';
-import ChatPage from './pages/ChatPage';
+import ChatPage from './pages/chat/ChatPage.tsx';
 import MyConversationsPage from './pages/MyConversationsPage';
+import HistoricRidesPage from './pages/rides-page/HistoricRidesPage.tsx'
 
 export default function App() {
   return (
@@ -23,6 +24,7 @@ export default function App() {
         <Route path="/search" element={<SearchTripsPage />} />
         <Route path="/joined-rides" element={<JoinedRidesPage />} />
         <Route path="/my-rides" element={<MyRidesPage />} />
+        <Route path="/historic-rides" element={<HistoricRidesPage />} />
         <Route path="/trip/:id" element={<TripDetailsPage />} />
         <Route path="/trip/:id/chats" element={<TripChatsListPage />} />
         <Route path="/conversation/:id" element={<ChatPage />} />

@@ -1,8 +1,8 @@
 import { useNavigate } from 'react-router-dom';
-import Navbar from '../components/layout/Navbar';
-import Footer from '../components/layout/Footer';
-import ProfileDetails from './profile/components/ProfileDetails';
-import { useCurrentUser } from '../hooks/useCurrentUser';
+import Navbar from '../../components/layout/Navbar';
+import Footer from '../../components/layout/Footer';
+import ProfileDetails from './components/ProfileDetails';
+import { useCurrentUser } from '../../hooks/useCurrentUser';
 
 export default function ProfilePage() {
   const navigate = useNavigate();
@@ -21,18 +21,24 @@ export default function ProfilePage() {
           {user && <ProfileDetails user={user} onUpdated={refetch} />}
         </header>
 
-        <div className="mt-10 flex gap-2">
+        <div className="mt-10 flex flex-wrap justify-center gap-2">
           <button
             onClick={() => navigate('/joined-rides')}
             className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-[#12351f] shadow-sm ring-1 ring-[#d7e8c8] hover:bg-[#f3faee]"
           >
-            Joined rides
+            Upcoming joined rides
           </button>
           <button
             onClick={() => navigate('/my-rides')}
             className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-[#12351f] shadow-sm ring-1 ring-[#d7e8c8] hover:bg-[#f3faee]"
           >
-            My rides
+            Upcoming driven rides
+          </button>
+          <button
+            onClick={() => navigate('/historic-rides')}
+            className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-[#12351f] shadow-sm ring-1 ring-[#d7e8c8] hover:bg-[#f3faee]"
+          >
+            Historic rides
           </button>
           <button
             onClick={() => navigate('/my-conversations')}

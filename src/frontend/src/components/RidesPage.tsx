@@ -1,16 +1,23 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Navbar from '../components/layout/Navbar';
-import Footer from '../components/layout/Footer';
-import TripSummaryCard from '../components/TripSummaryCard';
-import { useJoinedTrips } from '../hooks/useJoinedTrips';
+import Navbar from './layout/Navbar';
+import Footer from './layout/Footer';
+import TripSummaryCard from './TripSummaryCard';
+import { usePagedTrips } from '../hooks/usePagedTrips';
+import type { PagedTripsDTO, TripDTO } from '../api/trips';
 
 const PAGE_SIZE = 10;
 
-export default function JoinedRidesPage() {
-  const navigate = useNavigate();
+interface RidesPageProps {
+  title: string;
+  fetchTrips: (page: number, pageSize: number) => Promise<PagedTripsDTO>;
+  emptyMessage: string;
+  headerButton?: { label: string; onClick: () => void };
+  cardAction?: (trip: TripDTO) => { label: string; onClick: () => void } | undefined;
+}
+
+export default function RidesPage({ title, fetchTrips, emptyMessage, headerButton, cardAction }: RidesPageProps) {
   const [page, setPage] = useState(1);
-  const { trips, totalCount, loading, error } = useJoinedTrips(page, PAGE_SIZE);
+  const { trips, totalCount, loading, error } = usePagedTrips(fetchTrips, page, PAGE_SIZE);
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
@@ -20,13 +27,15 @@ export default function JoinedRidesPage() {
 
       <div className="mx-auto w-full max-w-3xl flex-1 px-6 pb-16 pt-28">
         <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-3xl font-bold">Joined rides</h1>
-          <button
-            onClick={() => navigate('/search')}
-            className="rounded-xl bg-[#8cc63f] px-4 py-2 text-sm font-semibold text-[#12351f] hover:bg-[#a6dd55]"
-          >
-            Search rides
-          </button>
+          <h1 className="text-3xl font-bold">{title}</h1>
+          {headerButton && (
+            <button
+              onClick={headerButton.onClick}
+              className="rounded-xl bg-[#8cc63f] px-4 py-2 text-sm font-semibold text-[#12351f] hover:bg-[#a6dd55]"
+            >
+              {headerButton.label}
+            </button>
+          )}
         </div>
 
         {loading && <p className="text-sm text-[#5d7056]">Loading rides...</p>}
@@ -36,13 +45,13 @@ export default function JoinedRidesPage() {
         )}
 
         {!loading && !error && trips.length === 0 && (
-          <p className="text-sm text-[#5d7056]">You haven't joined any rides yet.</p>
+          <p className="text-sm text-[#5d7056]">{emptyMessage}</p>
         )}
 
         {!loading && !error && trips.length > 0 && (
           <div className="flex flex-col gap-3">
             {trips.map((trip) => (
-              <TripSummaryCard key={trip.id} trip={trip} />
+              <TripSummaryCard key={trip.id} trip={trip} action={cardAction?.(trip)} />
             ))}
           </div>
         )}
