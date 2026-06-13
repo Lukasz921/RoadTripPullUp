@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import Navbar from '../components/layout/Navbar';
-import Footer from '../components/layout/Footer';
-import { getConversation, type ConversationDTO } from '../api/messages';
-import { addToTrip, getTripById, type TripDTO } from '../api/trips';
-import { getUserById } from '../api/user';
-import { reverseGeocode } from '../api/reverseGeocode';
-import { useCurrentUser } from '../hooks/useCurrentUser';
-import Chat from './chat/Chat';
+import Navbar from '../../components/layout/Navbar';
+import Footer from '../../components/layout/Footer';
+import { getConversation, type ConversationDTO } from '../../api/messages';
+import { addToTrip, getTripById, type TripDTO } from '../../api/trips';
+import { getUserById } from '../../api/user';
+import { reverseGeocode } from '../../api/reverseGeocode';
+import { useCurrentUser } from '../../hooks/useCurrentUser';
+import Chat from './Chat';
 
 export default function ChatPage() {
   const { id: conversationId } = useParams<{ id: string }>();

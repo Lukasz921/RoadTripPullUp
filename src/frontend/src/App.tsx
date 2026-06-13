@@ -1,14 +1,14 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import LoginRegisterPage from './pages/LoginRegisterPage.tsx';
 import MainPage from './pages/MainPage';
-import ProfilePage from './pages/ProfilePage';
+import ProfilePage from './pages/profile/ProfilePage.tsx';
 import AddTripPage from './pages/AddTripPage';
 import SearchTripsPage from './pages/SearchTripsPage';
-import JoinedRidesPage from './pages/JoinedRidesPage';
-import MyRidesPage from './pages/MyRidesPage';
+import JoinedRidesPage from './pages/rides-page/JoinedRidesPage.tsx';
+import MyRidesPage from './pages/rides-page/MyRidesPage.tsx';
 import TripDetailsPage from './pages/TripDetailsPage';
 import TripChatsListPage from './pages/TripChatsListPage';
-import ChatPage from './pages/ChatPage';
+import ChatPage from './pages/chat/ChatPage.tsx';
 import MyConversationsPage from './pages/MyConversationsPage';
 
 export default function App() {
