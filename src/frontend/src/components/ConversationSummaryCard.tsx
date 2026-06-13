@@ -4,6 +4,7 @@ import type { ConversationDTO } from '../api/messages';
 import { getTripById, type TripDTO } from '../api/trips';
 import { getUserById } from '../api/user';
 import { reverseGeocode } from '../api/reverseGeocode';
+import { useCurrentUser } from '../hooks/useCurrentUser';
 import { formatDate } from '../utils/format';
 
 interface ConversationSummaryCardProps {
@@ -18,6 +19,7 @@ function hasRealLastMessage(iso?: string): boolean {
 
 export default function ConversationSummaryCard({ conversation, navigationState }: ConversationSummaryCardProps) {
   const navigate = useNavigate();
+  const { user } = useCurrentUser();
   const isGroup = conversation.type?.toLowerCase() === 'group';
 
   const [trip, setTrip] = useState<TripDTO | null>(null);
@@ -46,10 +48,10 @@ export default function ConversationSummaryCard({ conversation, navigationState 
     };
   }, [conversation.tripId]);
 
-  // For direct chats, show the other person's name + surname.
+  // For direct chats, show the other person's name + surname (the participant that isn't the logged-in user).
   useEffect(() => {
-    if (isGroup) return;
-    const otherId = conversation.participants[conversation.participants.length - 1];
+    if (isGroup || !user) return;
+    const otherId = conversation.participants.find((id) => id !== user.id);
     if (!otherId) return;
     let cancelled = false;
     getUserById(otherId)
@@ -60,7 +62,7 @@ export default function ConversationSummaryCard({ conversation, navigationState 
     return () => {
       cancelled = true;
     };
-  }, [isGroup, conversation.participants]);
+  }, [isGroup, conversation.participants, user]);
 
   const title = isGroup
     ? 'Group chat'
