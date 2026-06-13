@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { getCurrentUser, type CurrentUser } from '../api/user';
 
 interface UseCurrentUserResult {
   user: CurrentUser | null;
   loading: boolean;
   error: string;
+  refetch: () => Promise<void>;
 }
 
 export function useCurrentUser(): UseCurrentUserResult {
@@ -12,15 +13,23 @@ export function useCurrentUser(): UseCurrentUserResult {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    getCurrentUser()
-      .then((data) => setUser(data))
-      .catch((err) => {
-        console.error('Failed to load user:', err);
-        setError('Failed to load profile.');
-      })
-      .finally(() => setLoading(false));
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await getCurrentUser();
+      setUser(data);
+    } catch (err) {
+      console.error('Failed to load user:', err);
+      setError('Failed to load profile.');
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  return { user, loading, error };
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  return { user, loading, error, refetch: load };
 }
