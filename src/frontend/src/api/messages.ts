@@ -1,7 +1,7 @@
 import { messageApi } from './axiosConfig';
 
 export type ConversationType = 'direct' | 'group';
-export type MessageType = 'Text' | 'PriceOffer' | 'PriceAccept' | 'OfferApproval' | 'Location';
+export type MessageType = 'text' | 'priceOffer' | 'priceAccept' | 'offerApproval' | 'location';
 
 // --- Conversations ---
 
@@ -79,39 +79,12 @@ export interface MessageListParams {
   toConversation?: number;
 }
 
-export interface SyncResponseDTO {
-  messages: MessageDTO[];
-  serverTimestamp: string;
-}
-
-export interface ReadReceiptDTO {
-  conversationId: string;
-  lastReadMessageId?: string;
-  lastReadTimestamp?: string;
-}
-
 export const sendMessage = async (dto: CreateMessageDTO): Promise<{ messageId: string }> => {
-  const response = await messageApi.post('/messages', { ...dto, type: 'Text' });
+  const response = await messageApi.post('/messages', { ...dto, type: 'text' });
   return response.data;
 };
 
 export const getMessages = async (conversationId: string, params?: MessageListParams): Promise<MessageDTO[]> => {
   const response = await messageApi.get(`/conversations/${conversationId}/messages`, { params });
   return response.data;
-};
-
-export const getMessage = async (messageId: string): Promise<MessageDTO> => {
-  const response = await messageApi.get(`/messages/${messageId}`);
-  return response.data;
-};
-
-export const syncMessages = async (lastReceivedAt?: string): Promise<SyncResponseDTO> => {
-  const response = await messageApi.get('/messages/sync', {
-    params: lastReceivedAt ? { lastReceivedAt } : undefined,
-  });
-  return response.data;
-};
-
-export const markAsRead = async (dto: ReadReceiptDTO): Promise<void> => {
-  await messageApi.post('/messages/read', dto);
 };
