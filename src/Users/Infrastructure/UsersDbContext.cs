@@ -10,6 +10,7 @@ public class UsersDbContext : DbContext
     }
 
     public DbSet<User> Users { get; set; }
+    public DbSet<Rating> Ratings { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -25,6 +26,29 @@ public class UsersDbContext : DbContext
             entity.Property(u => u.PasswordHash).IsRequired();
             entity.Property(u => u.PhoneNumber).HasMaxLength(20);
             entity.Property(u => u.DateOfBirth).IsRequired();
+            entity.Property(u => u.AvgRating).HasDefaultValue(0);
+            entity.Property(u => u.RatingsCount).HasDefaultValue(0);
+            entity.Property(u => u.IsBanned).HasDefaultValue(false);
+            entity.Property(u => u.BanReason).HasMaxLength(500);
+            entity.Property(u => u.BannedUntil).IsRequired(false);
+        });
+
+        modelBuilder.Entity<Rating>(entity =>
+        {
+            entity.HasKey(r => r.Id);
+            entity.Property(r => r.Value).IsRequired();
+            entity.Property(r => r.CreatedAt).IsRequired();
+            entity.Property(r => r.Comment).HasMaxLength(500);
+
+            entity.HasOne(r => r.User)
+                .WithMany()
+                .HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(r => r.Rater)
+                .WithMany()
+                .HasForeignKey(r => r.RaterId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }
