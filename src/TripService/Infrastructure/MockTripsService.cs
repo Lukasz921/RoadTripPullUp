@@ -1,4 +1,5 @@
-using Application.Exceptions;
+using TripService.Application.Exceptions;
+using MessageService.Core.Exceptions;
 using TripService.Application;
 using System.Collections.Concurrent;
 
@@ -320,3 +321,4 @@ public class MockTripsService : ITripsService
         public int TotalCount { get; set; }
     }
 }
+

@@ -3,9 +3,6 @@ WORKDIR /src
 
 COPY ["Backend.sln", "./"]
 COPY ["src/API/API.csproj", "src/API/"]
-COPY ["src/Application/Application.csproj", "src/Application/"]
-COPY ["src/Infrastructure/Infrastructure.csproj", "src/Infrastructure/"]
-COPY ["src/Core/Core.csproj", "src/Core/"]
 COPY ["src/Users/Users.csproj", "src/Users/"]
 COPY ["src/TripService/TripService.csproj", "src/TripService/"]
 

@@ -1,4 +1,4 @@
-using Application.Exceptions;
+using MessageService.Core.Exceptions;
 using FluentAssertions;
 using MessageService.Application.DTOs;
 using MessageService.Application.Services;
@@ -49,4 +49,5 @@ public class ConversationServiceTests
         dto.Participants.Should().Contain(userId);
     }
 }
+
 

@@ -1,4 +1,4 @@
-using Application.Exceptions;
+using MessageService.Core.Exceptions;
 using TripService.Application;
 
 namespace TripService.Infrastructure;
@@ -33,3 +33,4 @@ public partial class TripsService
         await _repository.RateTripAsync(tripGuid, raterGuid, driverGuid.Value, dto.Rating);
     }
 }
+

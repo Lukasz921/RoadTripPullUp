@@ -1,4 +1,4 @@
-namespace Application.Exceptions;
+namespace MessageService.Core.Exceptions;
 
 public class NotFoundException : Exception
 {

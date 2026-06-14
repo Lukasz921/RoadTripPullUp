@@ -1,5 +1,5 @@
 using System.Security.Claims;
-using Application.Exceptions;
+using MessageService.Core.Exceptions;
 using MessageService.Application.DTOs;
 using MessageService.Application.Helpers;
 using MessageService.Application.Services;
@@ -103,3 +103,4 @@ public class MessagesController : ControllerBase
         return string.IsNullOrEmpty(sub) ? Guid.Empty : Guid.Parse(sub);
     }
 }
+
