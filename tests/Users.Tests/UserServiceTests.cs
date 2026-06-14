@@ -11,83 +11,30 @@ namespace Users.Tests;
 public class UserServiceTests
 {
     private readonly Mock<IUserRepository> _userRepositoryMock;
-    private readonly Mock<IRatingRepository> _ratingRepositoryMock;
     private readonly UserService _userService;
 
     public UserServiceTests()
     {
         _userRepositoryMock = new Mock<IUserRepository>();
-        _ratingRepositoryMock = new Mock<IRatingRepository>();
-        _userService = new UserService(_userRepositoryMock.Object, _ratingRepositoryMock.Object);
+        _userService = new UserService(_userRepositoryMock.Object);
     }
 
     [Fact]
-    public async Task AddRating_ShouldUpdateAverageRatingCorrectly()
+    public async Task UpdateUserRating_ShouldUpdateAverageRatingCorrectly()
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var raterId = Guid.NewGuid();
         var user = new User { Id = userId, AvgRating = 4.0, RatingsCount = 1 };
-        var rater = new User { Id = raterId, IsBanned = false };
 
         _userRepositoryMock.Setup(r => r.FindById(userId)).ReturnsAsync(user);
-        _userRepositoryMock.Setup(r => r.FindById(raterId)).ReturnsAsync(rater);
-
-        var dto = new AddRatingDTO
-        {
-            UserId = userId,
-            RaterId = raterId,
-            Value = 5,
-            Comment = "Great driver!"
-        };
 
         // Act
-        await _userService.AddRating(dto);
+        await _userService.UpdateUserRating(userId, 5);
 
         // Assert
         user.RatingsCount.Should().Be(2);
         user.AvgRating.Should().Be(4.5); // (4*1 + 5) / 2 = 4.5
-        _ratingRepositoryMock.Verify(r => r.Add(It.IsAny<Rating>()), Times.Once);
         _userRepositoryMock.Verify(r => r.Save(user), Times.Once);
-    }
-
-    [Fact]
-    public async Task AddRating_ShouldThrow_WhenRaterIsBanned()
-    {
-        // Arrange
-        var raterId = Guid.NewGuid();
-        var rater = new User { Id = raterId, IsBanned = true, BannedUntil = DateTime.UtcNow.AddDays(1) };
-        _userRepositoryMock.Setup(r => r.FindById(raterId)).ReturnsAsync(rater);
-
-        var dto = new AddRatingDTO { RaterId = raterId, Value = 5 };
-
-        // Act
-        var act = () => _userService.AddRating(dto);
-
-        // Assert
-        await act.Should().ThrowAsync<Exception>().WithMessage("Banned users cannot give ratings.");
-    }
-
-    [Fact]
-    public async Task DeleteRating_ShouldRecalculateAverageCorrectly()
-    {
-        // Arrange
-        var userId = Guid.NewGuid();
-        var raterId = Guid.NewGuid();
-        var ratingId = Guid.NewGuid();
-        var user = new User { Id = userId, AvgRating = 4.5, RatingsCount = 2 };
-        var rating = new Rating { Id = ratingId, UserId = userId, RaterId = raterId, Value = 5 };
-
-        _ratingRepositoryMock.Setup(r => r.GetById(ratingId)).ReturnsAsync(rating);
-        _userRepositoryMock.Setup(r => r.FindById(userId)).ReturnsAsync(user);
-
-        // Act
-        await _userService.DeleteRating(ratingId, raterId);
-
-        // Assert
-        user.RatingsCount.Should().Be(1);
-        user.AvgRating.Should().Be(4.0); // (4.5*2 - 5) / 1 = 4.0
-        _ratingRepositoryMock.Verify(r => r.Delete(rating), Times.Once);
     }
 
     [Fact]

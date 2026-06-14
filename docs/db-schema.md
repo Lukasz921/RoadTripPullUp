@@ -26,18 +26,6 @@ erDiagram
         text BanReason
         datetime BannedUntil
     }
-
-    RATINGS {
-        uuid Id PK
-        uuid UserId FK
-        uuid RaterId FK
-        int Value
-        text Comment
-        datetime CreatedAt
-    }
-
-    USERS ||--o{ RATINGS : "receives"
-    USERS ||--o{ RATINGS : "gives (RaterId)"
 ```
 
 | Enum | Values |
@@ -123,7 +111,17 @@ erDiagram
         timestamptz joined_at
     }
 
+    TRIP_RATING {
+        uuid id PK
+        uuid trip_id FK
+        uuid rater_user_id
+        uuid rated_user_id
+        smallint rating
+        timestamptz created_at
+    }
+
     TRIP ||--o{ TRIP_PASSENGER : includes
+    TRIP ||--o{ TRIP_RATING : "has"
 ```
 
 `status` ∈ `ACTIVE` (only value used in practice — trips are hard-deleted, not transitioned to other states)
@@ -135,3 +133,5 @@ erDiagram
 - `idx_trip_departure_active` — on `departure_time` filtered to `status = 'ACTIVE'`
 - `idx_trip_driver_active` — on `driver_user_id` filtered to `status = 'ACTIVE'`
 - `idx_trip_passenger_user` — on `trip_passenger(passenger_user_id)`
+- `idx_trip_rating_rated_user` — on `trip_rating(rated_user_id)`
+- `idx_trip_rating_rater_user` — on `trip_rating(rater_user_id)`

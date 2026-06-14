@@ -119,6 +119,20 @@ public class MockTripsService : ITripsService
         return Task.CompletedTask;
     }
 
+    public Task RateTripAsync(string tripId, string raterId, RateTripDTO dto)
+    {
+        if (!_trips.TryGetValue(tripId, out var trip))
+            throw new NotFoundException($"Trip {tripId} not found.");
+        
+        if (trip.DriverId == raterId)
+            throw new ValidationException("Drivers cannot rate their own trips.");
+        
+        if (!trip.PassengerIds.Contains(raterId))
+            throw new ForbiddenException("Only passengers can rate the trip.");
+
+        return Task.CompletedTask;
+    }
+
     public Task<PagedTripsDTO> GetAllTripsAsync(DateTime? dateFrom, DateTime? dateTo, int page, int pageSize)
     {
         var all = _trips.Values

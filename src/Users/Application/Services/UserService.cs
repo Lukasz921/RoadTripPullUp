@@ -8,12 +8,10 @@ namespace Users.Application.Services;
 public class UserService : IUserService
 {
     private readonly IUserRepository _userRepository;
-    private readonly IRatingRepository _ratingRepository;
 
-    public UserService(IUserRepository userRepository, IRatingRepository ratingRepository)
+    public UserService(IUserRepository userRepository)
     {
         _userRepository = userRepository;
-        _ratingRepository = ratingRepository;
     }
 
     public async Task<UserResponseDTO> GetById(Guid id)
@@ -73,97 +71,16 @@ public class UserService : IUserService
         await _userRepository.Save(user);
     }
 
-    public async Task AddRating(AddRatingDTO dto)
+    public async Task UpdateUserRating(Guid userId, int rating)
     {
-        var rater = await _userRepository.FindById(dto.RaterId);
-        if (rater != null && rater.IsBanned && (rater.BannedUntil == null || rater.BannedUntil > DateTime.UtcNow))
-        {
-            throw new Exception("Banned users cannot give ratings.");
-        }
+        var user = await _userRepository.FindById(userId);
+        if (user == null) throw new NotFoundException("User not found.");
 
-        if (dto.Value < 1 || dto.Value > 5)
-        {
-            throw new Exception("Rating must be between 1 and 5.");
-        }
-
-        var user = await _userRepository.FindById(dto.UserId);
-        if (user == null)
-        {
-            throw new NotFoundException("User not found.");
-        }
-
-        var rating = new Rating
-        {
-            Id = Guid.NewGuid(),
-            UserId = dto.UserId,
-            RaterId = dto.RaterId,
-            Value = dto.Value,
-            Comment = dto.Comment,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        await _ratingRepository.Add(rating);
-
-        // Update average rating
-        double totalScore = (user.AvgRating * user.RatingsCount) + dto.Value;
+        double totalScore = (user.AvgRating * user.RatingsCount) + rating;
         user.RatingsCount++;
         user.AvgRating = totalScore / user.RatingsCount;
 
         await _userRepository.Save(user);
-    }
-
-    public async Task<List<RatingResponseDTO>> GetUserRatings(Guid userId)
-    {
-        var ratings = await _ratingRepository.GetByUserId(userId);
-        return ratings.Select(r => new RatingResponseDTO
-        {
-            Id = r.Id,
-            RaterId = r.RaterId,
-            RaterName = r.Rater != null ? $"{r.Rater.Name} {r.Rater.Surname}" : "Unknown",
-            Value = r.Value,
-            Comment = r.Comment,
-            CreatedAt = r.CreatedAt
-        }).ToList();
-    }
-
-    public async Task<RatingResponseDTO> GetRating(Guid ratingId)
-    {
-        var r = await _ratingRepository.GetById(ratingId);
-        if (r == null) throw new Exception("Rating not found.");
-
-        return new RatingResponseDTO
-        {
-            Id = r.Id,
-            RaterId = r.RaterId,
-            RaterName = r.Rater != null ? $"{r.Rater.Name} {r.Rater.Surname}" : "Unknown",
-            Value = r.Value,
-            Comment = r.Comment,
-            CreatedAt = r.CreatedAt
-        };
-    }
-
-    public async Task DeleteRating(Guid ratingId, Guid currentUserId)
-    {
-        var rating = await _ratingRepository.GetById(ratingId);
-        if (rating == null) throw new Exception("Rating not found.");
-
-        if (rating.RaterId != currentUserId)
-        {
-            throw new Exception("You can only delete your own ratings.");
-        }
-
-        var user = await _userRepository.FindById(rating.UserId);
-        if (user != null)
-        {
-            // Recalculate average rating
-            double totalScore = (user.AvgRating * user.RatingsCount) - rating.Value;
-            user.RatingsCount--;
-            user.AvgRating = user.RatingsCount > 0 ? totalScore / user.RatingsCount : 0;
-            
-            await _userRepository.Save(user);
-        }
-
-        await _ratingRepository.Delete(rating);
     }
 
     public async Task Ban(Guid userId, BanUserDTO dto)

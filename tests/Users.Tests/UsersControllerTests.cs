@@ -51,23 +51,6 @@ public class UsersControllerTests
     }
 
     [Fact]
-    public async Task RateUser_ShouldCallService()
-    {
-        // Arrange
-        var targetId = Guid.NewGuid();
-        int value = 5;
-        string comment = "Good";
-
-        // Act
-        var result = await _controller.RateUser(targetId, value, comment);
-
-        // Assert
-        result.Should().BeOfType<OkResult>();
-        _userServiceMock.Verify(s => s.AddRating(It.Is<AddRatingDTO>(dto => 
-            dto.UserId == targetId && dto.Value == value && dto.Comment == comment)), Times.Once);
-    }
-
-    [Fact]
     public async Task Ban_ShouldCallService()
     {
         // Arrange

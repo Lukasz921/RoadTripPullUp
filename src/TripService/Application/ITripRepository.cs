@@ -11,6 +11,10 @@ public interface ITripRepository
     Task<Guid?> GetDriverIdAsync(Guid tripId);
     Task DeleteAsync(Guid id);
 
+    Task RateTripAsync(Guid tripId, Guid raterId, Guid ratedId, int rating);
+    Task<bool> HasRatedAsync(Guid tripId, Guid raterId, Guid ratedId);
+    Task<bool> IsPassengerAsync(Guid tripId, Guid userId);
+
     // Runs SELECT FOR UPDATE + INSERT in one transaction.
     // Pre-checks (UUID validity, user exists, driver != passenger) are the caller's responsibility.
     // Throws NotFoundException, ForbiddenException, ValidationException, SeatUnavailableException.

@@ -44,6 +44,11 @@ export interface UpdateUserDTO {
   sex?: Sex;
 }
 
+export interface BanUserDTO {
+  reason: string;
+  until?: string;
+}
+
 export interface RatingResponseDTO {
   id: string;
   raterId: string;
@@ -51,11 +56,6 @@ export interface RatingResponseDTO {
   value: number;
   comment?: string;
   createdAt: string;
-}
-
-export interface BanUserDTO {
-  reason: string;
-  until?: string;
 }
 
 // Mirrors Users.Core.UserRole — serialized as a number (no JsonStringEnumConverter on the backend).
@@ -97,9 +97,11 @@ export const getUserById = async (userId: string): Promise<CurrentUser> => {
 
 // --- Ratings ---
 
-export const rateUser = async (userId: string, value: number, comment?: string): Promise<void> => {
-  await authApi.post(`/users/${userId}/rating`, value, {
-    params: comment ? { comment } : undefined,
+export const rateUser = async (tripId: string, userId: string, value: number, comment?: string): Promise<void> => {
+  await authApi.post(`/trips/${tripId}/rate-user`, {
+    userId,
+    value,
+    comment,
   });
 };
 

@@ -11,6 +11,7 @@ public interface ITripsService
     Task AdminDeleteTripAsync(string tripId);
     Task AddPassengerAsync(string tripId, string driverId, string passengerId);
     Task DeleteTripAsync(string tripId, string driverId);
+    Task RateTripAsync(string tripId, string raterId, RateTripDTO dto);
     Task<SearchJobCreatedDTO> SubmitSearchAsync(SearchTripsRequestDTO dto, string userId);
     Task<SearchJobPollResult> PollSearchJobAsync(string jobId, string userId);
 }
