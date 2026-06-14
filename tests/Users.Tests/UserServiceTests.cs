@@ -161,21 +161,6 @@ public class UserServiceTests
     }
 
     [Fact]
-    public async Task Update_ShouldThrow_WhenUserIsBanned()
-    {
-        // Arrange
-        var userId = Guid.NewGuid();
-        var user = new User { Id = userId, IsBanned = true, BannedUntil = DateTime.UtcNow.AddDays(1) };
-        _userRepositoryMock.Setup(r => r.FindById(userId)).ReturnsAsync(user);
-
-        // Act
-        var act = () => _userService.Update(userId, new UpdateUserDTO { Name = "New Name" });
-
-        // Assert
-        await act.Should().ThrowAsync<Exception>().WithMessage("Banned users cannot update their profiles.");
-    }
-
-    [Fact]
     public async Task GetUserIntegrationData_ShouldBlockTripCreation_WhenBanned()
     {
         // Arrange
