@@ -1,3 +1,5 @@
+using API.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Users;
 using Users.Infrastructure;
 using Microsoft.OpenApi;
@@ -73,7 +75,16 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddScoped<IAuthorizationHandler, NotBannedHandler>();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("NotBanned", policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.AddRequirements(new NotBannedRequirement());
+    });
+    options.DefaultPolicy = options.GetPolicy("NotBanned")!;
+});
 
 builder.Services.AddUsersModule();
 
@@ -93,7 +104,6 @@ else
     builder.Services.AddScoped<IRoutingEngine, ValhallaRoutingEngine>();
 builder.Services.AddScoped<ITripRepository, TripRepository>();
 builder.Services.AddScoped<IUserChecker, UserCheckerAdapter>();
-builder.Services.AddScoped<MessageService.Application.Services.IUserBanChecker, MessageUserBanCheckerAdapter>();
 builder.Services.AddScoped<ITripsService, TripsService>();
 builder.Services.AddScoped<ITripsSearchService, TripsSearchService>();
 builder.Services.AddHostedService<SearchWorker>();

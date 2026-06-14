@@ -10,24 +10,17 @@ public class MessageService : IMessageService
     private readonly IConversationRepository _conversations;
     private readonly INotificationService _notifier;
     private readonly IClockService _clockService;
-    private readonly IUserBanChecker _userBanChecker;
 
-    public MessageService(IMessageRepository messages, IConversationRepository conversations, INotificationService notifier, IClockService clockService, IUserBanChecker userBanChecker)
+    public MessageService(IMessageRepository messages, IConversationRepository conversations, INotificationService notifier, IClockService clockService)
     {
         _messages = messages;
         _conversations = conversations;
         _notifier = notifier;
         _clockService = clockService;
-        _userBanChecker = userBanChecker;
     }
 
     public async Task<Guid> CreateMessageAsync(CreateMessageDto dto, Guid senderId)
     {
-        if (await _userBanChecker.IsUserBannedAsync(senderId))
-        {
-            throw new UnauthorizedAccessException("Banned users cannot send messages.");
-        }
-
         var conv = await _conversations.GetByIdAsync(dto.ConversationId);
         if (conv == null) throw new KeyNotFoundException("conversation not found");
 
