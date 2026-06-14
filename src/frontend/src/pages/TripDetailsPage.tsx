@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import TripRouteMap from '../components/TripRouteMap';
-import { getTripById, type TripDTO } from '../api/trips';
+import { getTripById, rateUser, type TripDTO } from '../api/trips';
 import { getUserById, type CurrentUser } from '../api/user';
 import { reverseGeocode } from '../api/reverseGeocode';
 import { useCurrentUser } from '../hooks/useCurrentUser';
@@ -22,6 +22,8 @@ function Field({ label, value }: { label: string; value: string }) {
 export default function TripDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const canRate = (location.state as { canRate?: boolean } | null)?.canRate ?? false;
   const { user } = useCurrentUser();
   const [trip, setTrip] = useState<TripDTO | null>(null);
   const [loading, setLoading] = useState(true);
@@ -29,6 +31,7 @@ export default function TripDetailsPage() {
   const [origin, setOrigin] = useState<Place | null>(null);
   const [destination, setDestination] = useState<Place | null>(null);
   const [userById, setUserById] = useState<Record<string, CurrentUser>>({});
+  const [rateOpen, setRateOpen] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -120,6 +123,15 @@ export default function TripDetailsPage() {
                 >
                   Trip chats
                 </button>
+                {canRate && trip.driverId !== user?.id && (
+                  <button
+                    type="button"
+                    onClick={() => setRateOpen(true)}
+                    className="flex-1 rounded-xl border border-[#12351f] px-4 py-3 text-sm font-semibold text-[#12351f] hover:bg-[#e8f5e0]"
+                  >
+                    Rate trip
+                  </button>
+                )}
               </div>
             )}
 
@@ -166,7 +178,125 @@ export default function TripDetailsPage() {
         )}
       </div>
 
+      {rateOpen && trip && (
+        <RateDriverModal
+          tripId={trip.id}
+          driverId={trip.driverId}
+          driverName={
+            userById[trip.driverId]
+              ? `${userById[trip.driverId].name} ${userById[trip.driverId].surname}`
+              : 'the driver'
+          }
+          onClose={() => setRateOpen(false)}
+        />
+      )}
+
       <Footer />
     </main>
+  );
+}
+
+function RateDriverModal({
+  tripId,
+  driverId,
+  driverName,
+  onClose,
+}: {
+  tripId: string;
+  driverId: string;
+  driverName: string;
+  onClose: () => void;
+}) {
+  const [value, setValue] = useState(0);
+  const [hover, setHover] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+  const [done, setDone] = useState(false);
+
+  async function submit() {
+    if (value < 1 || value > 5) return;
+    setSubmitting(true);
+    setError('');
+    try {
+      await rateUser(tripId, { userId: driverId, value });
+      setDone(true);
+    } catch (err) {
+      const status = (err as { response?: { status?: number } }).response?.status;
+      if (status === 409) setError('You have already rated this driver for this trip.');
+      else if (status === 400) setError('This trip cannot be rated.');
+      else setError('Failed to submit rating. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-lg"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {done ? (
+          <div className="text-center">
+            <h2 className="mb-2 text-lg font-semibold text-[#12351f]">Thanks for your rating!</h2>
+            <button
+              type="button"
+              onClick={onClose}
+              className="mt-2 w-full rounded-xl bg-[#12351f] px-4 py-3 text-sm font-semibold text-white hover:bg-[#1d4a2d]"
+            >
+              Close
+            </button>
+          </div>
+        ) : (
+          <>
+            <h2 className="mb-1 text-lg font-semibold text-[#12351f]">Rate {driverName}</h2>
+            <p className="mb-4 text-sm text-[#5d7056]">How was your ride with the driver?</p>
+
+            <div className="mb-4 flex justify-center gap-2">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  onMouseEnter={() => setHover(star)}
+                  onMouseLeave={() => setHover(0)}
+                  onClick={() => setValue(star)}
+                  className={`text-3xl leading-none transition ${
+                    star <= (hover || value) ? 'text-[#f5b301]' : 'text-[#d7e8c8]'
+                  }`}
+                  aria-label={`${star} star${star > 1 ? 's' : ''}`}
+                >
+                  ★
+                </button>
+              ))}
+            </div>
+
+            {error && (
+              <p className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 rounded-xl border border-[#12351f] px-4 py-3 text-sm font-semibold text-[#12351f] hover:bg-[#e8f5e0]"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={submit}
+                disabled={value < 1 || submitting}
+                className="flex-1 rounded-xl bg-[#12351f] px-4 py-3 text-sm font-semibold text-white hover:bg-[#1d4a2d] disabled:opacity-40"
+              >
+                {submitting ? 'Submitting...' : 'Submit'}
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
   );
 }
