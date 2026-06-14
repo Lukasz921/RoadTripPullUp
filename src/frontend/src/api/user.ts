@@ -118,17 +118,3 @@ export const getRating = async (ratingId: string): Promise<RatingResponseDTO> =>
 export const deleteRating = async (ratingId: string): Promise<void> => {
   await authApi.delete(`/users/ratings/${ratingId}`);
 };
-
-// --- Admin ---
-
-export const banUser = async (userId: string, dto: BanUserDTO): Promise<void> => {
-  await authApi.post(`/users/${userId}/ban`, dto);
-};
-
-export const unbanUser = async (userId: string): Promise<void> => {
-  await authApi.post(`/users/${userId}/unban`);
-};
-
-export const changeRole = async (userId: string, role: UserRole): Promise<void> => {
-  await authApi.post(`/users/${userId}/role`, role);
-};
