@@ -56,25 +56,6 @@ public class UsersApiTests : IClassFixture<IntegrationTestFactory>
     }
 
     [Fact]
-    public async Task User_CanRateAnotherUser()
-    {
-        // 1. Register two users
-        var user1Token = await RegisterAndLogin("user1@test.com", "User123!", "User", "One");
-        var user2 = await RegisterUser("user2@test.com", "User123!", "User", "Two");
-
-        // 2. User 1 rates User 2
-        _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", user1Token);
-        var rateResponse = await _client.PostAsJsonAsync($"/api/users/{user2.Id}/rating?comment=Good", 5);
-        rateResponse.EnsureSuccessStatusCode();
-
-        // 3. Verify rating
-        var ratingsResponse = await _client.GetAsync($"/api/users/{user2.Id}/ratings");
-        ratingsResponse.EnsureSuccessStatusCode();
-        var ratings = await ratingsResponse.Content.ReadFromJsonAsync<List<RatingResponseDTO>>();
-        ratings.Should().ContainSingle(r => r.Value == 5 && r.Comment == "Good");
-    }
-
-    [Fact]
     public async Task User_CanUpdateProfile()
     {
         // 1. Register and login

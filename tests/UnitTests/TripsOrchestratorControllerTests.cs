@@ -47,29 +47,30 @@ public class TripsOrchestratorControllerTests
     }
 
     [Fact]
-    public async Task RateUser_ShouldSucceed_WhenBothParticipatedInTrip()
+    public async Task RateUser_ShouldSucceed_WhenPassengerRatesDriver()
     {
         // Arrange
         var tripId = "trip-123";
-        var targetUserId = Guid.NewGuid();
+        var driverId = Guid.NewGuid();
         var trip = new TripDTO
         {
             Id = tripId,
-            DriverId = _currentUserId.ToString(),
-            PassengerIds = new List<string> { targetUserId.ToString() }
+            DriverId = driverId.ToString(),
+            PassengerIds = new List<string> { _currentUserId.ToString() },
+            DepartureTime = DateTime.UtcNow.AddHours(-1)
         };
 
         _tripsServiceMock.Setup(s => s.GetTripAsync(tripId)).ReturnsAsync(trip);
 
-        var dto = new RateUserDTO { UserId = targetUserId, Value = 5, Comment = "Good passenger" };
+        var dto = new RateUserDTO { UserId = driverId, Value = 5, Comment = "Good driver" };
 
         // Act
         var result = await _controller.RateUser(tripId, dto);
 
         // Assert
         result.Should().BeOfType<OkResult>();
-        _userServiceMock.Verify(s => s.AddRating(It.Is<Users.Application.DTOs.AddRatingDTO>(r => 
-            r.UserId == targetUserId && r.RaterId == _currentUserId)), Times.Once);
+        _tripsServiceMock.Verify(s => s.RateTripAsync(tripId, _currentUserId.ToString(), It.IsAny<RateTripDTO>()), Times.Once);
+        _userServiceMock.Verify(s => s.UpdateUserRating(driverId, 5), Times.Once);
     }
 
     [Fact]
