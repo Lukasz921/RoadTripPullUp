@@ -44,15 +44,6 @@ export interface UpdateUserDTO {
   sex?: Sex;
 }
 
-export interface RatingResponseDTO {
-  id: string;
-  raterId: string;
-  raterName?: string;
-  value: number;
-  comment?: string;
-  createdAt: string;
-}
-
 export interface BanUserDTO {
   reason: string;
   until?: string;
@@ -97,24 +88,12 @@ export const getUserById = async (userId: string): Promise<CurrentUser> => {
 
 // --- Ratings ---
 
-export const rateUser = async (userId: string, value: number, comment?: string): Promise<void> => {
-  await authApi.post(`/users/${userId}/rating`, value, {
-    params: comment ? { comment } : undefined,
+export const rateUser = async (tripId: string, userId: string, value: number, comment?: string): Promise<void> => {
+  await authApi.post(`/trips/${tripId}/rate-user`, {
+    userId,
+    value,
+    comment,
   });
-};
-
-export const getUserRatings = async (userId: string): Promise<RatingResponseDTO[]> => {
-  const response = await authApi.get<RatingResponseDTO[]>(`/users/${userId}/ratings`);
-  return response.data;
-};
-
-export const getRating = async (ratingId: string): Promise<RatingResponseDTO> => {
-  const response = await authApi.get<RatingResponseDTO>(`/users/ratings/${ratingId}`);
-  return response.data;
-};
-
-export const deleteRating = async (ratingId: string): Promise<void> => {
-  await authApi.delete(`/users/ratings/${ratingId}`);
 };
 
 // --- Admin ---
