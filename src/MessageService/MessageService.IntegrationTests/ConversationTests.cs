@@ -6,6 +6,7 @@ using Xunit.Abstractions;
 namespace MessageService.IntegrationTests;
 
 [Collection("IntegrationTestCollection")]
+[Trait("Category", "E2E")]
 public class ConversationTests : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly ITestOutputHelper _testOutputHelper;
@@ -44,17 +45,7 @@ public class ConversationTests : IClassFixture<CustomWebApplicationFactory>
     public async Task GetConversation_ReturnsOk()
     {
         // Arrange
-        var createConversationDto = new
-        {
-            TripId = Guid.NewGuid(),
-            Title = "Test Conversation",
-            Date = DateTime.UtcNow,
-            Participants = new List<Guid> { Guid.NewGuid(), Guid.NewGuid() }
-        };
-        var firstResponse = await _client.PostAsJsonAsync("/api/v1/message/conversations", createConversationDto);
-        var responseData = await firstResponse.Content.ReadFromJsonAsync<Dictionary<string, object>>();
-        var conversationId = responseData?["conversationId"] != null ? Guid.Parse(responseData["conversationId"].ToString() ?? "") : Guid.Empty;
-        if (conversationId == Guid.Empty) throw new Exception("Failed to create conversation for test");
+        var (conversationId, _) = await IntegrationTestCommon.CreateConversation2Members(_client);
         
         // Act
         var response = await _client.GetAsync($"/api/v1/message/conversations/{conversationId}");
@@ -104,18 +95,7 @@ public class ConversationTests : IClassFixture<CustomWebApplicationFactory>
     public async Task GetConversationForTrip_ReturnsOk()
     {
         // Arrange
-        var tripId = Guid.NewGuid();
-        var createConversationDto = new
-        {
-            TripId = tripId,
-            Title = "Test Conversation",
-            Date = DateTime.UtcNow,
-            Participants = new List<Guid> { Guid.NewGuid(), Guid.NewGuid() }
-        };
-        var firstResponse = await _client.PostAsJsonAsync("/api/v1/message/conversations", createConversationDto);
-        var responseData = await firstResponse.Content.ReadFromJsonAsync<Dictionary<string, object>>();
-        var conversationId = responseData?["conversationId"] != null ? Guid.Parse(responseData["conversationId"].ToString() ?? "") : Guid.Empty;
-        if (conversationId == Guid.Empty) throw new Exception("Failed to create conversation for test");
+        var (_, tripId) = await IntegrationTestCommon.CreateConversation2Members(_client);
         
         // Act
         var response = await _client.GetAsync($"/api/v1/message/conversations/byTripId/direct/{tripId}");
@@ -144,20 +124,7 @@ public class ConversationTests : IClassFixture<CustomWebApplicationFactory>
     public async Task GetDirectConversationsForTrip_ReturnsOk()
     {
         // Arrange
-        var tripId = Guid.NewGuid();
-        var createConversationDto = new
-        {
-            TripId = tripId,
-            Title = "Test Conversation",
-            Date = DateTime.UtcNow,
-            Participants = new List<Guid> { Guid.NewGuid(), Guid.NewGuid() }
-        };
-        var firstResponse = await _client.PostAsJsonAsync("/api/v1/message/conversations", createConversationDto);
-        var responseData = await firstResponse.Content.ReadFromJsonAsync<Dictionary<string, object>>();
-        var conversationId = responseData?["conversationId"] != null
-            ? Guid.Parse(responseData["conversationId"].ToString() ?? "")
-            : Guid.Empty;
-        if (conversationId == Guid.Empty) throw new Exception("Failed to create conversation for test");
+        var (_, tripId) = await IntegrationTestCommon.CreateConversation2Members(_client);
 
         // Act
         var response = await _client.GetAsync($"/api/v1/message/conversations/byTripId/direct/{tripId}");
