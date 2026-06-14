@@ -6,6 +6,22 @@ import { getComplaintById, banUser, type ComplaintResponseDTO } from '../../api/
 import { getUserById, type CurrentUser } from '../../api/user';
 import { formatDate } from '../../utils/format';
 
+// Fallback used when a user can't be fetched (e.g. mock ids), so the card and
+// ban button still render with the id we do have.
+function placeholderUser(id: string): CurrentUser {
+  return {
+    id,
+    name: 'Unknown',
+    surname: 'user',
+    email: id,
+    dateOfBirth: '',
+    sex: '',
+    avgRating: 0,
+    ratingsCount: 0,
+    isBanned: false,
+  };
+}
+
 function UserCard({
   title,
   user,
@@ -61,14 +77,23 @@ export default function ComplaintDetailsPage() {
       .then(async (data) => {
         if (cancelled) return;
         setComplaint(data);
-        // Load both involved users. Tolerate one failing without losing the other.
+        // Load both involved users. Tolerate one failing — fall back to a
+        // minimal placeholder so the card (and ban button) still render.
         const [complainerRes, complainedRes] = await Promise.allSettled([
           getUserById(data.complainerId),
           getUserById(data.complainedUserId),
         ]);
         if (cancelled) return;
-        if (complainerRes.status === 'fulfilled') setComplainer(complainerRes.value);
-        if (complainedRes.status === 'fulfilled') setComplained(complainedRes.value);
+        setComplainer(
+          complainerRes.status === 'fulfilled'
+            ? complainerRes.value
+            : placeholderUser(data.complainerId),
+        );
+        setComplained(
+          complainedRes.status === 'fulfilled'
+            ? complainedRes.value
+            : placeholderUser(data.complainedUserId),
+        );
       })
       .catch(() => {
         if (!cancelled) setError('Failed to load complaint.');
