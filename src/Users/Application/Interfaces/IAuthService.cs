@@ -6,6 +6,6 @@ public interface IAuthService
 {
     Task Register(RegisterDTO dto);
     Task<AuthResponseDTO> Login(LoginDTO dto);
-    Task ResetPassword(string email);
+    Task ResetPassword(ResetPasswordDTO dto);
     Task<AuthResponseDTO> GoogleLogin(string idToken);
 }

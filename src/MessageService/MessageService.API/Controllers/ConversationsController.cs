@@ -1,15 +1,17 @@
 using System.Security.Claims;
-using Application.Exceptions;
+using MessageService.Core.Exceptions;
 using MessageService.Application.DTOs;
 using MessageService.Application.DTOs.Mappers;
 using MessageService.Application.Helpers;
 using MessageService.Application.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MessageService.API.Controllers;
 
 [ApiController]
 [Route("api/v1/message/conversations")]
+[Authorize]
 public class ConversationsController : ControllerBase
 {
     private readonly IConversationService _conversations;
@@ -23,6 +25,7 @@ public class ConversationsController : ControllerBase
     public async Task<IActionResult> Create([FromBody] CreateConversationDto dto)
     {
         var userId = GetUserId();
+        if (string.IsNullOrEmpty(dto.Type)) dto.Type = "direct";
         var id = await _conversations.CreateConversationAsync(dto, userId);
         return CreatedAtAction(nameof(Get), new { conversationId = id }, new { conversationId = id });
     }
@@ -87,3 +90,4 @@ public class ConversationsController : ControllerBase
         return string.IsNullOrEmpty(sub) ? Guid.Empty : Guid.Parse(sub);
     }
 }
+

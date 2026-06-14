@@ -138,8 +138,20 @@ public class AuthService : IAuthService
         };
     }
 
-    public Task ResetPassword(string email)
+    public async Task ResetPassword(ResetPasswordDTO dto)
     {
-        throw new NotImplementedException("Reset password logic is not yet implemented.");
+        var user = await _userRepository.FindByEmail(dto.Email);
+        if (user == null)
+        {
+            throw new NotFoundException("User not found.");
+        }
+
+        if (string.IsNullOrWhiteSpace(dto.NewPassword))
+        {
+            throw new UserValidationException("New password is required.");
+        }
+
+        user.PasswordHash = _passwordHasher.Hash(dto.NewPassword);
+        await _userRepository.Save(user);
     }
 }

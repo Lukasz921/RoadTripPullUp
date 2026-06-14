@@ -3,9 +3,6 @@ WORKDIR /src
 
 COPY ["Backend.sln", "./"]
 COPY ["src/API/API.csproj", "src/API/"]
-COPY ["src/Application/Application.csproj", "src/Application/"]
-COPY ["src/Infrastructure/Infrastructure.csproj", "src/Infrastructure/"]
-COPY ["src/Core/Core.csproj", "src/Core/"]
 COPY ["src/Users/Users.csproj", "src/Users/"]
 COPY ["src/TripService/TripService.csproj", "src/TripService/"]
 
@@ -15,6 +12,7 @@ COPY ["src/MessageService/MessageService.Application/MessageService.Application.
 COPY ["src/MessageService/MessageService.Infrastructure/MessageService.Infrastructure.csproj", "src/MessageService/MessageService.Infrastructure/"]
 COPY ["src/MessageService/MessageService.Core/MessageService.Core.csproj", "src/MessageService/MessageService.Core/"]
 COPY ["src/MessageService/MessageService.UnitTests/MessageService.UnitTests.csproj", "src/MessageService/MessageService.UnitTests/"]
+COPY ["src/MessageService/MessageService.IntegrationTests/MessageService.IntegrationTests.csproj", "src/MessageService/MessageService.IntegrationTests/"]
 
 COPY ["tests/UnitTests/UnitTests.csproj", "tests/UnitTests/"]
 COPY ["tests/IntegrationTests/IntegrationTests.csproj", "tests/IntegrationTests/"]
@@ -29,6 +27,9 @@ RUN dotnet publish "API.csproj" -c Release -o /app/publish
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 EXPOSE 8080
+
+# Install libgssapi-krb5-2 for Npgsql
+RUN apt-get update && apt-get install -y libgssapi-krb5-2 && rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /app/publish .
 

@@ -16,9 +16,7 @@ function createApiInstance(baseURL: string): AxiosInstance {
     (error) => {
       if (error.response?.status === 401) {
         console.error('Unauthorized:', error.response.config.url);
-      }
-      if(error.response?.status === 403){
-        window.location.href = '/login'
+        window.location.href = '/login';
       }
       return Promise.reject(error);
     }

@@ -24,9 +24,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\API\API.csproj" />
-    <ProjectReference Include="..\..\src\Application\Application.csproj" />
-    <ProjectReference Include="..\..\src\Core\Core.csproj" />
-    <ProjectReference Include="..\..\src\Infrastructure\Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\Users\Users.csproj" />
     <ProjectReference Include="..\..\src\TripService\TripService.csproj" />
   </ItemGroup>
