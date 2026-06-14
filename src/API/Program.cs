@@ -83,6 +83,10 @@ builder.Services.AddAuthorization(options =>
         policy.RequireAuthenticatedUser();
         policy.AddRequirements(new NotBannedRequirement());
     });
+
+    options.AddPolicy("AuthenticatedOnly", policy =>
+        policy.RequireAuthenticatedUser());
+
     options.DefaultPolicy = options.GetPolicy("NotBanned")!;
 });
 
