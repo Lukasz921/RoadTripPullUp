@@ -7,7 +7,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\TripService\TripService.csproj" />
       <ProjectReference Include="..\MessageService.Core\MessageService.Core.csproj" />
     </ItemGroup>
 

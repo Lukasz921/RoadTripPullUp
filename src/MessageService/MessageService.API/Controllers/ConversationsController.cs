@@ -1,5 +1,5 @@
 using System.Security.Claims;
-using TripService.Application.Exceptions;
+using MessageService.Core.Exceptions;
 using MessageService.Application.DTOs;
 using MessageService.Application.DTOs.Mappers;
 using MessageService.Application.Helpers;

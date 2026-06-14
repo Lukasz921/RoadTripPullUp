@@ -1,4 +1,4 @@
-namespace TripService.Application.Exceptions;
+namespace MessageService.Core.Exceptions;
 
 public class ValidationException : Exception
 {

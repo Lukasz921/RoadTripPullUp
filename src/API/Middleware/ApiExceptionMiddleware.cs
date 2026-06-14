@@ -38,7 +38,7 @@ public class ApiExceptionMiddleware
         string title = "Error";
         string type = "https://tools.ietf.org/html/rfc7231#section-6.6.1";
 
-        if (exception is TripService.Application.Exceptions.ValidationException vex)
+        if (exception is MessageService.Core.Exceptions.ValidationException vex)
         {
             code = System.Net.HttpStatusCode.BadRequest;
             message = vex.Message;
@@ -66,7 +66,7 @@ public class ApiExceptionMiddleware
             title = "Unauthorized";
             type = "https://tools.ietf.org/html/rfc7231#section-6.5.1";
         }
-        else if (exception is TripService.Application.Exceptions.NotFoundException nf)
+        else if (exception is MessageService.Core.Exceptions.NotFoundException nf)
         {
             code = System.Net.HttpStatusCode.NotFound;
             message = nf.Message;
@@ -80,7 +80,7 @@ public class ApiExceptionMiddleware
             title = "Not Found";
             type = "https://tools.ietf.org/html/rfc7231#section-6.5.4";
         }
-        else if (exception is TripService.Application.Exceptions.ForbiddenException fex)
+        else if (exception is MessageService.Core.Exceptions.ForbiddenException fex)
         {
             code = System.Net.HttpStatusCode.Forbidden;
             message = fex.Message;
@@ -101,7 +101,7 @@ public class ApiExceptionMiddleware
             title = "Seat Unavailable";
             type = "https://tools.ietf.org/html/rfc7231#section-6.5.8";
         }
-        else if (exception is TripService.Application.Exceptions.InvalidParametersException ipex)
+        else if (exception is MessageService.Core.Exceptions.InvalidParametersException ipex)
         {
             code = System.Net.HttpStatusCode.BadRequest;
             message = ipex.Message;

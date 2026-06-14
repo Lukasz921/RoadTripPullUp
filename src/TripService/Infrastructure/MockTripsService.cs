@@ -1,4 +1,5 @@
 using TripService.Application.Exceptions;
+using MessageService.Core.Exceptions;
 using TripService.Application;
 using System.Collections.Concurrent;
 

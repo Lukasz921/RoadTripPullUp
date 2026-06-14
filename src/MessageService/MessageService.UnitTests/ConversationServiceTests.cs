@@ -1,4 +1,4 @@
-using TripService.Application.Exceptions;
+using MessageService.Core.Exceptions;
 using FluentAssertions;
 using MessageService.Application.DTOs;
 using MessageService.Application.Services;
