@@ -3,7 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import TripRouteMap from '../components/TripRouteMap';
-import { getTripById, rateUser, fileComplaint, type TripDTO } from '../api/trips';
+import { getTripById, rateUser, fileComplaint, deleteTrip, type TripDTO } from '../api/trips';
 import { getUserById, type CurrentUser } from '../api/user';
 import { reverseGeocode } from '../api/reverseGeocode';
 import { useCurrentUser } from '../hooks/useCurrentUser';
@@ -33,6 +33,9 @@ export default function TripDetailsPage() {
   const [userById, setUserById] = useState<Record<string, CurrentUser>>({});
   const [rateOpen, setRateOpen] = useState(false);
   const [complaintOpen, setComplaintOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const isDriver = !!user && !!trip && trip.driverId === user.id;
 
   useEffect(() => {
     if (!id) return;
@@ -69,6 +72,20 @@ export default function TripDetailsPage() {
       cancelled = true;
     };
   }, [trip]);
+
+  async function handleDelete() {
+    if (!id) return;
+    if (!window.confirm('Delete this trip? This cannot be undone.')) return;
+    setDeleting(true);
+    setError('');
+    try {
+      await deleteTrip(id);
+      navigate('/my-rides');
+    } catch {
+      setError('Failed to delete trip.');
+      setDeleting(false);
+    }
+  }
 
   // Clicking yourself goes to the editable profile; clicking anyone else to their read-only profile.
   function openUser(uid: string) {
@@ -140,6 +157,16 @@ export default function TripDetailsPage() {
                 >
                   File complaint
                 </button>
+                {isDriver && (
+                  <button
+                    type="button"
+                    onClick={handleDelete}
+                    disabled={deleting}
+                    className="flex-1 rounded-xl bg-red-600 px-4 py-3 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-40"
+                  >
+                    {deleting ? 'Deleting...' : 'Delete trip'}
+                  </button>
+                )}
               </div>
             )}
 

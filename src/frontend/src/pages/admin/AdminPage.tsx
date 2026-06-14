@@ -72,7 +72,6 @@ export default function AdminPage() {
     setDeletingId(id);
     try {
       await deleteComplaint(id);
-      // Delete has no backend yet, so drop the row locally instead of refetching.
       setComplaints((prev) => prev.filter((c) => c.id !== id));
       setTotalCount((c) => Math.max(0, c - 1));
     } catch {

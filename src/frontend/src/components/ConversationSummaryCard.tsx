@@ -70,6 +70,14 @@ export default function ConversationSummaryCard({ conversation, navigationState 
       ? `Private chat with ${otherName}`
       : 'Private chat';
 
+  // Direct chats are between the driver and one other user. If that user isn't a
+  // passenger on the trip, flag it as "New" (e.g. someone asking to join).
+  const otherParticipantId = isGroup
+    ? undefined
+    : conversation.participants.find((id) => id !== trip?.driverId);
+  const isNonPassenger =
+    !isGroup && !!trip && !!otherParticipantId && !trip.passengerIds.includes(otherParticipantId);
+
   const showLastMessageDate = hasRealLastMessage(conversation.lastMessageCreatedAt);
 
   return (
@@ -84,6 +92,11 @@ export default function ConversationSummaryCard({ conversation, navigationState 
           {isGroup && (
             <span className="rounded-full bg-[#8cc63f] px-2 py-0.5 text-xs font-semibold text-white">
               Group
+            </span>
+          )}
+          {isNonPassenger && (
+            <span className="rounded-full bg-amber-500 px-2 py-0.5 text-xs font-semibold text-white">
+              New
             </span>
           )}
           <p className="font-semibold text-[#12351f]">{title}</p>

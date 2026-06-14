@@ -1,3 +1,5 @@
+using API.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Users;
 using Users.Infrastructure;
 using Microsoft.OpenApi;
@@ -73,7 +75,20 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddScoped<IAuthorizationHandler, NotBannedHandler>();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("NotBanned", policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.AddRequirements(new NotBannedRequirement());
+    });
+
+    options.AddPolicy("AuthenticatedOnly", policy =>
+        policy.RequireAuthenticatedUser());
+
+    options.DefaultPolicy = options.GetPolicy("NotBanned")!;
+});
 
 builder.Services.AddUsersModule();
 
