@@ -13,4 +13,5 @@ public interface IUserService
     Task<UserIntegrationDTO> GetUserIntegrationData(Guid id);
     Task FileComplaint(Guid complainerId, Guid tripId, FileComplaintDTO dto);
     Task<PagedComplaintsDTO> GetAllComplaints(int page, int pageSize);
+    Task DeleteComplaint(Guid id);
 }

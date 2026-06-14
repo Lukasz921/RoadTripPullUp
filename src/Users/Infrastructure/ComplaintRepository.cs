@@ -42,4 +42,14 @@ public class ComplaintRepository : IComplaintRepository
 
         return (items, totalCount);
     }
+
+    public async Task Delete(Guid id)
+    {
+        var complaint = await _context.Complaints.FindAsync(id);
+        if (complaint != null)
+        {
+            _context.Complaints.Remove(complaint);
+            await _context.SaveChangesAsync();
+        }
+    }
 }

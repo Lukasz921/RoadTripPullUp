@@ -180,4 +180,12 @@ public class UserService : IUserService
             TotalCount = totalCount
         };
     }
+
+    public async Task DeleteComplaint(Guid id)
+    {
+        var complaint = await _complaintRepository.FindById(id);
+        if (complaint == null) throw new NotFoundException("Complaint not found.");
+
+        await _complaintRepository.Delete(id);
+    }
 }
