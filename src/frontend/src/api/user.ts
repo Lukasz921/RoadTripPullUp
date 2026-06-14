@@ -49,6 +49,15 @@ export interface BanUserDTO {
   until?: string;
 }
 
+export interface RatingResponseDTO {
+  id: string;
+  raterId: string;
+  raterName?: string;
+  value: number;
+  comment?: string;
+  createdAt: string;
+}
+
 // Mirrors Users.Core.UserRole — serialized as a number (no JsonStringEnumConverter on the backend).
 export const UserRole = {
   RegularUser: 0,
@@ -94,6 +103,20 @@ export const rateUser = async (tripId: string, userId: string, value: number, co
     value,
     comment,
   });
+};
+
+export const getUserRatings = async (userId: string): Promise<RatingResponseDTO[]> => {
+  const response = await authApi.get<RatingResponseDTO[]>(`/users/${userId}/ratings`);
+  return response.data;
+};
+
+export const getRating = async (ratingId: string): Promise<RatingResponseDTO> => {
+  const response = await authApi.get<RatingResponseDTO>(`/users/ratings/${ratingId}`);
+  return response.data;
+};
+
+export const deleteRating = async (ratingId: string): Promise<void> => {
+  await authApi.delete(`/users/ratings/${ratingId}`);
 };
 
 // --- Admin ---
