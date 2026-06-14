@@ -60,52 +60,6 @@ public class UsersController : ControllerBase
         return Ok(data);
     }
 
-    [HttpPost("{id}/rating")]
-    public async Task<IActionResult> RateUser(Guid id, [FromBody] int value, [FromQuery] string? comment)
-    {
-        var raterIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-        if (raterIdClaim == null) return Unauthorized();
-
-        var raterId = Guid.Parse(raterIdClaim.Value);
-        
-        await _userService.AddRating(new AddRatingDTO
-        {
-            UserId = id,
-            RaterId = raterId,
-            Value = value,
-            Comment = comment
-        });
-
-        return Ok();
-    }
-
-    [HttpGet("{id}/ratings")]
-    [AllowAnonymous]
-    public async Task<IActionResult> GetRatings(Guid id)
-    {
-        var ratings = await _userService.GetUserRatings(id);
-        return Ok(ratings);
-    }
-
-    [HttpGet("ratings/{ratingId}")]
-    [AllowAnonymous]
-    public async Task<IActionResult> GetRating(Guid ratingId)
-    {
-        var rating = await _userService.GetRating(ratingId);
-        return Ok(rating);
-    }
-
-    [HttpDelete("ratings/{ratingId}")]
-    public async Task<IActionResult> DeleteRating(Guid ratingId)
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-        if (userIdClaim == null) return Unauthorized();
-
-        var userId = Guid.Parse(userIdClaim.Value);
-        await _userService.DeleteRating(ratingId, userId);
-        return NoContent();
-    }
-
     [HttpPost("{id}/ban")]
     [Authorize(Roles = "ADMIN")]
     public async Task<IActionResult> Ban(Guid id, [FromBody] BanUserDTO dto)
