@@ -142,6 +142,45 @@ public class TripsOrchestratorController : ControllerBase
         return Ok();
     }
 
+    [HttpPost("trips/{tripId}/complaint")]
+    public async Task<IActionResult> FileComplaint([FromRoute] string tripId, [FromBody] FileComplaintDTO dto)
+    {
+        var currentUserIdStr = GetUserId();
+        if (currentUserIdStr == null) return Unauthorized();
+        var currentUserId = Guid.Parse(currentUserIdStr);
+
+        var trip = await _trips.GetTripAsync(tripId);
+        if (trip == null) return NotFound("Trip not found.");
+
+        // Check if current user participated in the trip
+        bool isCurrentUserDriver = trip.DriverId == currentUserIdStr;
+        bool isCurrentUserPassenger = trip.PassengerIds.Contains(currentUserIdStr);
+
+        if (!isCurrentUserDriver && !isCurrentUserPassenger)
+        {
+            return Forbid();
+        }
+
+        // Check if target user participated in the trip
+        string targetUserIdStr = dto.ComplainedUserId.ToString();
+        bool isTargetDriver = trip.DriverId == targetUserIdStr;
+        bool isTargetPassenger = trip.PassengerIds.Contains(targetUserIdStr);
+
+        if (!isTargetDriver && !isTargetPassenger)
+        {
+            return BadRequest(new { error = new { code = "TARGET_NOT_PARTICIPANT", message = "The complained user did not participate in this trip." } });
+        }
+        
+        if (currentUserId == dto.ComplainedUserId)
+        {
+            return BadRequest(new { error = new { code = "CANNOT_COMPLAIN_ABOUT_SELF", message = "You cannot file a complaint against yourself." } });
+        }
+
+        await _users.FileComplaint(currentUserId, Guid.Parse(tripId), dto);
+
+        return NoContent();
+    }
+
     private string? GetUserId() =>
         User.FindFirstValue(ClaimTypes.NameIdentifier)
         ?? User.FindFirstValue(ClaimTypes.Name)
