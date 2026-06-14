@@ -255,5 +255,6 @@ public class TripSearchE2ETests : IAsyncDisposable
     private sealed class NoOpUserChecker : IUserChecker
     {
         public Task<bool> UserExistsAsync(string userId, CancellationToken ct = default) => Task.FromResult(true);
+        public Task<bool> IsUserBannedAsync(string userId, CancellationToken ct = default) => Task.FromResult(false);
     }
 }

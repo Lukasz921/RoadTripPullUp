@@ -7,6 +7,9 @@ public partial class TripsService
 {
     public async Task<TripDTO> CreateTripAsync(CreateTripDTO dto, string driverId)
     {
+        if (await _userChecker.IsUserBannedAsync(driverId))
+            throw new ForbiddenException("Banned users cannot create trips.");
+
         if (dto.DepartureTime.ToUniversalTime() <= DateTime.UtcNow)
             throw new ValidationException("departureTime must be in the future.");
         if (dto.MaxDetourMeters <= 0)

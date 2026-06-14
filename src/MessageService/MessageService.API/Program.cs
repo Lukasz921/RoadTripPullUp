@@ -105,6 +105,7 @@ namespace MessageService.API
             services.AddScoped<IConversationService, ConversationService>();
             services.AddScoped<INotificationService, RedisNotificationService>();
             services.AddScoped<IClockService, ClockService>();
+            services.AddScoped<IUserBanChecker, NoOpUserBanChecker>();
 
             return builder;
         }

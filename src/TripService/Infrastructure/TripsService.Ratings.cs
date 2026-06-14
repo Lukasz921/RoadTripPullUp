@@ -15,6 +15,9 @@ public partial class TripsService
         if (dto.Rating < 1 || dto.Rating > 5)
             throw new ValidationException("Rating must be between 1 and 5.");
 
+        if (await _userChecker.IsUserBannedAsync(raterId))
+            throw new ForbiddenException("Banned users cannot rate trips.");
+
         var driverGuid = await _repository.GetDriverIdAsync(tripGuid);
         if (driverGuid == null)
             throw new NotFoundException($"Trip '{tripId}' not found.");

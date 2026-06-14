@@ -26,4 +26,19 @@ public class UserCheckerAdapter : IUserChecker
             return false;
         }
     }
+
+    public async Task<bool> IsUserBannedAsync(string userId, CancellationToken ct = default)
+    {
+        if (!Guid.TryParse(userId, out var guid)) return false;
+
+        try
+        {
+            var user = await _users.GetById(guid);
+            return user.IsBanned && (user.BannedUntil == null || user.BannedUntil > DateTime.UtcNow);
+        }
+        catch
+        {
+            return false;
+        }
+    }
 }

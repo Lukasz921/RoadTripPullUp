@@ -19,6 +19,9 @@ public partial class TripsService
         if (!await _userChecker.UserExistsAsync(passengerId))
             throw new ValidationException($"User '{passengerId}' does not exist.");
 
+        if (await _userChecker.IsUserBannedAsync(passengerId))
+            throw new ForbiddenException("Banned users cannot join trips.");
+
         await _repository.AddPassengerTransactionalAsync(tripGuid, driverGuid, passengerGuid);
     }
 }

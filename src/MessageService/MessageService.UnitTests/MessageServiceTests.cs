@@ -18,9 +18,12 @@ public class MessageServiceTests
         var convRepo = new Mock<IConversationRepository>();
         var notifier = new Mock<INotificationService>();
         var clock = new Mock<IClockService>();
+        var banChecker = new Mock<IUserBanChecker>();
 
         var conversationId = Guid.NewGuid();
         var senderId = Guid.NewGuid();
+
+        banChecker.Setup(x => x.IsUserBannedAsync(senderId, default)).ReturnsAsync(false);
 
         var conv = new Conversation
         {
@@ -36,7 +39,7 @@ public class MessageServiceTests
             return m;
         });
 
-        var svc = new Application.Services.MessageService(messageRepo.Object, convRepo.Object, notifier.Object, clock.Object);
+        var svc = new Application.Services.MessageService(messageRepo.Object, convRepo.Object, notifier.Object, clock.Object, banChecker.Object);
 
         var dto = new CreateMessageDto
         {
@@ -62,6 +65,7 @@ public class MessageServiceTests
         var convRepo = new Mock<IConversationRepository>();
         var notifier = new Mock<INotificationService>();
         var clock = new Mock<IClockService>();
+        var banChecker = new Mock<IUserBanChecker>();
 
         var conversationId = Guid.NewGuid();
         var readerId = Guid.NewGuid();
@@ -70,7 +74,7 @@ public class MessageServiceTests
 
         messageRepo.Setup(r => r.MarkMessagesReadAsync(conversationId, It.IsAny<IEnumerable<Guid>>(), readerId, It.IsAny<DateTime>())).Returns(Task.CompletedTask).Verifiable();
 
-        var svc = new Application.Services.MessageService(messageRepo.Object, convRepo.Object, notifier.Object, clock.Object);
+        var svc = new Application.Services.MessageService(messageRepo.Object, convRepo.Object, notifier.Object, clock.Object, banChecker.Object);
 
         // Act
         await svc.MarkMessagesReadAsync(conversationId, [msg1, msg2], readerId, DateTime.UtcNow);
