@@ -9,6 +9,7 @@ using Xunit;
 
 namespace IntegrationTests;
 
+[Trait("Category", "E2E")]
 public class UsersApiTests : IClassFixture<IntegrationTestFactory>
 {
     private readonly IntegrationTestFactory _factory;
