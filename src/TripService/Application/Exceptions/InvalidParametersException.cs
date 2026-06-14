@@ -1,4 +1,4 @@
-namespace Application.Exceptions;
+namespace TripService.Application.Exceptions;
 
 public class InvalidParametersException : Exception
 {
