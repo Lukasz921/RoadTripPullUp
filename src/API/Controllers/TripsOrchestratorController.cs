@@ -130,13 +130,14 @@ public class TripsOrchestratorController : ControllerBase
             return BadRequest("You cannot rate yourself.");
         }
 
-        await _users.AddRating(new Users.Application.DTOs.AddRatingDTO
+        // Only passengers can rate the driver for now as per requirements
+        if (targetUserIdStr != trip.DriverId)
         {
-            UserId = dto.UserId,
-            RaterId = currentUserId,
-            Value = dto.Value,
-            Comment = dto.Comment
-        });
+            return BadRequest("Currently only driver ratings are supported via trip ratings.");
+        }
+
+        await _trips.RateTripAsync(tripId, currentUserIdStr, new RateTripDTO { Rating = dto.Value });
+        await _users.UpdateUserRating(dto.UserId, dto.Value);
 
         return Ok();
     }
