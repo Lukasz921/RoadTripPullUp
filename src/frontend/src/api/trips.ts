@@ -129,6 +129,15 @@ export const rateUser = async (tripId: string, dto: RateUserDTO) => {
   await tripApi.post(`/${tripId}/rate-user`, dto);
 };
 
+export interface FileComplaintDTO {
+  complainedUserId: string;
+  reason: string;
+}
+
+export const fileComplaint = async (tripId: string, dto: FileComplaintDTO) => {
+  await tripApi.post(`/${tripId}/complaint`, dto);
+};
+
 export const deleteTrip = async (tripId: string) => {
   await tripApi.delete(`/${tripId}`);
 };

@@ -3,7 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import TripRouteMap from '../components/TripRouteMap';
-import { getTripById, rateUser, type TripDTO } from '../api/trips';
+import { getTripById, rateUser, fileComplaint, type TripDTO } from '../api/trips';
 import { getUserById, type CurrentUser } from '../api/user';
 import { reverseGeocode } from '../api/reverseGeocode';
 import { useCurrentUser } from '../hooks/useCurrentUser';
@@ -32,6 +32,7 @@ export default function TripDetailsPage() {
   const [destination, setDestination] = useState<Place | null>(null);
   const [userById, setUserById] = useState<Record<string, CurrentUser>>({});
   const [rateOpen, setRateOpen] = useState(false);
+  const [complaintOpen, setComplaintOpen] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -132,6 +133,13 @@ export default function TripDetailsPage() {
                     Rate trip
                   </button>
                 )}
+                <button
+                  type="button"
+                  onClick={() => setComplaintOpen(true)}
+                  className="flex-1 rounded-xl border border-red-300 px-4 py-3 text-sm font-semibold text-red-600 hover:bg-red-50"
+                >
+                  File complaint
+                </button>
               </div>
             )}
 
@@ -188,6 +196,15 @@ export default function TripDetailsPage() {
               : 'the driver'
           }
           onClose={() => setRateOpen(false)}
+        />
+      )}
+
+      {complaintOpen && trip && user && (
+        <FileComplaintModal
+          tripId={trip.id}
+          participants={[trip.driverId, ...trip.passengerIds].filter((uid) => uid !== user.id)}
+          userById={userById}
+          onClose={() => setComplaintOpen(false)}
         />
       )}
 
@@ -290,6 +307,110 @@ function RateDriverModal({
                 onClick={submit}
                 disabled={value < 1 || submitting}
                 className="flex-1 rounded-xl bg-[#12351f] px-4 py-3 text-sm font-semibold text-white hover:bg-[#1d4a2d] disabled:opacity-40"
+              >
+                {submitting ? 'Submitting...' : 'Submit'}
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function FileComplaintModal({
+  tripId,
+  participants,
+  userById,
+  onClose,
+}: {
+  tripId: string;
+  participants: string[];
+  userById: Record<string, CurrentUser>;
+  onClose: () => void;
+}) {
+  const [complainedUserId, setComplainedUserId] = useState('');
+  const [reason, setReason] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+  const [done, setDone] = useState(false);
+
+  async function submit() {
+    if (!complainedUserId || reason.trim().length === 0) return;
+    setSubmitting(true);
+    setError('');
+    try {
+      await fileComplaint(tripId, { complainedUserId, reason: reason.trim() });
+      setDone(true);
+    } catch (err) {
+      const status = (err as { response?: { status?: number } }).response?.status;
+      if (status === 403) setError('You can only file complaints for trips you took part in.');
+      else if (status === 400) setError('This complaint could not be filed.');
+      else setError('Failed to file complaint. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={onClose}>
+      <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-lg" onClick={(e) => e.stopPropagation()}>
+        {done ? (
+          <div className="text-center">
+            <h2 className="mb-2 text-lg font-semibold text-[#12351f]">Complaint submitted</h2>
+            <p className="mb-4 text-sm text-[#5d7056]">Thanks — our team will review it.</p>
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-full rounded-xl bg-[#12351f] px-4 py-3 text-sm font-semibold text-white hover:bg-[#1d4a2d]"
+            >
+              Close
+            </button>
+          </div>
+        ) : (
+          <>
+            <h2 className="mb-4 text-lg font-semibold text-[#12351f]">File a complaint</h2>
+
+            <label className="mb-1 block text-xs text-[#5d7056]">Who is this about?</label>
+            <select
+              value={complainedUserId}
+              onChange={(e) => setComplainedUserId(e.target.value)}
+              className="mb-4 w-full rounded-xl border border-[#d7e8c8] px-3 py-2 text-sm text-[#12351f] focus:border-[#12351f] focus:outline-none"
+            >
+              <option value="">Select a person…</option>
+              {participants.map((uid) => (
+                <option key={uid} value={uid}>
+                  {userById[uid] ? `${userById[uid].name} ${userById[uid].surname}` : uid}
+                </option>
+              ))}
+            </select>
+
+            <label className="mb-1 block text-xs text-[#5d7056]">Reason</label>
+            <textarea
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              rows={4}
+              placeholder="Describe what happened…"
+              className="mb-4 w-full resize-none rounded-xl border border-[#d7e8c8] px-3 py-2 text-sm text-[#12351f] focus:border-[#12351f] focus:outline-none"
+            />
+
+            {error && (
+              <p className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 rounded-xl border border-[#12351f] px-4 py-3 text-sm font-semibold text-[#12351f] hover:bg-[#e8f5e0]"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={submit}
+                disabled={!complainedUserId || reason.trim().length === 0 || submitting}
+                className="flex-1 rounded-xl bg-red-600 px-4 py-3 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-40"
               >
                 {submitting ? 'Submitting...' : 'Submit'}
               </button>
