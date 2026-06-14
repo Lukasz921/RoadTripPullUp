@@ -7,4 +7,5 @@ public class UpdateUserDTO
     public string? PhoneNumber { get; set; }
     public DateTime? DateOfBirth { get; set; }
     public string? Sex { get; set; }
+    public string? Password { get; set; }
 }

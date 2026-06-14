@@ -8,10 +8,12 @@ namespace Users.Application.Services;
 public class UserService : IUserService
 {
     private readonly IUserRepository _userRepository;
+    private readonly IPasswordHasher _passwordHasher;
 
-    public UserService(IUserRepository userRepository)
+    public UserService(IUserRepository userRepository, IPasswordHasher passwordHasher)
     {
         _userRepository = userRepository;
+        _passwordHasher = passwordHasher;
     }
 
     public async Task<UserResponseDTO> GetById(Guid id)
@@ -66,6 +68,11 @@ public class UserService : IUserService
             {
                 throw new Exception("Invalid value for Sex.");
             }
+        }
+
+        if (!string.IsNullOrWhiteSpace(dto.Password))
+        {
+            user.PasswordHash = _passwordHasher.Hash(dto.Password);
         }
 
         await _userRepository.Save(user);
