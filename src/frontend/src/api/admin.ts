@@ -37,6 +37,6 @@ export const getComplaints = async (page = 1, pageSize = 20): Promise<PagedCompl
   return response.data;
 };
 
-export const deleteComplaint = async (_id: string): Promise<void> => {
-  await new Promise((resolve) => setTimeout(resolve, 200));
+export const deleteComplaint = async (id: string): Promise<void> => {
+  await authApi.delete(`/admin/complaints/${id}`);
 };
