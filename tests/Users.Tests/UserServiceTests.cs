@@ -11,12 +11,14 @@ namespace Users.Tests;
 public class UserServiceTests
 {
     private readonly Mock<IUserRepository> _userRepositoryMock;
+    private readonly Mock<IPasswordHasher> _passwordHasherMock;
     private readonly UserService _userService;
 
     public UserServiceTests()
     {
         _userRepositoryMock = new Mock<IUserRepository>();
-        _userService = new UserService(_userRepositoryMock.Object);
+        _passwordHasherMock = new Mock<IPasswordHasher>();
+        _userService = new UserService(_userRepositoryMock.Object, _passwordHasherMock.Object);
     }
 
     [Fact]
@@ -91,6 +93,25 @@ public class UserServiceTests
         user.PhoneNumber.Should().Be("456");
         user.DateOfBirth.Should().Be(new DateTime(1991, 2, 2));
         user.Sex.Should().Be(Sex.MALE);
+        _userRepositoryMock.Verify(r => r.Save(user), Times.Once);
+    }
+
+    [Fact]
+    public async Task Update_ShouldUpdatePassword_WhenProvided()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var user = new User { Id = userId, PasswordHash = "OldHash" };
+        _userRepositoryMock.Setup(r => r.FindById(userId)).ReturnsAsync(user);
+        _passwordHasherMock.Setup(h => h.Hash("NewPassword")).Returns("NewHash");
+
+        var dto = new UpdateUserDTO { Password = "NewPassword" };
+
+        // Act
+        await _userService.Update(userId, dto);
+
+        // Assert
+        user.PasswordHash.Should().Be("NewHash");
         _userRepositoryMock.Verify(r => r.Save(user), Times.Once);
     }
 
