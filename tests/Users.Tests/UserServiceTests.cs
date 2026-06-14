@@ -97,6 +97,25 @@ public class UserServiceTests
     }
 
     [Fact]
+    public async Task Update_ShouldUpdatePassword_WhenProvided()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var user = new User { Id = userId, PasswordHash = "OldHash" };
+        _userRepositoryMock.Setup(r => r.FindById(userId)).ReturnsAsync(user);
+        _passwordHasherMock.Setup(h => h.Hash("NewPassword")).Returns("NewHash");
+
+        var dto = new UpdateUserDTO { Password = "NewPassword" };
+
+        // Act
+        await _userService.Update(userId, dto);
+
+        // Assert
+        user.PasswordHash.Should().Be("NewHash");
+        _userRepositoryMock.Verify(r => r.Save(user), Times.Once);
+    }
+
+    [Fact]
     public async Task Update_ShouldThrow_WhenUserIsBanned()
     {
         // Arrange

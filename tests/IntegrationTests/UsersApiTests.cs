@@ -83,6 +83,30 @@ public class UsersApiTests : IClassFixture<IntegrationTestFactory>
         user!.Sex.Should().Be("FEMALE");
     }
 
+    [Fact]
+    public async Task User_CanResetPassword()
+    {
+        // 1. Register a user
+        var email = "reset@test.com";
+        var oldPassword = "OldPassword123!";
+        var newPassword = "NewPassword123!";
+        await RegisterUser(email, oldPassword, "Reset", "User");
+
+        // 2. Reset password
+        var resetDto = new ResetPasswordDTO { Email = email, NewPassword = newPassword };
+        var resetResponse = await _client.PostAsJsonAsync("/api/auth/reset-password", resetDto);
+        resetResponse.EnsureSuccessStatusCode();
+
+        // 3. Try to login with new password
+        var loginDto = new LoginDTO { Email = email, Password = newPassword };
+        var loginResponse = await _client.PostAsJsonAsync("/api/auth/login", loginDto);
+        loginResponse.EnsureSuccessStatusCode();
+        
+        var auth = await loginResponse.Content.ReadFromJsonAsync<AuthResponseDTO>();
+        auth.Should().NotBeNull();
+        auth!.Token.Should().NotBeEmpty();
+    }
+
     private async Task<string> RegisterAndLogin(string email, string password, string name, string surname, UserRole? role = null)
     {
         var user = await RegisterUser(email, password, name, surname);
