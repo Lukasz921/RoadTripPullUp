@@ -29,4 +29,13 @@ public class AdminComplaintsController : ControllerBase
         var result = await _userService.GetAllComplaints(page, pageSize);
         return Ok(result);
     }
+
+    [HttpDelete("{id}")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> DeleteComplaint([FromRoute] Guid id)
+    {
+        await _userService.DeleteComplaint(id);
+        return NoContent();
+    }
 }
