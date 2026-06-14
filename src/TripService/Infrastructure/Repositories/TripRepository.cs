@@ -275,6 +275,51 @@ public class TripRepository : ITripRepository
         await cmd.ExecuteNonQueryAsync();
     }
 
+    public async Task RateTripAsync(Guid tripId, Guid raterId, Guid ratedId, int rating)
+    {
+        const string sql = """
+            INSERT INTO trip_rating (trip_id, rater_user_id, rated_user_id, rating)
+            VALUES (@tripId, @raterId, @ratedId, @rating)
+            """;
+
+        await using var conn = new NpgsqlConnection(_connectionString);
+        await conn.OpenAsync();
+        await using var cmd = new NpgsqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("tripId",  tripId);
+        cmd.Parameters.AddWithValue("raterId", raterId);
+        cmd.Parameters.AddWithValue("ratedId", ratedId);
+        cmd.Parameters.AddWithValue("rating",  (short)rating);
+
+        await cmd.ExecuteNonQueryAsync();
+    }
+
+    public async Task<bool> HasRatedAsync(Guid tripId, Guid raterId, Guid ratedId)
+    {
+        const string sql = "SELECT EXISTS(SELECT 1 FROM trip_rating WHERE trip_id = @tripId AND rater_user_id = @raterId AND rated_user_id = @ratedId)";
+
+        await using var conn = new NpgsqlConnection(_connectionString);
+        await conn.OpenAsync();
+        await using var cmd = new NpgsqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("tripId",  tripId);
+        cmd.Parameters.AddWithValue("raterId", raterId);
+        cmd.Parameters.AddWithValue("ratedId", ratedId);
+
+        return (bool)(await cmd.ExecuteScalarAsync() ?? false);
+    }
+
+    public async Task<bool> IsPassengerAsync(Guid tripId, Guid userId)
+    {
+        const string sql = "SELECT EXISTS(SELECT 1 FROM trip_passenger WHERE trip_id = @tripId AND passenger_user_id = @userId)";
+
+        await using var conn = new NpgsqlConnection(_connectionString);
+        await conn.OpenAsync();
+        await using var cmd = new NpgsqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("tripId", tripId);
+        cmd.Parameters.AddWithValue("userId", userId);
+
+        return (bool)(await cmd.ExecuteScalarAsync() ?? false);
+    }
+
     public async Task AddPassengerTransactionalAsync(Guid tripId, Guid driverGuid, Guid passengerGuid)
     {
         await using var conn = new NpgsqlConnection(_connectionString);

@@ -95,6 +95,21 @@ public class TripController : ControllerBase
         return NoContent();
     }
 
+    [HttpPost("trips/{tripId}/ratings")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(403)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> RateTrip([FromRoute] string tripId, [FromBody] RateTripDTO dto)
+    {
+        var userId = GetUserId();
+        if (userId == null)
+            return Unauthorized(new { error = new { code = "UNAUTHORIZED", message = "Missing or invalid token." } });
+
+        await _service.RateTripAsync(tripId, userId, dto);
+        return NoContent();
+    }
+
     [HttpGet("trips/search")]
     [ProducesResponseType(typeof(SyncSearchResultDTO), 200)]
     [ProducesResponseType(400)]
