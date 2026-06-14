@@ -104,18 +104,6 @@ public class UserService : IUserService
         await _userRepository.Save(user);
     }
 
-    public async Task Unban(Guid userId)
-    {
-        var user = await _userRepository.FindById(userId);
-        if (user == null) throw new NotFoundException("User not found.");
-
-        user.IsBanned = false;
-        user.BanReason = null;
-        user.BannedUntil = null;
-
-        await _userRepository.Save(user);
-    }
-
     public async Task ChangeRole(Guid userId, UserRole newRole)
     {
         var user = await _userRepository.FindById(userId);

@@ -68,14 +68,6 @@ public class UsersController : ControllerBase
         return Ok();
     }
 
-    [HttpPost("{id}/unban")]
-    [Authorize(Roles = "ADMIN")]
-    public async Task<IActionResult> Unban(Guid id)
-    {
-        await _userService.Unban(id);
-        return Ok();
-    }
-
     [HttpPost("{id}/role")]
     [Authorize(Roles = "ADMIN")]
     public async Task<IActionResult> ChangeRole(Guid id, [FromBody] UserRole role)

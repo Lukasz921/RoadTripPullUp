@@ -66,20 +66,6 @@ public class UsersControllerTests
     }
 
     [Fact]
-    public async Task Unban_ShouldCallService()
-    {
-        // Arrange
-        var userId = Guid.NewGuid();
-
-        // Act
-        var result = await _controller.Unban(userId);
-
-        // Assert
-        result.Should().BeOfType<OkResult>();
-        _userServiceMock.Verify(s => s.Unban(userId), Times.Once);
-    }
-
-    [Fact]
     public async Task ChangeRole_ShouldCallService()
     {
         // Arrange
