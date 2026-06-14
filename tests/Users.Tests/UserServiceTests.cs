@@ -12,13 +12,62 @@ public class UserServiceTests
 {
     private readonly Mock<IUserRepository> _userRepositoryMock;
     private readonly Mock<IPasswordHasher> _passwordHasherMock;
+    private readonly Mock<IComplaintRepository> _complaintRepositoryMock;
     private readonly UserService _userService;
 
     public UserServiceTests()
     {
         _userRepositoryMock = new Mock<IUserRepository>();
         _passwordHasherMock = new Mock<IPasswordHasher>();
-        _userService = new UserService(_userRepositoryMock.Object, _passwordHasherMock.Object);
+        _complaintRepositoryMock = new Mock<IComplaintRepository>();
+        _userService = new UserService(_userRepositoryMock.Object, _passwordHasherMock.Object, _complaintRepositoryMock.Object);
+    }
+
+    [Fact]
+    public async Task FileComplaint_ShouldSaveComplaint_WhenDataIsValid()
+    {
+        // Arrange
+        var complainerId = Guid.NewGuid();
+        var complainedUserId = Guid.NewGuid();
+        var tripId = Guid.NewGuid();
+        var dto = new FileComplaintDTO { ComplainedUserId = complainedUserId, Reason = "Bad behavior" };
+
+        _userRepositoryMock.Setup(r => r.FindById(complainedUserId)).ReturnsAsync(new User { Id = complainedUserId });
+
+        // Act
+        await _userService.FileComplaint(complainerId, tripId, dto);
+
+        // Assert
+        _complaintRepositoryMock.Verify(r => r.Save(It.Is<Complaint>(c => 
+            c.ComplainerId == complainerId && 
+            c.ComplainedUserId == complainedUserId && 
+            c.TripId == tripId && 
+            c.Reason == "Bad behavior")), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetComplaintById_ShouldReturnComplaint_WhenExists()
+    {
+        // Arrange
+        var complaintId = Guid.NewGuid();
+        var complaint = new Complaint
+        {
+            Id = complaintId,
+            TripId = Guid.NewGuid(),
+            ComplainerId = Guid.NewGuid(),
+            ComplainedUserId = Guid.NewGuid(),
+            Reason = "Test",
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _complaintRepositoryMock.Setup(r => r.FindById(complaintId)).ReturnsAsync(complaint);
+
+        // Act
+        var result = await _userService.GetComplaintById(complaintId);
+
+        // Assert
+        result.Id.Should().Be(complaintId);
+        result.Reason.Should().Be("Test");
     }
 
     [Fact]
