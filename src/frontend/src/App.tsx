@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import LoginRegisterPage from './pages/LoginRegisterPage.tsx';
 import MainPage from './pages/MainPage';
 import ProfilePage from './pages/profile/ProfilePage.tsx';
+import UserProfilePage from './pages/profile/UserProfilePage.tsx';
 import AddTripPage from './pages/add-trip/AddTripPage.tsx';
 import SearchTripsPage from './pages/SearchTripsPage';
 import JoinedRidesPage from './pages/rides-page/JoinedRidesPage.tsx';
@@ -20,6 +21,7 @@ export default function App() {
         <Route path="/login" element={<LoginRegisterPage />} />
         <Route path="/register" element={<LoginRegisterPage />} />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/user/:id" element={<UserProfilePage />} />
         <Route path="/add-trip" element={<AddTripPage />} />
         <Route path="/search" element={<SearchTripsPage />} />
         <Route path="/joined-rides" element={<JoinedRidesPage />} />
