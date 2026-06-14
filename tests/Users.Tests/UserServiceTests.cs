@@ -46,28 +46,24 @@ public class UserServiceTests
     }
 
     [Fact]
-    public async Task GetComplaintById_ShouldReturnComplaint_WhenExists()
+    public async Task GetAllComplaints_ShouldReturnPagedComplaints()
     {
         // Arrange
-        var complaintId = Guid.NewGuid();
-        var complaint = new Complaint
+        var complaints = new List<Complaint>
         {
-            Id = complaintId,
-            TripId = Guid.NewGuid(),
-            ComplainerId = Guid.NewGuid(),
-            ComplainedUserId = Guid.NewGuid(),
-            Reason = "Test",
-            CreatedAt = DateTime.UtcNow
+            new Complaint { Id = Guid.NewGuid(), Reason = "Test 1", CreatedAt = DateTime.UtcNow },
+            new Complaint { Id = Guid.NewGuid(), Reason = "Test 2", CreatedAt = DateTime.UtcNow }
         };
 
-        _complaintRepositoryMock.Setup(r => r.FindById(complaintId)).ReturnsAsync(complaint);
+        _complaintRepositoryMock.Setup(r => r.GetAll(1, 10)).ReturnsAsync((complaints, 2));
 
         // Act
-        var result = await _userService.GetComplaintById(complaintId);
+        var result = await _userService.GetAllComplaints(1, 10);
 
         // Assert
-        result.Id.Should().Be(complaintId);
-        result.Reason.Should().Be("Test");
+        result.Items.Should().HaveCount(2);
+        result.TotalCount.Should().Be(2);
+        result.Items[0].Reason.Should().Be("Test 1");
     }
 
     [Fact]

@@ -17,12 +17,16 @@ public class AdminComplaintsController : ControllerBase
         _userService = userService;
     }
 
-    [HttpGet("{id}")]
-    [ProducesResponseType(typeof(ComplaintResponseDTO), 200)]
-    [ProducesResponseType(404)]
-    public async Task<IActionResult> GetComplaintById([FromRoute] Guid id)
+    [HttpGet]
+    [ProducesResponseType(typeof(PagedComplaintsDTO), 200)]
+    public async Task<IActionResult> GetAllComplaints(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
     {
-        var result = await _userService.GetComplaintById(id);
+        pageSize = Math.Clamp(pageSize, 1, 100);
+        page = Math.Max(page, 1);
+
+        var result = await _userService.GetAllComplaints(page, pageSize);
         return Ok(result);
     }
 }
