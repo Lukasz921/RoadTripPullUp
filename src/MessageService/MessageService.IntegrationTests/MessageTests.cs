@@ -6,6 +6,7 @@ using Xunit.Abstractions;
 namespace MessageService.IntegrationTests;
 
 [Collection("IntegrationTestCollection")]
+[Trait("Category", "E2E")]
 public class MessageTests : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly ITestOutputHelper _testOutputHelper;
