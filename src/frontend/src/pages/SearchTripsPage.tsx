@@ -15,27 +15,44 @@ import type { Place } from '../utils/geoapify';
 
 const PAGE_SIZE = 10;
 
+// Module-level cache so the search form + results survive leaving the page
+// (e.g. opening a trip's details) and coming back, without re-running the search.
+// Lives for the SPA session; cleared on a full page reload.
+interface SearchCache {
+  originQuery: string;
+  destinationQuery: string;
+  origin: Place | null;
+  destination: Place | null;
+  dateFrom: string;
+  dateTo: string;
+  maxPrice: string;
+  minSeats: string;
+  page: number;
+  results: TripSummaryV1DTO[] | null;
+}
+let searchCache: SearchCache | null = null;
+
 export default function SearchTripsPage() {
   const navigate = useNavigate();
   const { user } = useCurrentUser();
 
   // Route
-  const [originQuery, setOriginQuery] = useState('');
-  const [destinationQuery, setDestinationQuery] = useState('');
-  const [origin, setOrigin] = useState<Place | null>(null);
-  const [destination, setDestination] = useState<Place | null>(null);
+  const [originQuery, setOriginQuery] = useState(() => searchCache?.originQuery ?? '');
+  const [destinationQuery, setDestinationQuery] = useState(() => searchCache?.destinationQuery ?? '');
+  const [origin, setOrigin] = useState<Place | null>(() => searchCache?.origin ?? null);
+  const [destination, setDestination] = useState<Place | null>(() => searchCache?.destination ?? null);
 
   // Filters
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
-  const [maxPrice, setMaxPrice] = useState('');
-  const [minSeats, setMinSeats] = useState('1');
-  const [page, setPage] = useState(1);
+  const [dateFrom, setDateFrom] = useState(() => searchCache?.dateFrom ?? '');
+  const [dateTo, setDateTo] = useState(() => searchCache?.dateTo ?? '');
+  const [maxPrice, setMaxPrice] = useState(() => searchCache?.maxPrice ?? '');
+  const [minSeats, setMinSeats] = useState(() => searchCache?.minSeats ?? '1');
+  const [page, setPage] = useState(() => searchCache?.page ?? 1);
 
   // State
   const [submitting, setSubmitting] = useState(false);
   const [polling, setPolling] = useState(false);
-  const [results, setResults] = useState<TripSummaryV1DTO[] | null>(null);
+  const [results, setResults] = useState<TripSummaryV1DTO[] | null>(() => searchCache?.results ?? null);
   const [error, setError] = useState('');
   const [askingTripId, setAskingTripId] = useState<string | null>(null);
   const pollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -145,6 +162,22 @@ export default function SearchTripsPage() {
   }
 
   useEffect(() => () => stopPolling(), []);
+
+  // Persist the search form + results so they're restored when returning to this page.
+  useEffect(() => {
+    searchCache = {
+      originQuery,
+      destinationQuery,
+      origin,
+      destination,
+      dateFrom,
+      dateTo,
+      maxPrice,
+      minSeats,
+      page,
+      results,
+    };
+  }, [originQuery, destinationQuery, origin, destination, dateFrom, dateTo, maxPrice, minSeats, page, results]);
 
   return (
     <div className="min-h-screen bg-[#eaf6df]">
