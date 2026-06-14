@@ -28,10 +28,9 @@ public class NotBannedHandler : AuthorizationHandler<NotBannedRequirement>
 
         try
         {
-            var user = await _userService.GetById(userId);
-            var isBanned = user.IsBanned && (user.BannedUntil == null || user.BannedUntil > DateTime.UtcNow);
+            var userResponse = await _userService.GetById(userId);
             
-            if (!isBanned)
+            if (!userResponse.IsCurrentlyBanned())
             {
                 context.Succeed(requirement);
             }

@@ -7,7 +7,7 @@ namespace TripService.Api;
 
 [ApiController]
 [Route("api/v1")]
-[Authorize]
+[Authorize(Policy = "NotBanned")]
 public class TripController : ControllerBase
 {
     private readonly ITripsService _service;

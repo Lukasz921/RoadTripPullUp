@@ -12,7 +12,7 @@ namespace API.Controllers;
 
 [ApiController]
 [Route("api/v1")]
-[Authorize]
+[Authorize(Policy = "NotBanned")]
 public class TripsOrchestratorController : ControllerBase
 {
     private readonly ITripsService _trips;

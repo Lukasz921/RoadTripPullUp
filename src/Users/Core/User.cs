@@ -16,4 +16,6 @@ public class User
     public bool IsBanned { get; set; }
     public string? BanReason { get; set; }
     public DateTime? BannedUntil { get; set; }
+
+    public bool IsCurrentlyBanned => IsBanned && (BannedUntil == null || BannedUntil > DateTime.UtcNow);
 }

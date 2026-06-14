@@ -51,6 +51,11 @@ public class UserService : IUserService
             throw new NotFoundException("User not found.");
         }
 
+        if (user.IsCurrentlyBanned)
+        {
+            throw new Exception("Banned users cannot update their profiles.");
+        }
+
         if (dto.Name != null) user.Name = dto.Name;
         if (dto.Surname != null) user.Surname = dto.Surname;
         if (dto.PhoneNumber != null) user.PhoneNumber = dto.PhoneNumber;
@@ -116,7 +121,7 @@ public class UserService : IUserService
             throw new NotFoundException("User not found.");
         }
 
-        var isBanned = user.IsBanned && (user.BannedUntil == null || user.BannedUntil > DateTime.UtcNow);
+        var isBanned = user.IsCurrentlyBanned;
 
         var today = DateTime.UtcNow.Date;
         var age = today.Year - user.DateOfBirth.Year;

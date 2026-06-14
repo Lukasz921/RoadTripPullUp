@@ -7,7 +7,7 @@ using MessageService.Application.DTOs.Mappers;
 
 namespace MessageService.API.Hubs;
 
-[Authorize]
+[Authorize(Policy = "NotBanned")]
 public class ChatHub : Hub
 {
     private readonly IMessageService _messageService;

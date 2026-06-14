@@ -14,4 +14,6 @@ public class UserResponseDTO
     public bool IsBanned { get; init; }
     public string? BanReason { get; init; }
     public DateTime? BannedUntil { get; init; }
+
+    public bool IsCurrentlyBanned() => IsBanned && (BannedUntil == null || BannedUntil > DateTime.UtcNow);
 }

@@ -7,7 +7,7 @@ namespace API.Controllers;
 
 [ApiController]
 [Route("api/admin/complaints")]
-[Authorize(Roles = "ADMIN")]
+[Authorize(Roles = "ADMIN", Policy = "NotBanned")]
 public class AdminComplaintsController : ControllerBase
 {
     private readonly IUserService _userService;

@@ -6,7 +6,7 @@ namespace API.Controllers;
 
 [ApiController]
 [Route("api/admin")]
-[Authorize(Roles = "ADMIN")]
+[Authorize(Roles = "ADMIN", Policy = "NotBanned")]
 public class AdminTripsController : ControllerBase
 {
     private readonly ITripsService _trips;

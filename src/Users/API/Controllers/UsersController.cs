@@ -9,7 +9,7 @@ namespace Users.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize]
+[Authorize(Policy = "NotBanned")]
 public class UsersController : ControllerBase
 {
     private readonly IUserService _userService;
