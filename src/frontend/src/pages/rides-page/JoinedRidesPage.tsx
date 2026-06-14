@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import RidesPage from '../../components/RidesPage';
+import RidesPage from './RidesPage';
 import { getJoinedTrips } from '../../api/trips';
 
 export default function JoinedRidesPage() {

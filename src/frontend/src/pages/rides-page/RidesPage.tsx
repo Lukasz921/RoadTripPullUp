@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import Navbar from './layout/Navbar';
-import Footer from './layout/Footer';
-import TripSummaryCard from './TripSummaryCard';
-import { usePagedTrips } from '../hooks/usePagedTrips';
-import type { PagedTripsDTO, TripDTO } from '../api/trips';
+import Navbar from '../../components/layout/Navbar';
+import Footer from '../../components/layout/Footer';
+import TripSummaryCard from '../../components/TripSummaryCard';
+import { usePagedTrips } from '../../hooks/usePagedTrips';
+import type { PagedTripsDTO, TripDTO } from '../../api/trips';
 
 const PAGE_SIZE = 10;
 
