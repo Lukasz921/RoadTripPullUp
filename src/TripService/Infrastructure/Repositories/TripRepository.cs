@@ -1,4 +1,4 @@
-using Application.Exceptions;
+using TripService.Application.Exceptions;
 using Microsoft.Extensions.Configuration;
 using Npgsql;
 using TripService.Application;
@@ -371,3 +371,4 @@ public class TripRepository : ITripRepository
         await tx.CommitAsync();
     }
 }
+

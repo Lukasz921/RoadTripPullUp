@@ -1,6 +1,6 @@
 using System.Net.Http.Json;
 using System.Text.Json;
-using Application.Exceptions;
+using TripService.Application.Exceptions;
 using TripService.Application;
 
 namespace TripService.Infrastructure;
@@ -182,3 +182,4 @@ public class ValhallaRoutingEngine : IRoutingEngine
         return $"LINESTRING({coords})";
     }
 }
+

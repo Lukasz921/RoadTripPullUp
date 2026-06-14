@@ -1,4 +1,4 @@
-using Application.Exceptions;
+using TripService.Application.Exceptions;
 using TripService.Application;
 
 namespace TripService.Infrastructure;
@@ -111,3 +111,4 @@ public partial class TripsService
         };
     }
 }
+

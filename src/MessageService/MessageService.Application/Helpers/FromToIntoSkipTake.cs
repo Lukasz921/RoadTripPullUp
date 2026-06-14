@@ -1,4 +1,4 @@
-using Application.Exceptions;
+using TripService.Application.Exceptions;
 
 namespace MessageService.Application.Helpers;
 

@@ -1,5 +1,5 @@
 using System.Security.Claims;
-using Application.Exceptions;
+using TripService.Application.Exceptions;
 using MessageService.Application.DTOs;
 using MessageService.Application.DTOs.Mappers;
 using MessageService.Application.Helpers;
@@ -90,3 +90,4 @@ public class ConversationsController : ControllerBase
         return string.IsNullOrEmpty(sub) ? Guid.Empty : Guid.Parse(sub);
     }
 }
+

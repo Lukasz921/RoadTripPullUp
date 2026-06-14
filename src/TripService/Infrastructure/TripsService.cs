@@ -1,4 +1,4 @@
-using Application.Exceptions;
+using TripService.Application.Exceptions;
 using Microsoft.Extensions.Configuration;
 using TripService.Application;
 
@@ -19,3 +19,4 @@ public partial class TripsService : ITripsService
         _userChecker = userChecker;
     }
 }
+

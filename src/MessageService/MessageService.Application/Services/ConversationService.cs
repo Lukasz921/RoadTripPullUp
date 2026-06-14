@@ -1,4 +1,4 @@
-using Application.Exceptions;
+using TripService.Application.Exceptions;
 using MessageService.Application.DTOs;
 using MessageService.Application.DTOs.Mappers;
 using MessageService.Core.Models;
@@ -79,3 +79,4 @@ public class ConversationService : IConversationService
         await _conversations.AddMemberAsync(conv.Id, userId, _clockService.Now);
     }
 }
+

@@ -3,7 +3,6 @@ using Users.Infrastructure;
 using Microsoft.OpenApi;
 using Scalar.AspNetCore;
 using Microsoft.EntityFrameworkCore;
-using Application.Messages;
 using TripService.Api;
 using TripService.Application;
 using TripService.Infrastructure;
