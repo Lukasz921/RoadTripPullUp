@@ -4,12 +4,14 @@ using MessageService.Application.DTOs;
 using MessageService.Application.DTOs.Mappers;
 using MessageService.Application.Helpers;
 using MessageService.Application.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MessageService.API.Controllers;
 
 [ApiController]
 [Route("api/v1/message/conversations")]
+[Authorize]
 public class ConversationsController : ControllerBase
 {
     private readonly IConversationService _conversations;

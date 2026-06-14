@@ -3,6 +3,7 @@ using Application.Exceptions;
 using MessageService.Application.DTOs;
 using MessageService.Application.Helpers;
 using MessageService.Application.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,6 +11,7 @@ namespace MessageService.API.Controllers;
 
 [ApiController]
 [Route("api/v1/message")]
+[Authorize]
 public class MessagesController : ControllerBase
 {
     private readonly IMessageService _messages;
