@@ -126,6 +126,7 @@ using (var scope = app.Services.CreateScope())
 {
     var userDbContext = scope.ServiceProvider.GetRequiredService<UsersDbContext>();
     userDbContext.Database.Migrate();
+    await DbSeeder.SeedAdminUser(scope.ServiceProvider);
 }
 
 app.MapControllers();

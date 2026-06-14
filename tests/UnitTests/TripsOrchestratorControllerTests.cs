@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
 using TripService.Application;
+using Users.Application.DTOs;
 using Users.Application.Interfaces;
 using Xunit;
 using MessageService.Application.Services;
@@ -120,5 +121,31 @@ public class TripsOrchestratorControllerTests
         // Assert
         var badRequest = result.Should().BeOfType<BadRequestObjectResult>().Subject;
         badRequest.Value.Should().Be("Target user didn't participate in this trip.");
+    }
+
+    [Fact]
+    public async Task FileComplaint_ShouldSucceed_WhenParticipantComplainsAboutAnotherParticipant()
+    {
+        // Arrange
+        var tripId = Guid.NewGuid().ToString();
+        var targetUserId = Guid.NewGuid();
+        var trip = new TripDTO
+        {
+            Id = tripId,
+            DriverId = Guid.NewGuid().ToString(),
+            PassengerIds = new List<string> { _currentUserId.ToString(), targetUserId.ToString() },
+            DepartureTime = DateTime.UtcNow.AddHours(1)
+        };
+
+        _tripsServiceMock.Setup(s => s.GetTripAsync(tripId)).ReturnsAsync(trip);
+
+        var dto = new FileComplaintDTO { ComplainedUserId = targetUserId, Reason = "Rude" };
+
+        // Act
+        var result = await _controller.FileComplaint(tripId, dto);
+
+        // Assert
+        result.Should().BeOfType<NoContentResult>();
+        _userServiceMock.Verify(s => s.FileComplaint(_currentUserId, Guid.Parse(tripId), dto), Times.Once);
     }
 }

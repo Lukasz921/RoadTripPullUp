@@ -10,10 +10,28 @@ public class UsersDbContext : DbContext
     }
 
     public DbSet<User> Users { get; set; }
+    public DbSet<Complaint> Complaints { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<Complaint>(entity =>
+        {
+            entity.HasKey(c => c.Id);
+            entity.Property(c => c.Reason).IsRequired().HasMaxLength(1000);
+            entity.Property(c => c.CreatedAt).IsRequired();
+            
+            entity.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(c => c.ComplainerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(c => c.ComplainedUserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
 
         modelBuilder.Entity<User>(entity =>
         {

@@ -9,16 +9,18 @@ public class UserService : IUserService
 {
     private readonly IUserRepository _userRepository;
     private readonly IPasswordHasher _passwordHasher;
+    private readonly IComplaintRepository _complaintRepository;
 
-    public UserService(IUserRepository userRepository, IPasswordHasher passwordHasher)
+    public UserService(IUserRepository userRepository, IPasswordHasher passwordHasher, IComplaintRepository complaintRepository)
     {
         _userRepository = userRepository;
         _passwordHasher = passwordHasher;
+        _complaintRepository = complaintRepository;
     }
 
     public async Task<UserResponseDTO> GetById(Guid id)
     {
-        var user = await _userRepository.FindById(id);
+        var user = await _userRepository.FindById(id) ;
         if (user == null)
         {
             throw new NotFoundException("User not found.");
@@ -149,6 +151,40 @@ public class UserService : IUserService
                 IsAdult = isAdult,
                 CanCreateTrip = isAdult && !isBanned
             }
+        };
+    }
+
+    public async Task FileComplaint(Guid complainerId, Guid tripId, FileComplaintDTO dto)
+    {
+        var complainedUser = await _userRepository.FindById(dto.ComplainedUserId);
+        if (complainedUser == null) throw new NotFoundException("Complained user not found.");
+
+        var complaint = new Complaint
+        {
+            Id = Guid.NewGuid(),
+            TripId = tripId,
+            ComplainerId = complainerId,
+            ComplainedUserId = dto.ComplainedUserId,
+            Reason = dto.Reason,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        await _complaintRepository.Save(complaint);
+    }
+
+    public async Task<ComplaintResponseDTO> GetComplaintById(Guid id)
+    {
+        var complaint = await _complaintRepository.FindById(id);
+        if (complaint == null) throw new NotFoundException("Complaint not found.");
+
+        return new ComplaintResponseDTO
+        {
+            Id = complaint.Id,
+            TripId = complaint.TripId,
+            ComplainerId = complaint.ComplainerId,
+            ComplainedUserId = complaint.ComplainedUserId,
+            Reason = complaint.Reason,
+            CreatedAt = complaint.CreatedAt
         };
     }
 }
