@@ -17,14 +17,14 @@ public static class DbSeeder
             var admin = new User
             {
                 Id = Guid.NewGuid(),
-                Name = "Admin",
-                Surname = "System",
-                Email = "admin@roadtrip.com",
-                PasswordHash = hasher.Hash("Admin123!"),
+                Name = "admin",
+                Surname = "admin",
+                Email = "admin@admin.com",
+                PasswordHash = hasher.Hash("admin"),
                 Role = UserRole.ADMIN,
                 Sex = Sex.OTHER,
                 DateOfBirth = new DateTime(1990, 1, 1, 0, 0, 0, DateTimeKind.Utc),
-                AvgRating = 5.0,
+                AvgRating = 0.0,
                 RatingsCount = 0,
                 IsBanned = false
             };
