@@ -13,9 +13,10 @@ interface RidesPageProps {
   emptyMessage: string;
   headerButton?: { label: string; onClick: () => void };
   cardAction?: (trip: TripDTO) => { label: string; onClick: () => void } | undefined;
+  detailsState?: Record<string, unknown>;
 }
 
-export default function RidesPage({ title, fetchTrips, emptyMessage, headerButton, cardAction }: RidesPageProps) {
+export default function RidesPage({ title, fetchTrips, emptyMessage, headerButton, cardAction, detailsState }: RidesPageProps) {
   const [page, setPage] = useState(1);
   const { trips, totalCount, loading, error } = usePagedTrips(fetchTrips, page, PAGE_SIZE);
 
@@ -51,7 +52,7 @@ export default function RidesPage({ title, fetchTrips, emptyMessage, headerButto
         {!loading && !error && trips.length > 0 && (
           <div className="flex flex-col gap-3">
             {trips.map((trip) => (
-              <TripSummaryCard key={trip.id} trip={trip} action={cardAction?.(trip)} />
+              <TripSummaryCard key={trip.id} trip={trip} action={cardAction?.(trip)} detailsState={detailsState} />
             ))}
           </div>
         )}

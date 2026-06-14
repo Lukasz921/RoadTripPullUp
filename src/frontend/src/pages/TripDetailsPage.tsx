@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import TripRouteMap from '../components/TripRouteMap';
@@ -22,6 +22,8 @@ function Field({ label, value }: { label: string; value: string }) {
 export default function TripDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const canRate = (location.state as { canRate?: boolean } | null)?.canRate ?? false;
   const { user } = useCurrentUser();
   const [trip, setTrip] = useState<TripDTO | null>(null);
   const [loading, setLoading] = useState(true);
@@ -120,6 +122,15 @@ export default function TripDetailsPage() {
                 >
                   Trip chats
                 </button>
+                {canRate && (
+                  <button
+                    type="button"
+                    onClick={() => {}}
+                    className="flex-1 rounded-xl border border-[#12351f] px-4 py-3 text-sm font-semibold text-[#12351f] hover:bg-[#e8f5e0]"
+                  >
+                    Rate trip
+                  </button>
+                )}
               </div>
             )}
 
