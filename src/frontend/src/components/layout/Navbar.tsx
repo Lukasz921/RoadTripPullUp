@@ -20,7 +20,7 @@ function getRole(): string | null {
 export default function Navbar() {
   const navigate = useNavigate();
   const loggedIn = !!localStorage.getItem('token');
-  const isAdmin = getRole() === 'Admin';
+  const isAdmin = getRole() === 'ADMIN';
 
   return (
     <header className="fixed inset-x-0 top-0 z-[1000] bg-[#12351f]/90 text-white backdrop-blur">
