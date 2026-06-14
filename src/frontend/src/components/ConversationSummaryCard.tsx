@@ -1,20 +1,80 @@
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { ConversationDTO } from '../api/messages';
+import { getTripById, type TripDTO } from '../api/trips';
+import { getUserById } from '../api/user';
+import { reverseGeocode } from '../api/reverseGeocode';
+import { useCurrentUser } from '../hooks/useCurrentUser';
 import { formatDate } from '../utils/format';
 
 interface ConversationSummaryCardProps {
   conversation: ConversationDTO;
-  isGroup?: boolean;
   navigationState?: Record<string, unknown>;
 }
 
-export default function ConversationSummaryCard({ conversation, isGroup, navigationState }: ConversationSummaryCardProps) {
+// Conversations with no messages get an epoch (1970) last-message date — treat those as "no last message".
+function hasRealLastMessage(iso?: string): boolean {
+  return !!iso && new Date(iso).getFullYear() > 1970;
+}
+
+export default function ConversationSummaryCard({ conversation, navigationState }: ConversationSummaryCardProps) {
   const navigate = useNavigate();
-  const title = conversation.Name ?? (isGroup ? 'Group chat' : 'Direct chat');
+  const { user } = useCurrentUser();
+  const isGroup = conversation.type?.toLowerCase() === 'group';
+
+  const [trip, setTrip] = useState<TripDTO | null>(null);
+  const [startPlace, setStartPlace] = useState('');
+  const [endPlace, setEndPlace] = useState('');
+  const [otherName, setOtherName] = useState('');
+
+  // Fetch the trip this conversation belongs to, then resolve its endpoints to place names.
+  useEffect(() => {
+    let cancelled = false;
+    getTripById(conversation.tripId)
+      .then(async (t) => {
+        if (cancelled) return;
+        setTrip(t);
+        const [start, end] = await Promise.all([
+          reverseGeocode(t.source.lat, t.source.lng),
+          reverseGeocode(t.target.lat, t.target.lng),
+        ]);
+        if (cancelled) return;
+        setStartPlace(start);
+        setEndPlace(end);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [conversation.tripId]);
+
+  // For direct chats, show the other person's name + surname (the participant that isn't the logged-in user).
+  useEffect(() => {
+    if (isGroup || !user) return;
+    const otherId = conversation.participants.find((id) => id !== user.id);
+    if (!otherId) return;
+    let cancelled = false;
+    getUserById(otherId)
+      .then((u) => {
+        if (!cancelled) setOtherName(`${u.name} ${u.surname}`);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [isGroup, conversation.participants, user]);
+
+  const title = isGroup
+    ? 'Group chat'
+    : otherName
+      ? `Private chat with ${otherName}`
+      : 'Private chat';
+
+  const showLastMessageDate = hasRealLastMessage(conversation.lastMessageCreatedAt);
 
   return (
     <div
-      onClick={() => navigate(`/conversation/${conversation.ConversationId}`, { state: navigationState })}
+      onClick={() => navigate(`/conversation/${conversation.conversationId}`, { state: navigationState })}
       className={`cursor-pointer rounded-xl border bg-white px-5 py-4 transition hover:bg-[#f0f9e8] ${
         isGroup ? 'border-[#8cc63f] border-l-4' : 'border-[#d7e8c8]'
       }`}
@@ -28,17 +88,28 @@ export default function ConversationSummaryCard({ conversation, isGroup, navigat
           )}
           <p className="font-semibold text-[#12351f]">{title}</p>
         </div>
-        <p className="shrink-0 text-xs text-[#5d7056]">
-          {conversation.LastMessageCreatedAt ? formatDate(conversation.LastMessageCreatedAt) : ''}
-        </p>
+        {showLastMessageDate && (
+          <p className="shrink-0 text-xs text-[#5d7056]">
+            {formatDate(conversation.lastMessageCreatedAt)}
+          </p>
+        )}
       </div>
 
-      {conversation.LastMessagePreview && (
-        <p className="mt-1 truncate text-sm text-[#5d7056]">{conversation.LastMessagePreview}</p>
+      {trip && (
+        <div className="mt-2 text-sm text-[#5d7056]">
+          <p>{formatDate(trip.departureTime)}</p>
+          <p className="font-medium text-[#12351f]">
+            {startPlace || '…'} → {endPlace || '…'}
+          </p>
+        </div>
+      )}
+
+      {conversation.lastMessagePreview && (
+        <p className="mt-1 truncate text-sm text-[#5d7056]">{conversation.lastMessagePreview}</p>
       )}
 
       <p className="mt-2 text-xs text-[#5d7056]">
-        {conversation.Participants.length} participant{conversation.Participants.length !== 1 ? 's' : ''}
+        {conversation.participants.length} participant{conversation.participants.length !== 1 ? 's' : ''}
       </p>
     </div>
   );

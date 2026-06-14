@@ -11,4 +11,9 @@ public class User
     public string PasswordHash { get; set; } = string.Empty;
     public UserRole Role { get; set; }
     public Sex Sex { get; set; }
+    public double AvgRating { get; set; }
+    public int RatingsCount { get; set; }
+    public bool IsBanned { get; set; }
+    public string? BanReason { get; set; }
+    public DateTime? BannedUntil { get; set; }
 }

@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { mapGeoapifyFeature, type Place } from '../../../utils/geoapify';
+import { type Place } from '../../../utils/geoapify';
+import { geocodeAutocomplete } from '../../../api/geocodeAutocomplete';
 
 const API_KEY = import.meta.env.VITE_GEOAPIFY_API_KEY as string;
-const COUNTRY_CODE = import.meta.env.VITE_GEOAPIFY_COUNTRY_CODE as string;
 
 interface LocationAutocompleteProps {
   label: string;
@@ -44,19 +44,7 @@ export default function LocationAutocomplete({ label, value, selectedPlace, onQu
     const timeoutId = window.setTimeout(async () => {
       setIsLoading(true);
       try {
-        const params = new URLSearchParams({ text: query, limit: '5', lang: 'pl', apiKey: API_KEY });
-        if (COUNTRY_CODE) params.set('filter', `countrycode:${COUNTRY_CODE}`);
-
-        const res = await fetch(
-          `https://api.geoapify.com/v1/geocode/autocomplete?${params}`,
-          { signal: controller.signal },
-        );
-        if (!res.ok) throw new Error('Geoapify request failed.');
-
-        const data = await res.json();
-        const places = (data.features ?? [])
-          .map(mapGeoapifyFeature)
-          .filter((p: Place) => Number.isFinite(p.lat) && Number.isFinite(p.lng));
+        const places = await geocodeAutocomplete(query, controller.signal);
 
         setSuggestions(places);
         setIsOpen(true);

@@ -35,4 +35,11 @@ public class AuthController : ControllerBase
         var response = await _authService.GoogleLogin(dto.IdToken);
         return Ok(response);
     }
+
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDTO dto)
+    {
+        await _authService.ResetPassword(dto);
+        return Ok();
+    }
 }

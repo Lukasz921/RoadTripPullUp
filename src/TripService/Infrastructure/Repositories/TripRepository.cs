@@ -119,7 +119,7 @@ public class TripRepository : ITripRepository
                 COUNT(*) OVER() AS total_count
             FROM trip t
             LEFT JOIN trip_passenger tp ON tp.trip_id = t.id
-            WHERE t.driver_user_id = @driverId AND t.status = 'ACTIVE'
+            WHERE t.driver_user_id = @driverId AND t.status = 'ACTIVE' AND t.departure_time >= NOW()
             GROUP BY t.id, t.driver_user_id, t.source_geog, t.target_geog,
                      t.route_distance_m, t.route_duration_s, t.max_detour_m,
                      t.departure_time, t.price_per_seat, t.available_seats,
@@ -157,7 +157,7 @@ public class TripRepository : ITripRepository
             FROM trip t
             INNER JOIN trip_passenger tp_me ON tp_me.trip_id = t.id AND tp_me.passenger_user_id = @userId
             LEFT JOIN trip_passenger tp_all ON tp_all.trip_id = t.id
-            WHERE t.status = 'ACTIVE'
+            WHERE t.status = 'ACTIVE' AND t.departure_time >= NOW()
             GROUP BY t.id, t.driver_user_id, t.source_geog, t.target_geog,
                      t.route_distance_m, t.route_duration_s, t.max_detour_m,
                      t.departure_time, t.price_per_seat, t.available_seats,
@@ -170,6 +170,87 @@ public class TripRepository : ITripRepository
         await conn.OpenAsync();
         await using var cmd = new NpgsqlCommand(sql, conn);
         cmd.Parameters.AddWithValue("userId",   userId);
+        cmd.Parameters.AddWithValue("pageSize", pageSize);
+        cmd.Parameters.AddWithValue("offset",   (page - 1) * pageSize);
+        return await TripMapper.ReadPagedAsync(cmd, page, pageSize);
+    }
+
+    public async Task<PagedTripsDTO> GetPastTripsAsync(Guid userId, int page, int pageSize)
+    {
+        const string sql = """
+            SELECT
+                t.id, t.driver_user_id,
+                ST_Y(t.source_geog::geometry) AS source_lat,
+                ST_X(t.source_geog::geometry) AS source_lng,
+                ST_Y(t.target_geog::geometry) AS target_lat,
+                ST_X(t.target_geog::geometry) AS target_lng,
+                t.route_distance_m, t.route_duration_s, t.max_detour_m,
+                t.departure_time, t.price_per_seat, t.available_seats,
+                t.status::text AS status, t.created_at,
+                COALESCE(
+                    ARRAY_AGG(tp.passenger_user_id ORDER BY tp.joined_at) FILTER (WHERE tp.passenger_user_id IS NOT NULL),
+                    '{}'::uuid[]
+                ) AS passenger_ids,
+                COUNT(*) OVER() AS total_count
+            FROM trip t
+            LEFT JOIN trip_passenger tp ON tp.trip_id = t.id
+            WHERE t.departure_time < NOW()
+              AND (
+                  t.driver_user_id = @userId
+                  OR EXISTS (SELECT 1 FROM trip_passenger WHERE trip_id = t.id AND passenger_user_id = @userId)
+              )
+            GROUP BY t.id, t.driver_user_id, t.source_geog, t.target_geog,
+                     t.route_distance_m, t.route_duration_s, t.max_detour_m,
+                     t.departure_time, t.price_per_seat, t.available_seats,
+                     t.status, t.created_at
+            ORDER BY t.departure_time DESC
+            LIMIT @pageSize OFFSET @offset
+            """;
+
+        await using var conn = new NpgsqlConnection(_connectionString);
+        await conn.OpenAsync();
+        await using var cmd = new NpgsqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("userId",   userId);
+        cmd.Parameters.AddWithValue("pageSize", pageSize);
+        cmd.Parameters.AddWithValue("offset",   (page - 1) * pageSize);
+        return await TripMapper.ReadPagedAsync(cmd, page, pageSize);
+    }
+
+    public async Task<PagedTripsDTO> GetAllAsync(DateTime? dateFrom, DateTime? dateTo, int page, int pageSize)
+    {
+        const string sql = """
+            SELECT
+                t.id, t.driver_user_id,
+                ST_Y(t.source_geog::geometry) AS source_lat,
+                ST_X(t.source_geog::geometry) AS source_lng,
+                ST_Y(t.target_geog::geometry) AS target_lat,
+                ST_X(t.target_geog::geometry) AS target_lng,
+                t.route_distance_m, t.route_duration_s, t.max_detour_m,
+                t.departure_time, t.price_per_seat, t.available_seats,
+                t.status::text AS status, t.created_at,
+                COALESCE(
+                    ARRAY_AGG(tp.passenger_user_id ORDER BY tp.joined_at) FILTER (WHERE tp.passenger_user_id IS NOT NULL),
+                    '{}'::uuid[]
+                ) AS passenger_ids,
+                COUNT(*) OVER() AS total_count
+            FROM trip t
+            LEFT JOIN trip_passenger tp ON tp.trip_id = t.id
+            WHERE (@dateFrom IS NULL OR t.departure_time >= @dateFrom)
+              AND (@dateTo   IS NULL OR t.departure_time <= @dateTo)
+            GROUP BY t.id, t.driver_user_id, t.source_geog, t.target_geog,
+                     t.route_distance_m, t.route_duration_s, t.max_detour_m,
+                     t.departure_time, t.price_per_seat, t.available_seats,
+                     t.status, t.created_at
+            ORDER BY t.departure_time ASC
+            LIMIT @pageSize OFFSET @offset
+            """;
+
+        await using var conn = new NpgsqlConnection(_connectionString);
+        await conn.OpenAsync();
+        await using var cmd = new NpgsqlCommand(sql, conn);
+
+        cmd.Parameters.AddWithValue("dateFrom", (object?)dateFrom?.ToUniversalTime() ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("dateTo",   (object?)dateTo?.ToUniversalTime()   ?? DBNull.Value);
         cmd.Parameters.AddWithValue("pageSize", pageSize);
         cmd.Parameters.AddWithValue("offset",   (page - 1) * pageSize);
         return await TripMapper.ReadPagedAsync(cmd, page, pageSize);
@@ -192,6 +273,51 @@ public class TripRepository : ITripRepository
         await using var cmd = new NpgsqlCommand("DELETE FROM trip WHERE id = @id", conn);
         cmd.Parameters.AddWithValue("id", id);
         await cmd.ExecuteNonQueryAsync();
+    }
+
+    public async Task RateTripAsync(Guid tripId, Guid raterId, Guid ratedId, int rating)
+    {
+        const string sql = """
+            INSERT INTO trip_rating (trip_id, rater_user_id, rated_user_id, rating)
+            VALUES (@tripId, @raterId, @ratedId, @rating)
+            """;
+
+        await using var conn = new NpgsqlConnection(_connectionString);
+        await conn.OpenAsync();
+        await using var cmd = new NpgsqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("tripId",  tripId);
+        cmd.Parameters.AddWithValue("raterId", raterId);
+        cmd.Parameters.AddWithValue("ratedId", ratedId);
+        cmd.Parameters.AddWithValue("rating",  (short)rating);
+
+        await cmd.ExecuteNonQueryAsync();
+    }
+
+    public async Task<bool> HasRatedAsync(Guid tripId, Guid raterId, Guid ratedId)
+    {
+        const string sql = "SELECT EXISTS(SELECT 1 FROM trip_rating WHERE trip_id = @tripId AND rater_user_id = @raterId AND rated_user_id = @ratedId)";
+
+        await using var conn = new NpgsqlConnection(_connectionString);
+        await conn.OpenAsync();
+        await using var cmd = new NpgsqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("tripId",  tripId);
+        cmd.Parameters.AddWithValue("raterId", raterId);
+        cmd.Parameters.AddWithValue("ratedId", ratedId);
+
+        return (bool)(await cmd.ExecuteScalarAsync() ?? false);
+    }
+
+    public async Task<bool> IsPassengerAsync(Guid tripId, Guid userId)
+    {
+        const string sql = "SELECT EXISTS(SELECT 1 FROM trip_passenger WHERE trip_id = @tripId AND passenger_user_id = @userId)";
+
+        await using var conn = new NpgsqlConnection(_connectionString);
+        await conn.OpenAsync();
+        await using var cmd = new NpgsqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("tripId", tripId);
+        cmd.Parameters.AddWithValue("userId", userId);
+
+        return (bool)(await cmd.ExecuteScalarAsync() ?? false);
     }
 
     public async Task AddPassengerTransactionalAsync(Guid tripId, Guid driverGuid, Guid passengerGuid)

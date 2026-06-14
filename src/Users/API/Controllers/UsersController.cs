@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using Users.Application.DTOs;
 using Users.Application.Interfaces;
+using Users.Core;
 
 namespace Users.API.Controllers;
 
@@ -29,6 +30,14 @@ public class UsersController : ControllerBase
         return Ok(user);
     }
 
+    [HttpGet("{id}")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetById(Guid id)
+    {
+        var user = await _userService.GetById(id);
+        return Ok(user);
+    }
+
     [HttpPatch("me")]
     public async Task<IActionResult> UpdateCurrent([FromBody] UpdateUserDTO dto)
     {
@@ -49,5 +58,29 @@ public class UsersController : ControllerBase
         var userId = Guid.Parse(userIdClaim.Value);
         var data = await _userService.GetUserIntegrationData(userId);
         return Ok(data);
+    }
+
+    [HttpPost("{id}/ban")]
+    [Authorize(Roles = "ADMIN")]
+    public async Task<IActionResult> Ban(Guid id, [FromBody] BanUserDTO dto)
+    {
+        await _userService.Ban(id, dto);
+        return Ok();
+    }
+
+    [HttpPost("{id}/unban")]
+    [Authorize(Roles = "ADMIN")]
+    public async Task<IActionResult> Unban(Guid id)
+    {
+        await _userService.Unban(id);
+        return Ok();
+    }
+
+    [HttpPost("{id}/role")]
+    [Authorize(Roles = "ADMIN")]
+    public async Task<IActionResult> ChangeRole(Guid id, [FromBody] UserRole role)
+    {
+        await _userService.ChangeRole(id, role);
+        return Ok();
     }
 }

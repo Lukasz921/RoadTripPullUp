@@ -1,131 +1,83 @@
 ### Przemysław Borczak, Bartosz Cichomski, Marek Makochon, Łukasz Przybylski
 
-**Wybrane technologie:** C#, .NET, PostgreSQL, Entity Framework, React, Azure, Leaflet
+**Technologies used:** C#, .NET 10, PostgreSQL, PostGIS, Entity Framework Core, React, Docker, Redis, Valhalla, SignalR
 
-### Sprint 1: Podział zadań w Clean Architecture
+---
 
-#### DevOps, Szkielet i Baza Danych (Infrastructure & API)
+### Sprint 1: Foundation
 
-**Cel:** Przygotowanie fundamentów projektu, aby reszta zespołu miała na czym pracować.
-* **Szkielet Solucji:** Utworzenie projektów w .NET zachowując podział na warstwy: `Core` (Domain), `Application`, `Infrastructure`, `API` (Presentation).
-* **Baza Danych (Infrastructure):** Skonfigurowanie połączenia z bazą PostgreSQL.
-* **Entity Framework (Infrastructure):** Instalacja paczek EF Core, skonfigurowanie `DbContext` i przygotowanie pierwszej migracji dla bazy danych.
-* **Bezpieczeństwo (API):** Skonfigurowanie wymuszania protokołu HTTPS dla całej aplikacji.
-* **Dokumentacja (API):** Konfiguracja Swaggera do testowania endpointów.
+**Auth, project skeleton, database setup.**
 
-#### Serce Systemu (Domain & Application)
+- Clean Architecture solution structure: `Core`, `Application`, `Infrastructure`, `API`
+- `POST /api/auth/register` — register with email/password
+- `POST /api/auth/login` — returns JWT
+- `POST /api/auth/google` — Google OAuth login
+- JWT validation middleware (issuer, audience, signing key)
+- `UsersDbContext` with EF Core migrations, PostgreSQL
 
-* **Cel:** Oprogramowanie czystej logiki biznesowej, bez dotykania bazy danych czy protokołu HTTP.
-* **Modele Domenowe (Domain):** Utworzenie klasy `User` z polami: `id`, `name`, `surname`, `email`, `passwordHash`, `pfpUrl`, `dateOfBirth`, `bio`.
-* **Role (Domain):** Stworzenie enumeratora `UserRole` (`REGULAR_USER`, `ADMIN`) i przypisanie go do użytkownika.
-* **Kontrakty (Application):** Stworzenie interfejsu `IUserRepository` definiującego metody: `save()`, `findById()`, `findByEmail(email: string)`.
-* **Logika (Application):** Utworzenie interfejsu i klasy `AuthService`, która będzie obsługiwać logikę biznesową metod `register(UserDTO)`, `login(email, password)` oraz `resetPassword(email)`.
-* **Zewnętrzne Kontrakty (Application):** Stworzenie interfejsów do hashowania haseł (np. `IPasswordHasher`) oraz generowania tokenów (np. `IJwtProvider`).
+---
 
-#### Implementacja i Wystawienie API (Infrastructure & API)
+### Sprint 2: Trips — Core
 
-* **Cel:** Spięcie logiki z bazą danych i wystawienie danych na zewnątrz.
+**Drivers can create trips; passengers can search.**
 
-* **Implementacja Repozytorium (Infrastructure):** Napisanie klasy `UserRepository` implementującej `IUserRepository`, która wykorzystuje EF Core do fizycznego zapisu/odczytu użytkowników w PostgreSQL.
-* **Narzędzia (Infrastructure):** Zaimplementowanie mechanizmu hashowania haseł oraz klasy generującej i walidującej tokeny JWT (implementacja `IJwtProvider`).
-* **Kontrolery (API):** Stworzenie `AuthController` i endpointu `POST api/auth/login` dla logowania standardowego.
-* **Logowanie Zewnętrzne (API):** Utworzenie endpointu `POST api/auth/google` przyjmującego parametr `id_token`. 
-* **Formatowanie Odpowiedzi (API):** Zmapowanie wyników na Auth Response DTO zawierające `token`, `expiresIn` oraz obiekt `user` (z polami `id`, `firstName`, `role`).
+- `POST /api/v1/trips` — create trip (computes route via Valhalla or mock engine)
+- `GET /api/v1/trips/search` — synchronous search (Phase 1: PostGIS `ST_DWithin`, Phase 2: Valhalla matrix detour)
+- `POST /api/v1/trips/search` — async search (enqueue to Redis)
+- `GET /api/v1/trips/search/{jobId}` — poll async search job
+- PostGIS `trip_db` with spatial indexes; raw Npgsql (no EF Core for trips)
+- Mock routing engine for debug mode (Haversine × 1.3, no Valhalla needed)
 
-#### Aplikacja Kliencka (Frontend - React)
+---
 
-* **Cel:** Zbudowanie interfejsu użytkownika i spięcie go z gotowym backendem.
-* **Inicjalizacja (Frontend):** Utworzenie projektu w React (np. Vite/Create React App) i podstawowa konfiguracja routingu.
-* **Widoki (Frontend):** Zbudowanie prostego formularza logowania (email, hasło) oraz rejestracji.
-* **Integracja (Frontend):** Podpięcie żądań HTTP (np. za pomocą biblioteki Axios lub Fetch) do endpointu `POST api/auth/login`.
-* **Zarządzanie Stanem (Frontend):** Obsługa poprawnego logowania (kod 200) polegająca na zapisaniu odebranego tokenu JWT  (np. w LocalStorage lub odpowiednim Context API).
-* **Obsługa Błędów (Frontend):** Obsługa błędu autoryzacji (kod 401)  i wyświetlenie stosownego komunikatu dla użytkownika (np. "Błędny email lub hasło").
+### Sprint 3: Passengers & Messaging
 
-### Sprint 2: Core Biznesowy – Oferty Przejazdów
+**Driver adds passengers; group chat created automatically.**
 
-**Cel:** Umożliwienie kierowcom dodawania tras, a pasażerom ich przeglądania.
+- `POST /api/v1/trips/{tripId}/passengers` — driver directly adds a passenger (no request/accept flow)
+- `GET /api/v1/trips/me` — driver's upcoming trips
+- `GET /api/v1/trips/joined` — passenger's upcoming trips
+- `GET /api/v1/trips/history` — all past trips (driver + passenger combined)
+- `GET /api/v1/trips/{tripId}` — trip detail
+- `DELETE /api/v1/trips/{tripId}` — driver deletes own trip
+- Group conversation created automatically on trip creation (`TripsOrchestratorController` coordinates TripService + MessageService)
+- Passenger added to group chat when driver adds them to the trip
+- MessageService: conversations, messages, SignalR hub, read receipts (see `MessageService-API.md`)
 
-* **Domain (Core):**
-* Wdrożenie głównej encji `Trip` agregującej dane o trasie (`route`), terminie (`date`), identyfikatorze kierowcy (`driverId`) i kosztach (`price`).
-* Definicja stanów oferty (Aktywna, Odwołana).
+---
 
-* **Application:**
-* Zdefiniowanie interfejsów `ITripRepository` oraz `IPassengerOperations`.
-* Implementacja `TripService` pozwalającego na tworzenie (`createTrip`) i wyszukiwanie ofert (`searchTrips` przyjmujące obiekt `Criteria`).
+### Sprint 4: Users & Ratings
 
-* **Infrastructure:**
-* Implementacja `TripRepository` (EF Core) do zapisu i filtrowania wycieczek w bazie PostgreSQL.
+**Profile management, ratings, banning.**
 
-* **Presentation (API):**
-* Uruchomienie endpointów `POST api/trips` do publikacji oraz `GET api/trips` do wyszukiwania z filtrami.
+- `GET /api/users/me` — current user profile
+- `PATCH /api/users/me` — update profile
+- `GET /api/users/me/integration-data` — user data for cross-service use
+- `POST /api/v1/trips/{tripId}/rate-user` — rate a trip participant (only allowed after trip departure time has passed)
+- `GET /api/users/{id}/ratings` — get ratings for a user
+- `GET /api/users/ratings/{ratingId}` — get single rating
+- `DELETE /api/users/ratings/{ratingId}` — delete own rating
+- `AvgRating` and `RatingsCount` stored on the `users` table
 
-### Sprint 3: Rezerwacje i Zarządzanie Przejazdem
+---
 
-**Cel:** Połączenie kierowcy z pasażerem i obsługa logiki zajmowania miejsc.
+### Sprint 5: Admin Panel
 
-* **Domain (Core):**
-* Implementacja logiki domenowej w encji `Trip` zapobiegającej przekroczeniu limitu miejsc (enkapsulacja - metoda np. `TryAddPassenger`).
-* Zarządzanie stanami "Pending" i "Pełna".
+**Admin endpoints for moderation.**
 
-* **Application:**
-* Rozbudowa `TripService` o logikę `addPassenger(tripId, userId)`.
-* Obsługa wyjątków domenowych (np. `SeatUnavailableException`), które później zamienią się w błąd 409 Conflict.
+- `GET /api/admin/trips` — list all trips with optional date range filter *(ADMIN only)*
+- `DELETE /api/admin/trips/{tripId}` — delete any trip *(ADMIN only)*
+- `POST /api/users/{id}/ban` — ban user with reason and optional expiry *(ADMIN only)*
+- `POST /api/users/{id}/unban` — lift ban *(ADMIN only)*
+- `POST /api/users/{id}/role` — change user role *(ADMIN only)*
+- JWT `ClaimTypes.Role` carries `REGULAR_USER` or `ADMIN`
 
-* **Infrastructure:**
-* Obsługa współbieżności w EF Core (Concurrency Tokens), aby uniknąć *race conditions* przy rezerwowaniu ostatniego miejsca.
+---
 
-* **Presentation (API):**
-* Uruchomienie endpointów `/api/trips/{id}/request` (rezerwacja) oraz `/api/requests/{id}/accept` (akceptacja).
+### Not implemented (out of scope)
 
-### Sprint 4: Komunikacja w Systemie
-
-**Cel:** Umożliwienie użytkownikom bezpośredniego kontaktu w celu ustalenia szczegółów.
-
-* **Domain (Core):**
-* Zbudowanie encji `Message` przechowującej `senderId`, `receiverId`, `content` oraz `timestamp`.
-
-* **Application:**
-* Zdefiniowanie `IMessageRepository`.
-* Wdrożenie `MessagingService` pozwalającego wysyłać wiadomości i pobierać konwersacje (`sendMessage`, `getConversation`).
-
-* **Infrastructure:**
-* Implementacja zapisu wiadomości w bazie danych.
-
-* **Presentation (API):**
-* Konfiguracja endpointów `POST api/messages` (wysyłanie) oraz `GET api/messages/{userId}` (pobieranie historii).
-
-### Sprint 5: Zaufanie i Bezpieczeństwo (Oceny i Moderacja)
-
-**Cel:** Wdrożenie systemu recenzji oraz panelu dla administratora.
-
-* **Domain (Core):**
-* Utworzenie encji `Review` (`authorId`, `subjectId`, `rating`, `content`).
-* Utworzenie encji `Report` dla zgłoszeń naruszeń.
-
-* **Application:**
-* Definicja `IReviewRepository` oraz `IReportRepository`.
-* Implementacja `ReviewService` , `ReportingService` (`submitReport`) oraz `AdminModerationService` (`banUser`, `resolveReport`).
-
-* **Infrastructure:**
-* Dodanie nowych repozytoriów do wstrzykiwania zależności (Dependency Injection).
-
-* **Presentation (API):**
-* Podłączenie endpointu `POST api/reports` dla zgłoszeń naruszeń  i endpointów dla dodawania ocen.
-
-### Sprint 6: Integracje Zewnętrzne, Historia i Szlify
-
-**Cel:** Dopracowanie aplikacji, dodanie map, płatności i telemetrii.
-
-* **Domain (Core):**
-* Obsługa stanów końcowych obiektów: "Wykonana" oraz "Zarchiwizowana".
-
-* **Application:**
-* Zdefiniowanie interfejsów dla serwisów zewnętrznych: `IGeoLocationService`, `IPaymentGateway`.
-* Wdrożenie logiki zwracającej historię ukończonych podróży w oparciu o datę przeszłą.
-
-* **Infrastructure:**
-* Implementacja `GoogleMapsGeoLocationService` w oparciu o zewnętrzne API Google Maps.
-* Implementacja zewnętrznego systemu bankowego do obsługi płatności.
-
-* **Presentation (API / Frontend):**
-* Wystawienie danych na zewnątrz i zintegrowanie ich z mapami (Leaflet) na frontendzie w środowisku React.
+- Request/accept passenger flow (`/api/trips/{id}/request`, `/api/requests/{id}/accept`) — replaced by direct driver-adds-passenger
+- Trip states beyond `ACTIVE` (Full, Cancelled, Done, Archived) — not implemented; trips are hard-deleted
+- Payment gateway integration
+- Google Maps / external geo-location service (Valhalla used instead)
+- Report/moderation system (`Report` entity, `IReportRepository`)

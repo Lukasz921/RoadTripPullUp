@@ -73,6 +73,13 @@ public class ApiExceptionMiddleware
             title = "Not Found";
             type = "https://tools.ietf.org/html/rfc7231#section-6.5.4";
         }
+        else if (exception is Users.Application.Exceptions.NotFoundException unf)
+        {
+            code = System.Net.HttpStatusCode.NotFound;
+            message = unf.Message;
+            title = "Not Found";
+            type = "https://tools.ietf.org/html/rfc7231#section-6.5.4";
+        }
         else if (exception is Application.Exceptions.ForbiddenException fex)
         {
             code = System.Net.HttpStatusCode.Forbidden;
