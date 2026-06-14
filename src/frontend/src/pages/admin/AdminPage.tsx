@@ -44,7 +44,6 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -65,7 +64,7 @@ export default function AdminPage() {
     return () => {
       cancelled = true;
     };
-  }, [page, reloadKey]);
+  }, [page]);
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
@@ -73,12 +72,9 @@ export default function AdminPage() {
     setDeletingId(id);
     try {
       await deleteComplaint(id);
-      // If we just removed the last item on a non-first page, step back a page.
-      if (complaints.length === 1 && page > 1) {
-        setPage((p) => p - 1);
-      } else {
-        setReloadKey((k) => k + 1);
-      }
+      // Delete has no backend yet, so drop the row locally instead of refetching.
+      setComplaints((prev) => prev.filter((c) => c.id !== id));
+      setTotalCount((c) => Math.max(0, c - 1));
     } catch {
       setError('Failed to delete complaint.');
     } finally {
@@ -109,7 +105,7 @@ export default function AdminPage() {
               <ComplaintCard
                 key={complaint.id}
                 complaint={complaint}
-                onOpen={() => navigate(`/complaint/${complaint.id}`)}
+                onOpen={() => navigate(`/complaint/${complaint.id}`, { state: { complaint } })}
                 onDelete={() => handleDelete(complaint.id)}
                 deleting={deletingId === complaint.id}
               />

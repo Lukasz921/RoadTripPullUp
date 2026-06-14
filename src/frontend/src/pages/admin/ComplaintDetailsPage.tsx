@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import Navbar from '../../components/layout/Navbar';
 import Footer from '../../components/layout/Footer';
-import { getComplaintById, banUser, type ComplaintResponseDTO } from '../../api/admin';
+import { banUser, type ComplaintResponseDTO } from '../../api/admin';
 import { getUserById, type CurrentUser } from '../../api/user';
 import { formatDate } from '../../utils/format';
 
@@ -60,8 +60,9 @@ function UserCard({
 }
 
 export default function ComplaintDetailsPage() {
-  const { complaintId } = useParams<{ complaintId: string }>();
-  const [complaint, setComplaint] = useState<ComplaintResponseDTO | null>(null);
+  const location = useLocation();
+  // The complaint is passed via navigation state from the list (no by-id endpoint).
+  const complaint = (location.state as { complaint?: ComplaintResponseDTO } | null)?.complaint ?? null;
   const [complainer, setComplainer] = useState<CurrentUser | null>(null);
   const [complained, setComplained] = useState<CurrentUser | null>(null);
   const [loading, setLoading] = useState(true);
@@ -69,34 +70,31 @@ export default function ComplaintDetailsPage() {
   const [banning, setBanning] = useState(false);
 
   useEffect(() => {
-    if (!complaintId) return;
+    if (!complaint) {
+      setLoading(false);
+      return;
+    }
     let cancelled = false;
     setLoading(true);
     setError('');
-    getComplaintById(complaintId)
-      .then(async (data) => {
-        if (cancelled) return;
-        setComplaint(data);
-        // Load both involved users. Tolerate one failing — fall back to a
-        // minimal placeholder so the card (and ban button) still render.
-        const [complainerRes, complainedRes] = await Promise.allSettled([
-          getUserById(data.complainerId),
-          getUserById(data.complainedUserId),
-        ]);
+    // Load both involved users. Tolerate one failing — fall back to a
+    // minimal placeholder so the card (and ban button) still render.
+    Promise.allSettled([
+      getUserById(complaint.complainerId),
+      getUserById(complaint.complainedUserId),
+    ])
+      .then(([complainerRes, complainedRes]) => {
         if (cancelled) return;
         setComplainer(
           complainerRes.status === 'fulfilled'
             ? complainerRes.value
-            : placeholderUser(data.complainerId),
+            : placeholderUser(complaint.complainerId),
         );
         setComplained(
           complainedRes.status === 'fulfilled'
             ? complainedRes.value
-            : placeholderUser(data.complainedUserId),
+            : placeholderUser(complaint.complainedUserId),
         );
-      })
-      .catch(() => {
-        if (!cancelled) setError('Failed to load complaint.');
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -104,7 +102,7 @@ export default function ComplaintDetailsPage() {
     return () => {
       cancelled = true;
     };
-  }, [complaintId]);
+  }, [complaint]);
 
   async function handleBan() {
     if (!complained || !complaint) return;
@@ -130,6 +128,10 @@ export default function ComplaintDetailsPage() {
 
         {error && (
           <p className="mb-4 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600">{error}</p>
+        )}
+
+        {!complaint && !loading && (
+          <p className="text-sm text-[#5d7056]">Open a complaint from the complaints list.</p>
         )}
 
         {complaint && (
