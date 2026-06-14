@@ -12,4 +12,6 @@ public interface IUserService
     Task Unban(Guid userId);
     Task ChangeRole(Guid userId, UserRole newRole);
     Task<UserIntegrationDTO> GetUserIntegrationData(Guid id);
+    Task FileComplaint(Guid complainerId, Guid tripId, FileComplaintDTO dto);
+    Task<ComplaintResponseDTO> GetComplaintById(Guid id);
 }
