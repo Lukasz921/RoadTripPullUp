@@ -172,19 +172,24 @@ public class UserService : IUserService
         await _complaintRepository.Save(complaint);
     }
 
-    public async Task<ComplaintResponseDTO> GetComplaintById(Guid id)
+    public async Task<PagedComplaintsDTO> GetAllComplaints(int page, int pageSize)
     {
-        var complaint = await _complaintRepository.FindById(id);
-        if (complaint == null) throw new NotFoundException("Complaint not found.");
+        var (items, totalCount) = await _complaintRepository.GetAll(page, pageSize);
 
-        return new ComplaintResponseDTO
+        return new PagedComplaintsDTO
         {
-            Id = complaint.Id,
-            TripId = complaint.TripId,
-            ComplainerId = complaint.ComplainerId,
-            ComplainedUserId = complaint.ComplainedUserId,
-            Reason = complaint.Reason,
-            CreatedAt = complaint.CreatedAt
+            Items = items.Select(c => new ComplaintResponseDTO
+            {
+                Id = c.Id,
+                TripId = c.TripId,
+                ComplainerId = c.ComplainerId,
+                ComplainedUserId = c.ComplainedUserId,
+                Reason = c.Reason,
+                CreatedAt = c.CreatedAt
+            }).ToList(),
+            Page = page,
+            PageSize = pageSize,
+            TotalCount = totalCount
         };
     }
 }

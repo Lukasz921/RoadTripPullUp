@@ -13,5 +13,5 @@ public interface IUserService
     Task ChangeRole(Guid userId, UserRole newRole);
     Task<UserIntegrationDTO> GetUserIntegrationData(Guid id);
     Task FileComplaint(Guid complainerId, Guid tripId, FileComplaintDTO dto);
-    Task<ComplaintResponseDTO> GetComplaintById(Guid id);
+    Task<PagedComplaintsDTO> GetAllComplaints(int page, int pageSize);
 }

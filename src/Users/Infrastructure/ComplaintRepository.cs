@@ -30,4 +30,16 @@ public class ComplaintRepository : IComplaintRepository
     {
         return await _context.Complaints.FindAsync(id);
     }
+
+    public async Task<(List<Complaint> Items, int TotalCount)> GetAll(int page, int pageSize)
+    {
+        var query = _context.Complaints.OrderByDescending(c => c.CreatedAt);
+        var totalCount = await query.CountAsync();
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return (items, totalCount);
+    }
 }
