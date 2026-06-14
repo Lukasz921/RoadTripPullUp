@@ -13,6 +13,7 @@ import ChatPage from './pages/chat/ChatPage.tsx';
 import MyConversationsPage from './pages/MyConversationsPage';
 import HistoricRidesPage from './pages/rides-page/HistoricRidesPage.tsx'
 import AdminPage from './pages/admin/AdminPage.tsx';
+import ComplaintDetailsPage from './pages/admin/ComplaintDetailsPage.tsx';
 
 export default function App() {
   return (
@@ -33,6 +34,7 @@ export default function App() {
         <Route path="/conversation/:id" element={<ChatPage />} />
         <Route path="/my-conversations" element={<MyConversationsPage />} />
         <Route path="/admin" element={<AdminPage />} />
+        <Route path="/complaint/:complaintId" element={<ComplaintDetailsPage />} />
       </Routes>
     </BrowserRouter>
   );

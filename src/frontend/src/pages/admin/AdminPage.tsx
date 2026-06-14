@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/layout/Navbar';
 import Footer from '../../components/layout/Footer';
 import { getComplaints, deleteComplaint, type ComplaintResponseDTO } from '../../api/admin';
@@ -8,19 +9,21 @@ const PAGE_SIZE = 10;
 
 function ComplaintCard({
   complaint,
+  onOpen,
   onDelete,
   deleting,
 }: {
   complaint: ComplaintResponseDTO;
+  onOpen: () => void;
   onDelete: () => void;
   deleting: boolean;
 }) {
   return (
     <div className="flex items-center justify-between gap-4 rounded-xl border border-[#d7e8c8] bg-white px-5 py-4">
-      <div>
-        <p className="text-sm font-semibold text-[#12351f]">{complaint.reason}</p>
+      <button type="button" onClick={onOpen} className="min-w-0 flex-1 text-left">
+        <p className="truncate text-sm font-semibold text-[#12351f] hover:underline">{complaint.reason}</p>
         <p className="mt-1 text-xs text-[#5d7056]">{formatDate(complaint.createdAt)}</p>
-      </div>
+      </button>
       <button
         type="button"
         onClick={onDelete}
@@ -34,6 +37,7 @@ function ComplaintCard({
 }
 
 export default function AdminPage() {
+  const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [complaints, setComplaints] = useState<ComplaintResponseDTO[]>([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -105,6 +109,7 @@ export default function AdminPage() {
               <ComplaintCard
                 key={complaint.id}
                 complaint={complaint}
+                onOpen={() => navigate(`/complaint/${complaint.id}`)}
                 onDelete={() => handleDelete(complaint.id)}
                 deleting={deletingId === complaint.id}
               />

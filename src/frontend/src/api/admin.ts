@@ -67,6 +67,15 @@ export const getComplaints = async (page = 1, pageSize = 10): Promise<PagedCompl
   };
 };
 
+// MOCK: returns a single complaint by id.
+// Swap the body for `authApi.get<ComplaintResponseDTO>(`/admin/complaints/${id}`)` once wired.
+export const getComplaintById = async (id: string): Promise<ComplaintResponseDTO> => {
+  await new Promise((resolve) => setTimeout(resolve, 300));
+  const complaint = MOCK_COMPLAINTS.find((c) => c.id === id);
+  if (!complaint) throw new Error('Complaint not found');
+  return complaint;
+};
+
 // MOCK: removes a complaint from the pool.
 // Swap the body for `authApi.delete(`/admin/complaints/${id}`)` once the backend endpoint exists.
 export const deleteComplaint = async (id: string): Promise<void> => {
