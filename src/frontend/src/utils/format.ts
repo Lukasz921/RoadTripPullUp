@@ -18,3 +18,11 @@ export function secondsToTime(seconds: number) {
 export function formatCoords(lat: number, lng: number) {
   return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
 }
+
+// Formats a Date as a local "YYYY-MM-DD" string for <input type="date"> defaults.
+export function toDateInputValue(date: Date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
