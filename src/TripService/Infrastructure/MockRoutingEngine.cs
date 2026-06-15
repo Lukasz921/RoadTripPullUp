@@ -14,6 +14,24 @@ public class MockRoutingEngine : IRoutingEngine
         return Task.FromResult(new RouteResult(distanceM, durationS, wkt));
     }
 
+    public Task<RouteResult> GetRouteAsync(IReadOnlyList<LatLngDTO> waypoints, CancellationToken ct = default)
+    {
+        if (waypoints.Count < 2)
+            throw new ArgumentException("A route needs at least two waypoints.", nameof(waypoints));
+
+        double distance = 0;
+        for (int i = 0; i < waypoints.Count - 1; i++)
+            distance += HaversineMeters(waypoints[i], waypoints[i + 1]) * 1.3;
+
+        var distanceM = (int)distance;
+        var durationS = (int)(distanceM / (80_000.0 / 3600)); // 80 km/h average
+
+        var inv = System.Globalization.CultureInfo.InvariantCulture;
+        var coords = string.Join(", ", waypoints.Select(w =>
+            $"{w.Lng.ToString(inv)} {w.Lat.ToString(inv)}"));
+        return Task.FromResult(new RouteResult(distanceM, durationS, $"LINESTRING({coords})"));
+    }
+
     public Task<int?[][]> GetMatrixAsync(LatLngDTO[] sources, LatLngDTO[] targets, CancellationToken ct = default)
     {
         var result = new int?[sources.Length][];

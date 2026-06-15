@@ -8,6 +8,7 @@ import TripRouteMap from '../../components/TripRouteMap';
 import NumberInput from '../../components/ui/NumberInput';
 import type { Place } from '../../utils/geoapify';
 import { createTrip } from '../../api/trips';
+import { toDateInputValue } from '../../utils/format';
 
 export default function AddTripPage() {
   const navigate = useNavigate();
@@ -18,9 +19,13 @@ export default function AddTripPage() {
   const [origin, setOrigin] = useState<Place | null>(null);
   const [destination, setDestination] = useState<Place | null>(null);
 
-  // Trip details
-  const [departureDate, setDepartureDate] = useState('');
-  const [departureTime, setDepartureTime] = useState('');
+  // Trip details — default to tomorrow at 10:00 to save typing.
+  const [departureDate, setDepartureDate] = useState(() => {
+    const t = new Date();
+    t.setDate(t.getDate() + 1);
+    return toDateInputValue(t);
+  });
+  const [departureTime, setDepartureTime] = useState('10:00');
   const [seats, setSeats] = useState('1');
   const [pricePerSeat, setPricePerSeat] = useState('0');
   const [maxDetourMeters, setMaxDetourMeters] = useState('5000');

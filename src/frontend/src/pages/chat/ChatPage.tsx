@@ -3,10 +3,12 @@ import { useParams } from 'react-router-dom';
 import Navbar from '../../components/layout/Navbar';
 import Footer from '../../components/layout/Footer';
 import { getConversation, type ConversationDTO } from '../../api/messages';
-import { addToTrip, getTripById, type TripDTO } from '../../api/trips';
+import { acceptTripRequest, getTripById, getTripRequestByConversation, type TripDTO, type TripRequestDTO } from '../../api/trips';
 import { getUserById } from '../../api/user';
 import { reverseGeocode } from '../../api/reverseGeocode';
+import { metersToKm } from '../../utils/format';
 import { useCurrentUser } from '../../hooks/useCurrentUser';
+import TripRequestMap from '../../components/TripRequestMap';
 import Chat from './Chat';
 
 export default function ChatPage() {
@@ -17,6 +19,9 @@ export default function ChatPage() {
   const [startPlace, setStartPlace] = useState('');
   const [endPlace, setEndPlace] = useState('');
   const [nameById, setNameById] = useState<Record<string, string>>({});
+  const [request, setRequest] = useState<TripRequestDTO | null>(null);
+  const [pickupPlace, setPickupPlace] = useState('');
+  const [dropoffPlace, setDropoffPlace] = useState('');
   const [joining, setJoining] = useState(false);
   const [added, setAdded] = useState(false);
   const [joinError, setJoinError] = useState('');
@@ -25,6 +30,28 @@ export default function ChatPage() {
   useEffect(() => {
     if (!conversationId) return;
     getConversation(conversationId).then(setConversation).catch(() => {});
+  }, [conversationId]);
+
+  // Fetch the trip request behind this direct conversation (if any) and label its endpoints.
+  useEffect(() => {
+    if (!conversationId) return;
+    let cancelled = false;
+    getTripRequestByConversation(conversationId)
+      .then(async (req) => {
+        if (cancelled || !req) return;
+        setRequest(req);
+        const [pu, dof] = await Promise.all([
+          reverseGeocode(req.pickup.lat, req.pickup.lng),
+          reverseGeocode(req.dropoff.lat, req.dropoff.lng),
+        ]);
+        if (cancelled) return;
+        setPickupPlace(pu);
+        setDropoffPlace(dof);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
   }, [conversationId]);
 
   // Fetch the trip this conversation belongs to and resolve its endpoints to place names.
@@ -84,15 +111,18 @@ export default function ChatPage() {
     ? conversation.participants.find((id) => id !== user.id)
     : undefined;
   const alreadyPassenger = !!trip && !!passengerId && trip.passengerIds.includes(passengerId);
-  const showAddToTrip = isDriver && !isGroup && !alreadyPassenger;
+  const requestPending = request?.status === 'PENDING';
+  // Only the driver can accept, and only while there is a pending request for a seat that's still free.
+  const showAddToTrip = isDriver && !isGroup && !!request && requestPending && !alreadyPassenger;
 
   async function addToTripHandler() {
-    if (!conversation || !passengerId) return;
+    if (!trip || !request) return;
     setJoining(true);
     setJoinError('');
     try {
-      await addToTrip(conversation.tripId, passengerId);
+      await acceptTripRequest(trip.id, request.id);
       setAdded(true);
+      setRequest({ ...request, status: 'ACCEPTED' });
     } catch {
       setJoinError('Failed to add to trip. Please try again.');
     } finally {
@@ -129,6 +159,45 @@ export default function ChatPage() {
                 {joinError && (
                   <p className="mt-2 text-sm text-red-600">{joinError}</p>
                 )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {request && !isGroup && (
+          <div className="mb-6 rounded-2xl bg-white p-6 shadow-sm">
+            <div className="mb-3 flex items-center justify-between gap-4">
+              <h2 className="text-lg font-semibold">Trip request</h2>
+              <span
+                className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                  request.status === 'ACCEPTED'
+                    ? 'bg-[#dff0c8] text-[#12351f]'
+                    : 'bg-[#fff3cd] text-[#7a5b00]'
+                }`}
+              >
+                {request.status === 'ACCEPTED' ? 'Added to trip' : 'Pending'}
+              </span>
+            </div>
+            <p className="text-sm text-[#5d7056]">
+              Wants a ride:{' '}
+              <span className="font-semibold text-[#12351f]">{pickupPlace || '…'}</span> →{' '}
+              <span className="font-semibold text-[#12351f]">{dropoffPlace || '…'}</span>
+            </p>
+            <p className="mt-1 text-sm text-[#5d7056]">
+              Extra detour:{' '}
+              <span className="font-semibold text-[#12351f]">{metersToKm(request.detourMeters)}</span>
+            </p>
+            {trip && (
+              <div className="mt-4 h-80">
+                <TripRequestMap
+                  tripStart={trip.source}
+                  tripEnd={trip.target}
+                  pickup={request.pickup}
+                  dropoff={request.dropoff}
+                  tripPolyline={trip.routePolylinePoints}
+                  requestPolyline={request.previewPolyline}
+                  labels={{ tripStart: startPlace, tripEnd: endPlace, pickup: pickupPlace, dropoff: dropoffPlace }}
+                />
               </div>
             )}
           </div>

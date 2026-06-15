@@ -8,12 +8,22 @@ import TripRouteMap from '../components/TripRouteMap';
 import NumberInput from '../components/ui/NumberInput';
 import Spinner from '../components/ui/Spinner';
 import TripSummaryCard from '../components/TripSummaryCard';
-import { submitSearch as submitSearchApi, pollSearch, type SearchJobResultDTO, type TripSummaryV1DTO } from '../api/trips';
-import { createConversation } from '../api/messages';
+import { submitSearch as submitSearchApi, pollSearch, requestTrip, type SearchJobResultDTO, type TripSummaryV1DTO } from '../api/trips';
 import { useCurrentUser } from '../hooks/useCurrentUser';
+import { toDateInputValue } from '../utils/format';
 import type { Place } from '../utils/geoapify';
 
 const PAGE_SIZE = 10;
+
+// Default search window: today through a week from today.
+function defaultDateFrom() {
+  return toDateInputValue(new Date());
+}
+function defaultDateTo() {
+  const d = new Date();
+  d.setDate(d.getDate() + 7);
+  return toDateInputValue(d);
+}
 
 // Module-level cache so the search form + results survive leaving the page
 // (e.g. opening a trip's details) and coming back, without re-running the search.
@@ -43,8 +53,8 @@ export default function SearchTripsPage() {
   const [destination, setDestination] = useState<Place | null>(() => searchCache?.destination ?? null);
 
   // Filters
-  const [dateFrom, setDateFrom] = useState(() => searchCache?.dateFrom ?? '');
-  const [dateTo, setDateTo] = useState(() => searchCache?.dateTo ?? '');
+  const [dateFrom, setDateFrom] = useState(() => searchCache?.dateFrom ?? defaultDateFrom());
+  const [dateTo, setDateTo] = useState(() => searchCache?.dateTo ?? defaultDateTo());
   const [maxPrice, setMaxPrice] = useState(() => searchCache?.maxPrice ?? '');
   const [minSeats, setMinSeats] = useState(() => searchCache?.minSeats ?? '1');
   const [page, setPage] = useState(() => searchCache?.page ?? 1);
@@ -58,16 +68,20 @@ export default function SearchTripsPage() {
   const pollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   async function handleAskAboutTrip(trip: TripSummaryV1DTO) {
+    if (!origin || !destination) {
+      setError('Select your origin and destination before requesting a trip.');
+      return;
+    }
     setAskingTripId(trip.id);
     try {
-      const { conversationId } = await createConversation({
-        tripId: trip.id,
-        title: 'Title',
-        participants: [trip.driverId],
-      });
+      const { conversationId } = await requestTrip(
+        trip.id,
+        { lat: origin.lat, lng: origin.lng },
+        { lat: destination.lat, lng: destination.lng },
+      );
       navigate(`/conversation/${conversationId}`);
     } catch {
-      setError('Failed to start conversation. Please try again.');
+      setError('Failed to send trip request. Please try again.');
     } finally {
       setAskingTripId(null);
     }
@@ -311,7 +325,7 @@ export default function SearchTripsPage() {
                     trip.driverId === user?.id
                       ? undefined
                       : {
-                          label: askingTripId === trip.id ? 'Creating…' : 'Ask about trip',
+                          label: askingTripId === trip.id ? 'Requesting…' : 'Request trip',
                           onClick: () => handleAskAboutTrip(trip),
                         }
                   }

@@ -19,4 +19,17 @@ public interface ITripRepository
     // Pre-checks (UUID validity, user exists, driver != passenger) are the caller's responsibility.
     // Throws NotFoundException, ForbiddenException, ValidationException, SeatUnavailableException.
     Task AddPassengerTransactionalAsync(Guid tripId, Guid driverGuid, Guid passengerGuid);
+
+    // --- Trip requests ---
+    Task<TripRequestDTO> InsertTripRequestAsync(
+        Guid tripId, Guid requesterId, Guid conversationId,
+        LatLngDTO pickup, LatLngDTO dropoff, int detourM, RouteResult preview);
+    Task<TripRequestDTO?> FindPendingRequestAsync(Guid tripId, Guid requesterId);
+    Task<TripRequestDTO?> FindRequestByConversationAsync(Guid conversationId);
+    Task<TripRequestDTO?> FindRequestByIdAsync(Guid requestId);
+    // Ordered (by accepted_at) pickup/dropoff pairs of already-accepted requests, for route recompute.
+    Task<List<(LatLngDTO Pickup, LatLngDTO Dropoff)>> GetAcceptedRequestStopsAsync(Guid tripId);
+    // SELECT FOR UPDATE + validate + UPDATE trip route + INSERT passenger + mark request ACCEPTED, one tx.
+    Task AcceptTripRequestTransactionalAsync(
+        Guid tripId, Guid driverGuid, Guid requestId, Guid requesterGuid, RouteResult newRoute);
 }

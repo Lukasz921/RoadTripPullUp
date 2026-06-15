@@ -2,6 +2,7 @@ using MessageService.Core.Exceptions;
 using Microsoft.Extensions.Configuration;
 using Npgsql;
 using TripService.Application;
+using TripService.Application.Exceptions;
 
 namespace TripService.Infrastructure;
 
@@ -82,7 +83,7 @@ public class TripsSearchService : ITripsSearchService
                 ST_X(t.source_geog::geometry) AS source_lng,
                 ST_Y(t.target_geog::geometry) AS target_lat,
                 ST_X(t.target_geog::geometry) AS target_lng,
-                t.route_distance_m,
+                COALESCE(t.base_route_distance_m, t.route_distance_m) AS route_distance_m,
                 t.max_detour_m,
                 t.departure_time,
                 t.price_per_seat,
@@ -158,16 +159,18 @@ public class TripsSearchService : ITripsSearchService
             .Select(c => new LatLngDTO { Lat = c.TargetLat, Lng = c.TargetLng })
             .ToArray();
 
-        // 3 matrix calls in parallel, regardless of candidate count
-        var matrixTasks = await Task.WhenAll(
-            _routing.GetMatrixAsync(tripSources,         new[] { passengerSrc }, ct),  // leg1[i][0]
-            _routing.GetMatrixAsync(new[] { passengerTgt }, tripTargets,          ct),  // leg2[0][i]
-            _routing.GetMatrixAsync(new[] { passengerSrc }, new[] { passengerTgt }, ct) // leg3[0][0]
-        );
+        // leg1/leg2 are short hops within the detour corridor, so the one-to-many matrix is fine.
+        // leg3 is the passenger's WHOLE journey (often hundreds of km). Valhalla's matrix refuses
+        // long pairs ("No path could be found"), so compute leg3 with /route, which handles any
+        // distance. All three run in parallel.
+        var leg1Task = _routing.GetMatrixAsync(tripSources,          new[] { passengerSrc }, ct); // leg1[i][0]
+        var leg2Task = _routing.GetMatrixAsync(new[] { passengerTgt }, tripTargets,          ct); // leg2[0][i]
+        var leg3Task = GetLegDistanceAsync(passengerSrc, passengerTgt, ct);                       // dist(paxSrc → paxTgt)
+        await Task.WhenAll(leg1Task, leg2Task, leg3Task);
 
-        var leg1Matrix = matrixTasks[0];
-        var leg2Matrix = matrixTasks[1];
-        var leg3 = leg2Matrix[0][0] != null ? matrixTasks[2][0][0] : null; // dist(passengerSrc → passengerTgt)
+        var leg1Matrix = leg1Task.Result;
+        var leg2Matrix = leg2Task.Result;
+        var leg3 = leg3Task.Result;
 
         var validated = new List<ValidatedResult>();
 
@@ -202,6 +205,13 @@ public class TripsSearchService : ITripsSearchService
         }
 
         return validated;
+    }
+
+    // dist(from → to) via /route (handles long distances, unlike the matrix). null if unroutable.
+    private async Task<int?> GetLegDistanceAsync(LatLngDTO from, LatLngDTO to, CancellationToken ct)
+    {
+        try { return (await _routing.GetRouteAsync(from, to, ct)).DistanceM; }
+        catch (RoutingEngineUnavailableException) { return null; }
     }
 
     // ─────────────────────────────────────────────────────────────────────────

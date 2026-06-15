@@ -69,6 +69,61 @@ public class ValhallaRoutingEngine : IRoutingEngine
         }
     }
 
+    public async Task<RouteResult> GetRouteAsync(IReadOnlyList<LatLngDTO> waypoints, CancellationToken ct = default)
+    {
+        if (waypoints.Count < 2)
+            throw new ArgumentException("A route needs at least two waypoints.", nameof(waypoints));
+
+        var body = new
+        {
+            locations = waypoints
+                .Select(w => new { lon = w.Lng, lat = w.Lat, type = "break", radius = 100 })
+                .ToArray(),
+            costing = "auto"
+        };
+
+        try
+        {
+            using var response = await _http.PostAsJsonAsync("/route", body, ct);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                await ThrowForValhalla400Async(response, ct);
+                throw new RoutingEngineUnavailableException(
+                    $"Valhalla returned HTTP {(int)response.StatusCode}.");
+            }
+
+            using var doc = await JsonDocument.ParseAsync(
+                await response.Content.ReadAsStreamAsync(ct), cancellationToken: ct);
+
+            var trip      = doc.RootElement.GetProperty("trip");
+            var summary   = trip.GetProperty("summary");
+            var distanceM = (int)(summary.GetProperty("length").GetDouble() * 1000);
+            var durationS = (int)summary.GetProperty("time").GetDouble();
+
+            // A multi-break route returns one leg per segment; concatenate every leg's shape,
+            // dropping the first point of each subsequent leg (it duplicates the previous leg's last).
+            var points = new List<(double lat, double lng)>();
+            foreach (var leg in trip.GetProperty("legs").EnumerateArray())
+            {
+                var legPoints = DecodePolyline(leg.GetProperty("shape").GetString()!);
+                if (points.Count > 0 && legPoints.Count > 0)
+                    legPoints.RemoveAt(0);
+                points.AddRange(legPoints);
+            }
+
+            return new RouteResult(distanceM, durationS, PointsToWkt(points));
+        }
+        catch (RoutingEngineUnavailableException)
+        {
+            throw;
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or OperationCanceledException)
+        {
+            throw new RoutingEngineUnavailableException("Valhalla routing engine is unavailable or timed out.");
+        }
+    }
+
     public async Task<int?[][]> GetMatrixAsync(LatLngDTO[] sources, LatLngDTO[] targets, CancellationToken ct = default)
     {
         var body = new
@@ -156,7 +211,11 @@ public class ValhallaRoutingEngine : IRoutingEngine
         }
     }
 
-    private static string DecodePolylineToWkt(string encoded, int precision = 6)
+    private static string DecodePolylineToWkt(string encoded, int precision = 6) =>
+        PointsToWkt(DecodePolyline(encoded, precision));
+
+    // Decodes a Valhalla-encoded polyline (precision 6) into (lat, lng) points.
+    private static List<(double lat, double lng)> DecodePolyline(string encoded, int precision = 6)
     {
         var factor = Math.Pow(10, precision);
         var points = new List<(double lat, double lng)>();
@@ -175,10 +234,17 @@ public class ValhallaRoutingEngine : IRoutingEngine
             points.Add((lat / factor, lng / factor));
         }
 
+        return points;
+    }
+
+    // Builds a WKT LINESTRING (lng-first, as PostGIS expects) from decoded points.
+    private static string PointsToWkt(List<(double lat, double lng)> points)
+    {
         if (points.Count < 2)
             throw new RoutingEngineUnavailableException("Valhalla returned an invalid route shape.");
 
-        var coords = string.Join(", ", points.Select(p => $"{p.lng} {p.lat}"));
+        var coords = string.Join(", ", points.Select(p =>
+            $"{p.lng.ToString(System.Globalization.CultureInfo.InvariantCulture)} {p.lat.ToString(System.Globalization.CultureInfo.InvariantCulture)}"));
         return $"LINESTRING({coords})";
     }
 }

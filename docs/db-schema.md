@@ -97,6 +97,7 @@ erDiagram
         geography route_polyline
         int route_distance_m
         int route_duration_s
+        int base_route_distance_m
         int max_detour_m
         timestamptz departure_time
         numeric price_per_seat
@@ -120,13 +121,34 @@ erDiagram
         timestamptz created_at
     }
 
+    TRIP_REQUEST {
+        uuid id PK
+        uuid trip_id FK
+        uuid requester_user_id
+        uuid conversation_id
+        geography pickup_geog
+        geography dropoff_geog
+        geography preview_polyline
+        int detour_m
+        trip_request_status status
+        timestamptz created_at
+        timestamptz accepted_at
+    }
+
     TRIP ||--o{ TRIP_PASSENGER : includes
     TRIP ||--o{ TRIP_RATING : "has"
+    TRIP ||--o{ TRIP_REQUEST : "receives"
 ```
 
-`status` ∈ `ACTIVE` (only value used in practice — trips are hard-deleted, not transitioned to other states)
+`status` (trip) ∈ `ACTIVE`, `COMPLETED` (in practice only `ACTIVE` — trips are hard-deleted, not transitioned)
 
-`route_polyline` is a `geography(LINESTRING, 4326)` — full road geometry computed by Valhalla (or approximated by the mock engine in debug mode).
+`status` (request) — `trip_request_status` ∈ `PENDING`, `ACCEPTED`
+
+`route_polyline` is a `geography(LINESTRING, 4326)` — full road geometry computed by Valhalla (or approximated by the mock engine in debug mode). When a request is accepted the route is **recomputed** through the new pickup/dropoff stops, so `route_polyline`, `route_distance_m` and `route_duration_s` grow.
+
+`base_route_distance_m` is the **immutable** driver-only route distance, captured at trip creation and never changed. Detour calculations (search Phase 2 and trip-request creation) subtract this baseline so they stay consistent no matter how many passengers have already joined.
+
+`trip_request` stores where a passenger wants to be picked up / dropped off, the computed `detour_m` (vs `base_route_distance_m`), the `preview_polyline` shown in the chat map, and a link to the direct `conversation_id`. A partial unique index keeps at most one open (`PENDING`) request per `(trip_id, requester_user_id)`.
 
 **Spatial indexes:**
 - `idx_trip_route_polyline` — GiST on `route_polyline` (used by `ST_DWithin` in search Phase 1)
@@ -135,3 +157,8 @@ erDiagram
 - `idx_trip_passenger_user` — on `trip_passenger(passenger_user_id)`
 - `idx_trip_rating_rated_user` — on `trip_rating(rated_user_id)`
 - `idx_trip_rating_rater_user` — on `trip_rating(rater_user_id)`
+- `idx_trip_request_trip` — on `trip_request(trip_id)`
+- `idx_trip_request_conversation` — on `trip_request(conversation_id)`
+- `uq_trip_request_pending` — partial UNIQUE on `trip_request(trip_id, requester_user_id) WHERE status = 'PENDING'`
+
+**Migrations:** raw SQL in `docker/trip-db/init/` — `004_add_trip_requests.sql` (the `trip_request` table) and `005_add_base_route_distance.sql` (the `base_route_distance_m` column). These run automatically only on a **fresh** `trip_db` volume; apply them manually to an existing volume (see the README).

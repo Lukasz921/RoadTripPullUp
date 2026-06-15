@@ -119,6 +119,51 @@ export const addToTrip = async (tripId: string, passengerId: string) => {
   await tripApi.post(`/${tripId}/passengers`, { PassengerId: passengerId });
 };
 
+// --- Trip requests ---
+
+export interface TripRequestDTO {
+  id: string;
+  tripId: string;
+  requesterId: string;
+  conversationId: string;
+  pickup: LatLng;
+  dropoff: LatLng;
+  previewPolyline?: LatLng[];
+  detourMeters: number;
+  status: string;
+}
+
+export interface CreateTripRequestResult {
+  conversationId: string;
+  requestId: string;
+  detourMeters: number;
+}
+
+// Passenger requests a trip: creates the driver chat + a trip request (pickup/dropoff).
+export const requestTrip = async (
+  tripId: string,
+  pickup: LatLng,
+  dropoff: LatLng,
+): Promise<CreateTripRequestResult> => {
+  const response = await tripApi.post<CreateTripRequestResult>(`/${tripId}/requests`, { pickup, dropoff });
+  return response.data;
+};
+
+// Returns the trip request behind a direct conversation, or null if there isn't one.
+export const getTripRequestByConversation = async (conversationId: string): Promise<TripRequestDTO | null> => {
+  try {
+    const response = await tripApi.get<TripRequestDTO>(`/requests/by-conversation/${conversationId}`);
+    return response.data;
+  } catch {
+    return null;
+  }
+};
+
+// Driver accepts a request: recomputes the route through the new stops and adds the passenger.
+export const acceptTripRequest = async (tripId: string, requestId: string): Promise<void> => {
+  await tripApi.post(`/${tripId}/requests/${requestId}/accept`);
+};
+
 export interface RateUserDTO {
   userId: string;
   value: number;
