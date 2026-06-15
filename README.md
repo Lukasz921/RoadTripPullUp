@@ -26,6 +26,19 @@ Trip routes will appear as straight lines on the map instead of real roads — e
 
 ---
 
+### Database migrations (trip_db)
+
+The `trip_db` schema is plain SQL in `docker/trip-db/init/`. These scripts run **automatically only on a fresh volume** (first `docker compose up` on a new machine, or after `docker compose down -v`). If you already have a `trip_db` volume, apply new scripts manually:
+
+```bash
+docker exec -i trip_db psql -U postgres -d trip_db < docker/trip-db/init/004_add_trip_requests.sql
+docker exec -i trip_db psql -U postgres -d trip_db < docker/trip-db/init/005_add_base_route_distance.sql
+```
+
+(`app_db` / `messages_db` use EF Core migrations and are applied automatically by the API on startup.)
+
+---
+
 ### Release mode — real routes with Valhalla
 
 Release mode uses the [Valhalla](https://github.com/valhalla/valhalla) routing engine with real OpenStreetMap road data. Routes follow actual roads and search results are calculated with real driving distances.
