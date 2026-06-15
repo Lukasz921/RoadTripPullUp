@@ -12,7 +12,7 @@ services:
       - build_admins=False
       - build_time_zones=False
     healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://localhost:8002/status || exit 1"]
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8002/status || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3

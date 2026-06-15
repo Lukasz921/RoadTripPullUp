@@ -34,6 +34,25 @@ public class AddPassengerDTO
     public string PassengerId { get; set; } = string.Empty;
 }
 
+public class CreateTripRequestDTO
+{
+    public LatLngDTO Pickup  { get; set; } = new();
+    public LatLngDTO Dropoff { get; set; } = new();
+}
+
+public class TripRequestDTO
+{
+    public string Id             { get; set; } = string.Empty;
+    public string TripId         { get; set; } = string.Empty;
+    public string RequesterId    { get; set; } = string.Empty;
+    public string ConversationId { get; set; } = string.Empty;
+    public LatLngDTO Pickup      { get; set; } = new();
+    public LatLngDTO Dropoff     { get; set; } = new();
+    public List<LatLngDTO>? PreviewPolyline { get; set; }
+    public int    DetourMeters   { get; set; }
+    public string Status         { get; set; } = "PENDING";
+}
+
 public class PagedTripsDTO
 {
     public List<TripDTO> Items { get; set; } = new();

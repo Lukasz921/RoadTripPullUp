@@ -93,6 +93,87 @@ public class TripsOrchestratorController : ControllerBase
         return NoContent();
     }
 
+    // Passenger asks about a trip: create the direct chat with the driver AND a trip request
+    // storing where they want to be picked up / dropped off. Reuses an existing open request.
+    [HttpPost("trips/{tripId}/requests")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> CreateTripRequest(
+        [FromRoute] string tripId,
+        [FromBody] CreateTripRequestDTO dto)
+    {
+        var passengerId = GetUserId();
+        if (passengerId == null)
+            return Unauthorized(new { error = new { code = "UNAUTHORIZED", message = "Missing or invalid token." } });
+
+        var trip = await _trips.GetTripAsync(tripId); // 404 if the trip doesn't exist
+
+        // A second click reuses the existing open request + its conversation (no orphan chat).
+        var existing = await _trips.GetPendingTripRequestAsync(tripId, passengerId);
+        if (existing is not null)
+            return Ok(new { conversationId = existing.ConversationId, requestId = existing.Id, detourMeters = existing.DetourMeters });
+
+        var conversationId = await _conversations.CreateConversationAsync(
+            new CreateConversationDto
+            {
+                TripId       = Guid.Parse(tripId),
+                Title        = "Trip request",
+                Participants = [Guid.Parse(trip.DriverId)],
+                Type         = "direct"
+            },
+            Guid.Parse(passengerId));
+
+        var request = await _trips.CreateTripRequestAsync(tripId, passengerId, conversationId, dto.Pickup, dto.Dropoff);
+
+        return Ok(new { conversationId = request.ConversationId, requestId = request.Id, detourMeters = request.DetourMeters });
+    }
+
+    // Driver accepts a request: recompute the trip route through the new stops, add the passenger,
+    // and add them to the trip's group chat (best-effort, mirroring AddPassenger).
+    [HttpPost("trips/{tripId}/requests/{requestId}/accept")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(403)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(409)]
+    public async Task<IActionResult> AcceptTripRequest(
+        [FromRoute] string tripId,
+        [FromRoute] string requestId)
+    {
+        var driverId = GetUserId();
+        if (driverId == null)
+            return Unauthorized(new { error = new { code = "UNAUTHORIZED", message = "Missing or invalid token." } });
+
+        var requesterId = await _trips.AcceptTripRequestAsync(tripId, driverId, requestId);
+
+        try
+        {
+            await _conversations.AddMemberToTripGroupAsync(Guid.Parse(tripId), Guid.Parse(requesterId));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to add requester {RequesterId} to group chat for trip {TripId}", requesterId, tripId);
+        }
+
+        return NoContent();
+    }
+
+    // Chat panel: fetch the trip request behind a direct conversation (pickup/dropoff, detour, preview route).
+    [HttpGet("trips/requests/by-conversation/{conversationId}")]
+    [ProducesResponseType(typeof(TripRequestDTO), 200)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> GetTripRequestByConversation([FromRoute] string conversationId)
+    {
+        var userId = GetUserId();
+        if (userId == null)
+            return Unauthorized(new { error = new { code = "UNAUTHORIZED", message = "Missing or invalid token." } });
+
+        var request = await _trips.GetTripRequestByConversationAsync(conversationId);
+        if (request is null) return NotFound();
+        return Ok(request);
+    }
+
     [HttpPost("trips/{tripId}/rate-user")]
     public async Task<IActionResult> RateUser([FromRoute] string tripId, [FromBody] RateUserDTO dto)
     {
