@@ -146,6 +146,8 @@ public class TripRequestCreateTests
         Source = Geo.At(0),
         Target = Geo.At(10),
         RouteDistanceM = routeDistanceM,
+        // Detour is measured against the immutable base distance.
+        BaseRouteDistanceM = routeDistanceM,
         MaxDetourMeters = 100_000,
     };
 

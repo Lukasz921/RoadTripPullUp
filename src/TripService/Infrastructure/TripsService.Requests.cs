@@ -26,9 +26,10 @@ public partial class TripsService
         if (existing is not null)
             return existing;
 
-        // Preview route source -> pickup -> dropoff -> target; detour vs the trip's current route.
+        // Preview route source -> pickup -> dropoff -> target; detour vs the driver's ORIGINAL
+        // route (base distance), so it stays consistent no matter how many passengers already joined.
         var preview = await _routing.GetRouteAsync(new[] { trip.Source, pickup, dropoff, trip.Target });
-        var detour  = Math.Max(0, preview.DistanceM - trip.RouteDistanceM);
+        var detour  = Math.Max(0, preview.DistanceM - trip.BaseRouteDistanceM);
 
         return await _repository.InsertTripRequestAsync(
             tripGuid, requesterGuid, conversationId, pickup, dropoff, detour, preview);

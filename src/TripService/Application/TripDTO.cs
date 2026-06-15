@@ -9,6 +9,8 @@ public class TripDTO
     public DateTime DepartureTime { get; set; }
     public int RouteDistanceM { get; set; }
     public int RouteDurationS { get; set; }
+    // Original driver-only route distance; immutable baseline for detour math.
+    public int BaseRouteDistanceM { get; set; }
     public int MaxDetourMeters { get; set; }
     public decimal PricePerSeat { get; set; }
     public int AvailableSeats { get; set; }

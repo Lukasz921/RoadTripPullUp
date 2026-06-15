@@ -11,3 +11,4 @@ stateDiagram-v2
 - A trip disappears from active listings automatically once `departure_time` has passed (date filter applied in queries).
 - Deleting a trip is a hard delete (removed from the database).
 - Past trips remain accessible via `GET /api/v1/trips/history`.
+- Accepting a trip request recomputes the trip's route through the new pickup/dropoff stops (`route_polyline`/`route_distance_m` grow), but `max_detour_m` and `base_route_distance_m` stay fixed. See [trip-request-lifecycle.md](trip-request-lifecycle.md).

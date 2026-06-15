@@ -21,7 +21,7 @@ public class TripRepository : ITripRepository
         const string sql = """
             INSERT INTO trip (
                 driver_user_id, source_geog, target_geog, route_polyline,
-                route_distance_m, route_duration_s, max_detour_m,
+                route_distance_m, route_duration_s, base_route_distance_m, max_detour_m,
                 departure_time, price_per_seat, available_seats
             )
             VALUES (
@@ -29,7 +29,7 @@ public class TripRepository : ITripRepository
                 ST_SetSRID(ST_MakePoint(@srcLng, @srcLat), 4326)::geography,
                 ST_SetSRID(ST_MakePoint(@tgtLng, @tgtLat), 4326)::geography,
                 ST_GeomFromText(@polylineWkt, 4326)::geography,
-                @distanceM, @durationS, @maxDetourM,
+                @distanceM, @durationS, @distanceM, @maxDetourM,
                 @departureTime, @pricePerSeat, @availableSeats
             )
             RETURNING
@@ -75,6 +75,7 @@ public class TripRepository : ITripRepository
                 ST_Y(t.target_geog::geometry) AS target_lat,
                 ST_X(t.target_geog::geometry) AS target_lng,
                 t.route_distance_m, t.route_duration_s, t.max_detour_m,
+                COALESCE(t.base_route_distance_m, t.route_distance_m) AS base_route_distance_m,
                 t.departure_time, t.price_per_seat, t.available_seats,
                 t.status::text AS status, t.created_at,
                 ST_AsGeoJSON(t.route_polyline)::text AS route_geojson,
