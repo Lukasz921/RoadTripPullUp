@@ -109,6 +109,20 @@ public class MockTripsService : ITripsService
         return Task.CompletedTask;
     }
 
+    // Trip requests are not supported by the in-memory mock (it is not wired into DI; the real
+    // TripsService + TripRepository back this feature). Stubs satisfy the ITripsService contract.
+    public Task<TripRequestDTO> CreateTripRequestAsync(string tripId, string requesterId, Guid conversationId, LatLngDTO pickup, LatLngDTO dropoff)
+        => throw new NotImplementedException("Trip requests are not supported by MockTripsService.");
+
+    public Task<TripRequestDTO?> GetPendingTripRequestAsync(string tripId, string requesterId)
+        => Task.FromResult<TripRequestDTO?>(null);
+
+    public Task<TripRequestDTO?> GetTripRequestByConversationAsync(string conversationId)
+        => Task.FromResult<TripRequestDTO?>(null);
+
+    public Task<string> AcceptTripRequestAsync(string tripId, string driverId, string requestId)
+        => throw new NotImplementedException("Trip requests are not supported by MockTripsService.");
+
     public Task DeleteTripAsync(string tripId, string driverId)
     {
         if (!_trips.TryGetValue(tripId, out var trip))
