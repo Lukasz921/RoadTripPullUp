@@ -8,8 +8,7 @@ import TripRouteMap from '../components/TripRouteMap';
 import NumberInput from '../components/ui/NumberInput';
 import Spinner from '../components/ui/Spinner';
 import TripSummaryCard from '../components/TripSummaryCard';
-import { submitSearch as submitSearchApi, pollSearch, type SearchJobResultDTO, type TripSummaryV1DTO } from '../api/trips';
-import { createConversation } from '../api/messages';
+import { submitSearch as submitSearchApi, pollSearch, requestTrip, type SearchJobResultDTO, type TripSummaryV1DTO } from '../api/trips';
 import { useCurrentUser } from '../hooks/useCurrentUser';
 import type { Place } from '../utils/geoapify';
 
@@ -58,16 +57,20 @@ export default function SearchTripsPage() {
   const pollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   async function handleAskAboutTrip(trip: TripSummaryV1DTO) {
+    if (!origin || !destination) {
+      setError('Select your origin and destination before requesting a trip.');
+      return;
+    }
     setAskingTripId(trip.id);
     try {
-      const { conversationId } = await createConversation({
-        tripId: trip.id,
-        title: 'Title',
-        participants: [trip.driverId],
-      });
+      const { conversationId } = await requestTrip(
+        trip.id,
+        { lat: origin.lat, lng: origin.lng },
+        { lat: destination.lat, lng: destination.lng },
+      );
       navigate(`/conversation/${conversationId}`);
     } catch {
-      setError('Failed to start conversation. Please try again.');
+      setError('Failed to send trip request. Please try again.');
     } finally {
       setAskingTripId(null);
     }
@@ -311,7 +314,7 @@ export default function SearchTripsPage() {
                     trip.driverId === user?.id
                       ? undefined
                       : {
-                          label: askingTripId === trip.id ? 'Creating…' : 'Ask about trip',
+                          label: askingTripId === trip.id ? 'Requesting…' : 'Request trip',
                           onClick: () => handleAskAboutTrip(trip),
                         }
                   }
