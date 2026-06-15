@@ -35,6 +35,7 @@ internal static class TripMapper
     internal static TripDTO MapRowDetail(NpgsqlDataReader r)
     {
         var dto = MapRowWithPassengers(r);
+        dto.BaseRouteDistanceM = r.GetInt32(r.GetOrdinal("base_route_distance_m"));
 
         var geoJsonOrd = r.GetOrdinal("route_geojson");
         if (!r.IsDBNull(geoJsonOrd))
