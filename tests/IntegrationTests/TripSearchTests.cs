@@ -8,6 +8,9 @@ using TripService.Infrastructure;
 
 namespace IntegrationTests;
 
+// Spins up a real PostGIS container (Testcontainers), so it requires Docker — excluded from CI
+// via the E2E category, like the other container-backed tests. Run on demand with Docker available.
+[Trait("Category", "E2E")]
 public class TripSearchTests : IAsyncLifetime
 {
     // Warsaw → Kraków trip: straight-line polyline, max_detour_m = 50 km
@@ -31,6 +34,9 @@ public class TripSearchTests : IAsyncLifetime
         await _db.StartAsync();
         await RunSqlFileAsync("sql/001_create_trip.sql");
         await RunSqlFileAsync("sql/002_add_trip_passengers.sql");
+        await RunSqlFileAsync("sql/003_add_trip_ratings.sql");
+        await RunSqlFileAsync("sql/004_add_trip_requests.sql");
+        await RunSqlFileAsync("sql/005_add_base_route_distance.sql");
     }
 
     public async Task DisposeAsync() => await _db.StopAsync();
